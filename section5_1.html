@@ -453,315 +453,1141 @@ export default function App() {
           >
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             {isMuted ? "효과음 켜기" : "효과음 끄기"}
-          </button>
-        </div>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>중1-1 소인수분해 폭탄돌리기 게임 💣</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-3deg) scale(1.1); }
+      50% { transform: rotate(3deg) scale(1.15); }
+    }
+    .animate-wiggle {
+      animation: wiggle 0.15s ease-in-out infinite;
+    }
+    @keyframes fuse {
+      0%, 100% { transform: scale(1) translate(0, 0); opacity: 1; }
+      50% { transform: scale(1.2) translate(1px, -1px); opacity: 0.8; }
+    }
+    .animate-fuse {
+      animation: fuse 0.2s ease-in-out infinite;
+    }
+    /* 스크롤바 커스텀 */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-white font-sans min-h-screen relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
 
-        {showConceptModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70">
-            <div className="w-full max-w-2xl overflow-hidden bg-slate-900 border-2 border-indigo-500 rounded-2xl shadow-2xl">
-              <div className="p-6 bg-indigo-900 border-b border-indigo-700 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <BookOpen className="w-6 h-6 text-indigo-400" />
-                  <h2 className="text-xl font-bold text-white">중1-1 소인수분해 핵심 요약 교실 📖</h2>
-                </div>
-                <button 
-                  onClick={() => setShowConceptModal(false)}
-                  className="px-3 py-1 bg-indigo-800 text-indigo-200 hover:bg-red-500 hover:text-white rounded-lg transition-colors font-bold text-sm"
-                >
-                  닫기 ✕
-                </button>
-              </div>
-              <div className="p-6 overflow-y-auto max-h-[60vh] text-slate-300 space-y-6">
-                <section className="space-y-2">
-                  <h3 className="text-lg font-semibold text-emerald-400 flex items-center gap-2">소수와 합성수</h3>
-                  <p className="pl-4 leading-relaxed">
-                    • <strong>소수 (Prime Number):</strong> 1보다 큰 자연수 중 1과 자기 자신만을 약수로 가지는 수 (예: 2, 3, 5, 7, 11...)<br />
-                    • <strong>합성수 (Composite Number):</strong> 1보다 큰 자연수 중 약수가 3개 이상인 수<br />
-                    <span className="text-amber-400">※ 1은 소수도 아니고 합성수도 아닙니다!</span>
-                  </p>
-                </section>
-                <section className="space-y-2">
-                  <h3 className="text-lg font-semibold text-emerald-400 flex items-center gap-2">소인수분해 (Prime Factorization)</h3>
-                  <p className="pl-4 leading-relaxed">
-                    • 1보다 큰 합성수를 오직 <strong>소수들의 곱(소인수의 곱)</strong>으로만 표현하는 것<br />
-                    예) 12를 소인수분해하면 $12 = 2 \times 2 \times 3 = 2^2 \times 3$입니다. (4 × 3으로 쓰면 합성수 4가 포함되므로 오답!)
-                  </p>
-                </section>
-              </div>
-              <div className="p-4 bg-slate-800 flex justify-end">
-                <button 
-                  onClick={() => setShowConceptModal(false)}
-                  className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg"
-                >
-                  개념 마스터 완료!
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
+  <!-- ========================================== -->
+  <!-- 배경 네온 데코레이션 요소 -->
+  <!-- ========================================== -->
+  <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none z-0"></div>
+  <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none z-0"></div>
 
-  const activePlayers = players.filter(p => p.isAlive);
-  const currentPlayer = players[currentPlayerIdx];
-  const isTimeUrgent = timeLeft <= 15;
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-white font-sans p-4 flex flex-col justify-between overflow-hidden relative">
+  <!-- ========================================== -->
+  <!-- 로비 화면 (LOBBY SCREEN) -->
+  <!-- ========================================== -->
+  <div id="lobby-screen" class="min-h-screen flex items-center justify-center p-4 relative z-10">
+    <div class="w-full max-w-xl bg-slate-900/80 border border-slate-800 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-2xl flex flex-col items-center">
       
-      {/* 1. 최상단 헤더 정보 바 */}
-      <header className="flex items-center justify-between py-2 px-4 bg-slate-900/60 border border-slate-800 rounded-2xl backdrop-blur-md">
-        <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+      <!-- 상단 서브 타이틀 배지 -->
+      <div class="text-center mb-6">
+        <span class="px-3.5 py-1.5 bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-full text-xs font-bold uppercase tracking-wider">
+          중학교 1학년 수학 1학기 과정
+        </span>
+        <h1 class="text-4xl md:text-5xl font-black mt-4 tracking-tight bg-gradient-to-r from-red-500 via-amber-400 to-yellow-300 bg-clip-text text-transparent drop-shadow-lg leading-tight">
+          소인수분해<br>
+          <span class="text-white">💣 폭탄돌리기 게임</span>
+        </h1>
+        <p class="text-slate-400 text-sm mt-3 leading-relaxed max-w-md mx-auto">
+          제한시간 1분! 소인수분해 문제를 해결하고 안전하게 넘기세요.<br>
+          오답일 시 올바른 정답을 풀 때까지 폭탄을 갖고 있어야 합니다!
+        </p>
+      </div>
+
+      <!-- 로비 폭탄 시각 디자인 -->
+      <div class="w-36 h-36 bg-slate-800 rounded-full flex items-center justify-center relative shadow-inner mb-6 border border-slate-700">
+        <div class="absolute -top-3 right-6 w-8 h-10 bg-slate-700 rounded-lg origin-bottom transform rotate-12 flex flex-col justify-end">
+          <div class="w-1.5 h-10 bg-amber-600 absolute bottom-6 left-3.5 origin-bottom animate-bounce"></div>
+        </div>
+        <div class="absolute -top-10 right-4 animate-fuse text-3xl">🔥</div>
+        <span class="text-7xl select-none">💣</span>
+        <div class="absolute inset-0 bg-red-500/5 rounded-full animate-ping"></div>
+      </div>
+
+      <!-- 게임 룰 요약 가이드박스 -->
+      <div class="w-full bg-slate-950/60 rounded-2xl p-5 border border-slate-800 text-sm text-slate-300 space-y-3 mb-6">
+        <div class="flex items-start gap-2.5">
+          <span class="text-emerald-400 font-bold">✓</span>
+          <p>나를 포함한 총 4명의 플레이어(나 + AI 3명)가 원탁에 둘러앉아 경쟁합니다.</p>
+        </div>
+        <div class="flex items-start gap-2.5">
+          <span class="text-emerald-400 font-bold">✓</span>
+          <p>화면에 주어지는 자연수를 올바르게 <strong class="text-white">소인수분해</strong>한 보기를 고르세요.</p>
+        </div>
+        <div class="flex items-start gap-2.5">
+          <span class="text-rose-400 font-bold">⚠️</span>
+          <p>AI 경쟁자들은 <strong class="text-amber-400">50% 확률로 실수</strong>하며, 오답 시 <strong class="text-rose-400">5초 패널티</strong> 동안 당황하며 폭탄을 그대로 가집니다.</p>
+        </div>
+        <div class="flex items-start gap-2.5">
+          <span class="text-amber-400 font-bold">⏳</span>
+          <p>1분의 라운드 타이머 종료 시 폭탄을 안고 있는 플레이어는 즉시 탈락합니다.</p>
+        </div>
+      </div>
+
+      <!-- 제어 및 입장 버튼 -->
+      <div class="w-full flex flex-col sm:flex-row gap-4">
+        <button
+          onclick="openConceptModal()"
+          class="flex-1 py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl border border-slate-700 flex items-center justify-center gap-2 transition-all transform active:scale-95"
+        >
+          <!-- BookOpen SVG -->
+          <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          수학 개념 학습하기
+        </button>
+        <button
+          onclick="startGame()"
+          class="flex-[1.5] py-4 bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-slate-950 font-black text-lg rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 hover:shadow-red-500/35 transition-all transform active:scale-95"
+        >
+          <!-- Play SVG -->
+          <svg class="w-5 h-5 fill-slate-950" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          게임 시작하기!
+        </button>
+      </div>
+
+      <!-- 사운드 토글 -->
+      <button 
+        onclick="toggleMute()"
+        class="mt-6 flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+      >
+        <span id="lobby-mute-icon">
+          <!-- Volume2 SVG -->
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"/></svg>
+        </span>
+        <span id="lobby-mute-text">효과음 켜져있음</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 인게임 플레이 화면 (GAME SCREEN) -->
+  <!-- ========================================== -->
+  <div id="game-screen" class="min-h-screen flex flex-col justify-between p-4 hidden relative z-10">
+    
+    <!-- 1. 최상단 헤더 정보 표시 바 -->
+    <header class="w-full max-w-4xl mx-auto flex items-center justify-between py-2.5 px-4 bg-slate-900/65 border border-slate-800 rounded-2xl backdrop-blur-md">
+      <div class="flex items-center gap-2">
+        <span class="flex h-2.5 w-2.5 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+        </span>
+        <span id="header-round-badge" class="text-sm font-black text-indigo-300 tracking-wider">ROUND 1</span>
+      </div>
+      
+      <!-- 인게임 볼륨 및 재작동 제어 -->
+      <div class="flex items-center gap-3">
+        <button 
+          onclick="toggleMute()"
+          class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+          title="소리 설정"
+        >
+          <span id="game-mute-icon">
+            <!-- Volume2 SVG -->
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"/></svg>
           </span>
-          <span className="text-sm font-bold text-indigo-300">ROUND {roundNumber}</span>
-        </div>
+        </button>
+        <button 
+          onclick="askRestart()"
+          class="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg text-slate-400 transition-colors"
+          title="로비로 돌아가기"
+        >
+          <!-- RotateCcw SVG -->
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. 중앙 원형 테이블 대결 구도 -->
+    <main class="flex-1 my-4 flex flex-col justify-center items-center relative">
+      <div class="relative w-full max-w-[500px] h-[350px] md:h-[400px] flex items-center justify-center">
         
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setIsMuted(!isMuted)}
-            className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
-          >
-            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-          </button>
-          <button 
-            onClick={() => {
-              if (confirm("정말로 게임을 처음부터 다시 시작하시겠습니까?")) {
-                setGameState('LOBBY');
+        <!-- 원형 연결 회전 가이드 라인 -->
+        <div class="absolute w-[220px] h-[220px] md:w-[280px] md:h-[280px] border-2 border-dashed border-slate-800 rounded-full animate-[spin_120s_linear_infinite] pointer-events-none z-0"></div>
+
+        <!-- 중앙 시각 연출부: 폭탄 및 남은 1분 타이머 -->
+        <div class="absolute z-20 flex flex-col items-center">
+          <div id="center-bomb-wrapper" class="relative flex items-center justify-center transition-all duration-300">
+            <!-- 불꽃 애니메이션 점화 -->
+            <div class="absolute -top-7 right-5 animate-fuse text-4xl select-none">🔥</div>
+            <span class="text-8xl select-none filter drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">💣</span>
+            <div id="urgent-bomb-glow" class="absolute -inset-4 bg-red-600/0 rounded-full filter blur-md -z-10 transition-all duration-350"></div>
+          </div>
+
+          <!-- 타임 디스플레이 -->
+          <div class="mt-3 text-center">
+            <div id="digital-timer" class="text-4xl md:text-5xl font-mono font-black text-amber-400 tracking-wider">
+              60s
+            </div>
+            <span class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Round Timer</span>
+          </div>
+        </div>
+
+        <!-- 플레이어 카드 리스트 (JS에서 동적 상태 적용) -->
+        <div id="players-circle-container" class="absolute inset-0 z-10 pointer-events-none">
+          <!-- JS를 통해 동적 절대 배치가 이루어집니다. -->
+        </div>
+
+      </div>
+    </main>
+
+    <!-- 3. 하단 문제 출제 콘솔 보드 -->
+    <footer id="console-footer" class="w-full max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-2xl relative mb-2">
+      <!-- 이 내부에 플레이어 차례 또는 AI 작동 씬이 렌더링됩니다 -->
+    </footer>
+
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 라운드 폭발 종료 전환 모달 오버레이 (ROUND_END) -->
+  <!-- ========================================== -->
+  <div id="round-end-overlay" class="fixed inset-0 z-40 bg-gradient-to-br from-slate-950/95 via-red-950/45 to-slate-950/95 flex flex-col items-center justify-center p-4 hidden">
+    <div class="max-w-md w-full bg-slate-900 border border-red-500/30 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden text-center">
+      <div class="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-red-500 to-amber-500"></div>
+
+      <div class="text-6xl mb-4 animate-bounce select-none">💥</div>
+      <h2 class="text-3xl font-black text-red-500 tracking-tight">콰 아 아 앙 !</h2>
+      <p class="text-slate-400 text-sm mt-2">시간이 모두 흘러 폭탄이 거세게 터지고 말았습니다!</p>
+
+      <!-- 이번 탈락자 묘사 영역 -->
+      <div id="round-eliminated-banner" class="my-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center gap-3">
+        <!-- 동적 삽입 -->
+      </div>
+
+      <!-- 생존자 카드 일지 -->
+      <div class="space-y-3 mb-6">
+        <span class="text-xs text-slate-500 font-extrabold uppercase block tracking-wider">살아남은 플레이어 리스트</span>
+        <div id="round-survivors-list" class="flex flex-wrap gap-2 justify-center">
+          <!-- 동적 삽입 -->
+        </div>
+      </div>
+
+      <!-- 진행 스타터 버튼 -->
+      <button
+        onclick="proceedNextRound()"
+        class="w-full py-4 bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-slate-950 font-black text-lg rounded-2xl shadow-lg transition-all transform active:scale-95 flex items-center justify-center gap-2"
+      >
+        다음 라운드 시작 🚀
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 최종 승자 게임오버 오버레이 (GAME_OVER) -->
+  <!-- ========================================== -->
+  <div id="game-over-overlay" class="fixed inset-0 z-40 bg-gradient-to-br from-slate-950/95 via-indigo-950/40 to-slate-950/95 flex flex-col items-center justify-center p-4 hidden">
+    <div class="max-w-md w-full bg-slate-900 border-2 border-yellow-500 rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden text-center">
+      <div class="absolute top-0 inset-x-0 h-1.5 bg-yellow-500"></div>
+
+      <div class="text-7xl mb-4 animate-[bounce_1s_infinite] select-none">👑</div>
+      <h2 class="text-3xl font-black text-yellow-400 tracking-tight">최종 우승자 결정!</h2>
+      <p class="text-slate-400 text-xs mt-1.5">소인수분해를 지배한 최강의 브레인이 탄생했습니다.</p>
+
+      <!-- 최종 위너 시각 데이터 -->
+      <div id="game-winner-banner" class="my-6 p-5 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl flex flex-col items-center justify-center gap-1">
+        <!-- 동적 삽입 -->
+      </div>
+
+      <!-- 명예의 전당 탈락 랭킹 리스트 -->
+      <div class="space-y-2 mb-6 text-left">
+        <span class="text-xs text-slate-500 font-extrabold uppercase tracking-wider block mb-2">서바이벌 최종 기록 기록판</span>
+        <div id="elimination-ranking-box" class="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+          <!-- 동적 삽입 -->
+        </div>
+      </div>
+
+      <!-- 리스타트 버튼 -->
+      <button
+        onclick="resetToLobby()"
+        class="w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-slate-950 font-black text-lg rounded-2xl shadow-lg transition-transform transform active:scale-95"
+      >
+        로비 화면으로 돌아가기 🎮
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 소인수분해 개념 요약 팝업 모달 -->
+  <!-- ========================================== -->
+  <div id="concept-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm hidden">
+    <div class="w-full max-w-2xl overflow-hidden bg-slate-900 border-2 border-indigo-500 rounded-2xl shadow-2xl flex flex-col">
+      <div class="p-5 bg-indigo-900 border-b border-indigo-700 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <!-- BookOpen SVG -->
+          <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          <h2 class="text-lg md:text-xl font-bold text-white">중1-1 소인수분해 핵심 요약 교실 📖</h2>
+        </div>
+        <button 
+          onclick="closeConceptModal()"
+          class="px-3 py-1 bg-indigo-800 text-indigo-200 hover:bg-red-500 hover:text-white rounded-lg transition-colors font-bold text-xs"
+        >
+          닫기 ✕
+        </button>
+      </div>
+      
+      <div class="p-6 overflow-y-auto max-h-[60vh] text-slate-300 space-y-6 text-sm md:text-base">
+        <section class="space-y-2">
+          <h3 class="text-base md:text-lg font-semibold text-emerald-400 flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-5.5 h-5.5 rounded-full bg-emerald-500 text-slate-900 text-xs font-black">1</span>
+            소수와 합성수
+          </h3>
+          <p class="pl-7 leading-relaxed">
+            • <strong class="text-white">소수 (Prime Number):</strong> 1보다 큰 자연수 중에서 약수가 1과 자기 자신뿐인 수 (예: 2, 3, 5, 7, 11, 13...) <br>
+            <span class="text-amber-400 font-medium">※ 2는 소수 중 유일한 짝수이며, 가장 작은 소수입니다!</span><br>
+            • <strong class="text-white">합성수 (Composite Number):</strong> 1보다 큰 자연수 중에서 소수가 아닌 수 (약수가 3개 이상인 수)<br>
+            <span class="text-rose-400 font-medium">※ 1은 소수도 아니고 합성수도 아닙니다! 시험에 정말 잘 나와요!</span>
+          </p>
+        </section>
+
+        <section class="space-y-2">
+          <h3 className="text-base md:text-lg font-semibold text-emerald-400 flex items-center gap-2" style="color: #34d399; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.375rem; height: 1.375rem; border-radius: 9999px; background-color: #10b981; color: #0f172a; font-size: 0.75rem; font-weight: 900;">2</span>
+            거듭제곱 (Power)
+          </h3>
+          <p class="pl-7 leading-relaxed">
+            같은 수나 문자를 거듭하여 여러 번 곱한 것을 간단히 나타낸 표현법입니다.<br>
+            • <strong class="text-white">밑 (Base):</strong> 거듭하여 곱해지는 수나 문자<br>
+            • <strong class="text-white">지수 (Exponent):</strong> 곱해진 개수 (밑의 오른쪽 위에 작게 적어 표기)<br>
+            예) 3을 4번 연속으로 곱하면: 3 × 3 × 3 × 3 = 3⁴ (밑은 3, 지수는 4)
+          </p>
+        </section>
+
+        <section class="space-y-2">
+          <h3 className="text-base md:text-lg font-semibold text-emerald-400 flex items-center gap-2" style="color: #34d399; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 1.375rem; height: 1.375rem; border-radius: 9999px; background-color: #10b981; color: #0f172a; font-size: 0.75rem; font-weight: 900;">3</span>
+            소인수분해 (Prime Factorization)
+          </h3>
+          <p class="pl-7 leading-relaxed">
+            • <strong class="text-white">소인수:</strong> 어떤 자연수의 약수 중에서 <span class="text-emerald-300">소수인 인수</span><br>
+            • <strong class="text-white">소인수분해:</strong> 1보다 큰 자연수를 오직 소인수들의 곱으로만 나타낸 것<br>
+            예) 12를 소인수분해하면: 12 = 2 × 2 × 3 = 2² × 3 (소인수는 2와 3입니다)<br>
+            <span class="text-amber-400 font-medium">※ 주의: 12 = 4 × 3으로 표기하면 오답입니다. 4는 소수가 아닌 합성수이기 때문입니다!</span>
+          </p>
+        </section>
+      </div>
+
+      <div class="p-4 bg-slate-800 flex justify-end">
+        <button 
+          onclick="closeConceptModal()"
+          class="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg transition-transform transform active:scale-95"
+        >
+          개념 마스터 완료! 게임하러 가기 👍
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. 게임 알고리즘 핵심 자바스크립트 엔진 -->
+  <!-- ========================================== -->
+  <script>
+    // ==========================================
+    // 4-1. 소인수분해 문제 은행 데이터 리스트
+    // ==========================================
+    const PROBLEMS = [
+      { num: 12, correct: "2² × 3", options: ["2² × 3", "2 × 3²", "4 × 3", "2³ × 3"] },
+      { num: 18, correct: "2 × 3²", options: ["2 × 3²", "2² × 3", "2 × 9", "2² × 3²"] },
+      { num: 20, correct: "2² × 5", options: ["2² × 5", "2 × 5²", "4 × 5", "2 × 10"] },
+      { num: 24, correct: "2³ × 3", options: ["2³ × 3", "2² × 3²", "8 × 3", "2² × 6"] },
+      { num: 28, correct: "2² × 7", options: ["2² × 7", "2 × 7²", "4 × 7", "2³ × 7"] },
+      { num: 30, correct: "2 × 3 × 5", options: ["2 × 3 × 5", "2² × 3 × 5", "6 × 5", "2 × 15"] },
+      { num: 36, correct: "2² × 3²", options: ["2² × 3²", "2³ × 3", "4 × 9", "2 × 3³"] },
+      { num: 40, correct: "2³ × 5", options: ["2³ × 5", "2² × 5²", "8 × 5", "2⁴ × 5"] },
+      { num: 42, correct: "2 × 3 × 7", options: ["2 × 3 × 7", "6 × 7", "2² × 3 × 7", "2 × 21"] },
+      { num: 45, correct: "3² × 5", options: ["3² × 5", "3 × 5²", "9 × 5", "3³ × 5"] },
+      { num: 48, correct: "2⁴ × 3", options: ["2⁴ × 3", "2³ × 3²", "16 × 3", "2⁵ × 3"] },
+      { num: 50, correct: "2 × 5²", options: ["2 × 5²", "2² × 5", "2 × 25", "2² × 5²"] },
+      { num: 54, correct: "2 × 3³", options: ["2 × 3³", "2² × 3²", "2 × 27", "2³ × 3"] },
+      { num: 56, correct: "2³ × 7", options: ["2³ × 7", "2² × 7²", "8 × 7", "2⁴ × 7"] },
+      { num: 60, correct: "2² × 3 × 5", options: ["2² × 3 × 5", "2 × 3² × 5", "4 × 3 × 5", "2 × 3 × 10"] },
+      { num: 63, correct: "3² × 7", options: ["3² × 7", "3 × 7²", "9 × 7", "3³ × 7"] },
+      { num: 72, correct: "2³ × 3²", options: ["2³ × 3²", "2² × 3³", "8 × 9", "2⁴ × 3"] },
+      { num: 75, correct: "3 × 5²", options: ["3 × 5²", "3² × 5", "3 × 25", "3² × 5²"] },
+      { num: 80, correct: "2⁴ × 5", options: ["2⁴ × 5", "2³ × 5²", "16 × 5", "2⁵ × 5"] },
+      { num: 84, correct: "2² × 3 × 7", options: ["2² × 3 × 7", "2 × 3² × 7", "4 × 21", "2 × 3 × 14"] },
+      { num: 90, correct: "2 × 3² × 5", options: ["2 × 3² × 5", "2² × 3 × 5", "2 × 9 × 5", "2 × 3 × 15"] },
+      { num: 98, correct: "2 × 7²", options: ["2 × 7²", "2² × 7", "2 × 49", "2² × 7²"] },
+      { num: 100, correct: "2² × 5²", options: ["2² × 5²", "2³ × 5", "4 × 25", "2 × 5³"] },
+      { num: 108, correct: "2² × 3³", options: ["2² × 3³", "2³ × 3²", "4 × 27", "2⁴ × 3"] },
+      { num: 120, correct: "2³ × 3 × 5", options: ["2³ × 3 × 5", "2² × 3² × 5", "8 × 15", "2² × 3 × 10"] },
+      { num: 125, correct: "5³", options: ["5³", "5²", "25 × 5", "5⁴"] },
+      { num: 135, correct: "3³ × 5", options: ["3³ × 5", "3² × 5²", "27 × 5", "3⁴ × 5"] },
+      { num: 144, correct: "2⁴ × 3²", options: ["2⁴ × 3²", "2³ × 3³", "16 × 9", "2⁵ × 3"] },
+      { num: 150, correct: "2 × 3 × 5²", options: ["2 × 3 × 5²", "2² × 3 × 5", "6 × 25", "2 × 3² × 5"] }
+    ];
+
+    const INITIAL_PLAYERS = [
+      { id: 0, name: "나 (플레이어)", isAI: false, isAlive: true, avatarColor: "from-emerald-400 to-teal-600", emoji: "😎" },
+      { id: 1, name: "AI 민수", isAI: true, isAlive: true, avatarColor: "from-amber-400 to-orange-500", emoji: "🤖" },
+      { id: 2, name: "AI 영희", isAI: true, isAlive: true, avatarColor: "from-pink-400 to-rose-500", emoji: "👾" },
+      { id: 3, name: "AI 철수", isAI: true, isAlive: true, avatarColor: "from-sky-400 to-blue-600", emoji: "🤠" }
+    ];
+
+    // ==========================================
+    // 4-2. 사운드 칩 오디오 엔진 (Web Audio API)
+    // ==========================================
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSound(type) {
+      if (state.isMuted) return;
+      try {
+        initAudio();
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const t = audioCtx.currentTime;
+
+        if (type === 'tick') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(1000, t);
+          gain.gain.setValueAtTime(0.04, t);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.06);
+        } else if (type === 'tick-fast') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(1500, t);
+          gain.gain.setValueAtTime(0.06, t);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.05);
+        } else if (type === 'correct') {
+          const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 코드음
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, t + idx * 0.06);
+            gain.gain.setValueAtTime(0.08, t + idx * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + idx * 0.06 + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(t + idx * 0.06);
+            osc.stop(t + idx * 0.06 + 0.35);
+          });
+        } else if (type === 'wrong') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, t);
+          osc.frequency.linearRampToValueAtTime(120, t + 0.25);
+          gain.gain.setValueAtTime(0.12, t);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.3);
+        } else if (type === 'pass') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(400, t);
+          osc.frequency.exponentialRampToValueAtTime(1000, t + 0.2);
+          gain.gain.setValueAtTime(0.08, t);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(t);
+          osc.stop(t + 0.2);
+        } else if (type === 'explosion') {
+          // 폭발 노이즈 버퍼 합성
+          const bufferSize = audioCtx.sampleRate * 1.5;
+          const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
+          const noise = audioCtx.createBufferSource();
+          noise.buffer = buffer;
+
+          const filter = audioCtx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(600, t);
+          filter.frequency.exponentialRampToValueAtTime(20, t + 1.2);
+
+          const gain = audioCtx.createGain();
+          gain.gain.setValueAtTime(0.3, t);
+          gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          noise.start(t);
+          noise.stop(t + 1.5);
+        }
+      } catch (err) {
+        console.warn("오디오 재생 실패 (자동 재생 비활성화 상태):", err);
+      }
+    }
+
+    // ==========================================
+    // 4-3. 게임 리얼타임 전역 상태 관리 모델
+    // ==========================================
+    let state = {
+      gameState: 'LOBBY',
+      isMuted: false,
+      players: [],
+      currentPlayerIdx: 0,
+      eliminatedHistory: [],
+      timeLeft: 60,
+      roundNumber: 1,
+      currentProblem: null,
+      disabledOptions: [], // 이미 잘못 눌린 선택지 인덱스들
+      userSelectedIdx: null,
+      aiState: {
+        status: 'idle', // 'idle' | 'thinking' | 'wrong_penalty' | 'correct_pass'
+        selectedIdx: null,
+        penaltyTimeLeft: 0
+      }
+    };
+
+    // 타이머 및 AI 동작 타임아웃을 관리하는 참조 포인터
+    let timerInterval = null;
+    let aiTurnTimeout = null;
+    let aiPenaltyInterval = null;
+
+    // ==========================================
+    // 4-4. 이벤트 바인딩 및 라우팅 컨트롤러
+    // ==========================================
+    
+    // 모달창 오픈/클로즈
+    function openConceptModal() {
+      initAudio();
+      document.getElementById('concept-modal').classList.remove('hidden');
+    }
+
+    function closeConceptModal() {
+      document.getElementById('concept-modal').classList.add('hidden');
+    }
+
+    // 소리 제어 조절
+    function toggleMute() {
+      initAudio();
+      state.isMuted = !state.isMuted;
+      
+      // 로비 음소거 뷰 업데이트
+      const lobbyIcon = document.getElementById('lobby-mute-icon');
+      const lobbyText = document.getElementById('lobby-mute-text');
+      const gameIcon = document.getElementById('game-mute-icon');
+
+      const volOnSVG = `<svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"/></svg>`;
+      const volOffSVG = `<svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 9.75L19.5 12m0 0l2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6L4.03 14.25H2.25v-4.5h1.78l3.47-3.47v8.94z"/></svg>`;
+
+      if (state.isMuted) {
+        lobbyIcon.innerHTML = volOffSVG;
+        lobbyText.textContent = "효과음 꺼져있음";
+        gameIcon.innerHTML = volOffSVG;
+      } else {
+        lobbyIcon.innerHTML = volOnSVG;
+        lobbyText.textContent = "효과음 켜져있음";
+        gameIcon.innerHTML = volOnSVG;
+      }
+    }
+
+    // 나가기 확인 모달 대체용 브라우저 프롬프트
+    function askRestart() {
+      if (confirm("정말로 중단하고 게임 로비화면으로 이동하시겠습니까?")) {
+        resetToLobby();
+      }
+    }
+
+    // 로비화면 원상복귀
+    function resetToLobby() {
+      clearAllTimers();
+      state.gameState = 'LOBBY';
+      document.getElementById('lobby-screen').classList.remove('hidden');
+      document.getElementById('game-screen').classList.add('hidden');
+      document.getElementById('round-end-overlay').classList.add('hidden');
+      document.getElementById('game-over-overlay').classList.add('hidden');
+    }
+
+    // 타이머 일체 청소
+    function clearAllTimers() {
+      if (timerInterval) clearInterval(timerInterval);
+      if (aiTurnTimeout) clearTimeout(aiTurnTimeout);
+      if (aiPenaltyInterval) clearInterval(aiPenaltyInterval);
+    }
+
+    // ==========================================
+    // 4-5. 게임 진행 및 라운드 시스템 구조화
+    // ==========================================
+    
+    // 신규 소인수분해 문제 로더
+    function loadNewProblem() {
+      const randomIndex = Math.floor(Math.random() * PROBLEMS.length);
+      const prob = PROBLEMS[randomIndex];
+      // 원본 옵션 셔플
+      const shuffledOptions = [...prob.options].sort(() => Math.random() - 0.5);
+      
+      state.currentProblem = {
+        num: prob.num,
+        correct: prob.correct,
+        options: shuffledOptions
+      };
+      state.disabledOptions = [];
+      state.userSelectedIdx = null;
+    }
+
+    // 최초 게임 개시
+    function startGame() {
+      initAudio();
+      state.players = INITIAL_PLAYERS.map(p => ({ ...p, isAlive: true }));
+      state.eliminatedHistory = [];
+      state.roundNumber = 1;
+      state.currentPlayerIdx = 0; // 나부터 시작
+      state.timeLeft = 60;
+      state.gameState = 'PLAYING';
+      state.aiState = { status: 'idle', selectedIdx: null, penaltyTimeLeft: 0 };
+      
+      loadNewProblem();
+      
+      // 화면 전환
+      document.getElementById('lobby-screen').classList.add('hidden');
+      document.getElementById('game-screen').classList.remove('hidden');
+      document.getElementById('round-end-overlay').classList.add('hidden');
+      document.getElementById('game-over-overlay').classList.add('hidden');
+
+      renderGame();
+      startRoundTimer();
+    }
+
+    // 라운드 타이머 주기 가동
+    function startRoundTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      
+      timerInterval = setInterval(() => {
+        if (state.gameState !== 'PLAYING') return;
+
+        if (state.timeLeft <= 1) {
+          state.timeLeft = 0;
+          clearInterval(timerInterval);
+          handleBombExplode();
+          return;
+        }
+
+        state.timeLeft -= 1;
+        
+        // 다급한 상황 째깍 소리
+        if (state.timeLeft <= 15) {
+          playSound('tick-fast');
+        } else {
+          playSound('tick');
+        }
+
+        updateTimerUI();
+      }, 1000);
+    }
+
+    // 남은 시간 뷰 개별 리프레시
+    function updateTimerUI() {
+      const timerText = document.getElementById('digital-timer');
+      const bombWrapper = document.getElementById('center-bomb-wrapper');
+      const bombGlow = document.getElementById('urgent-bomb-glow');
+
+      timerText.textContent = `${state.timeLeft}s`;
+
+      if (state.timeLeft <= 15) {
+        timerText.className = "text-4xl md:text-5xl font-mono font-black text-red-500 animate-pulse tracking-wider";
+        bombWrapper.classList.add('animate-wiggle');
+        bombGlow.className = "absolute -inset-4 bg-red-600/35 rounded-full filter blur-md -z-10 animate-ping";
+      } else {
+        timerText.className = "text-4xl md:text-5xl font-mono font-black text-amber-400 tracking-wider";
+        bombWrapper.classList.remove('animate-wiggle');
+        bombGlow.className = "absolute -inset-4 bg-red-600/0 rounded-full filter blur-md -z-10";
+      }
+    }
+
+    // ==========================================
+    // 4-6. 폭탄 패스 및 대결 사이클 구현
+    // ==========================================
+    
+    // 다음 생존자에게 폭탄 전달
+    function passBomb() {
+      playSound('pass');
+      let nextIdx = (state.currentPlayerIdx + 1) % state.players.length;
+      while (!state.players[nextIdx].isAlive) {
+        nextIdx = (nextIdx + 1) % state.players.length;
+      }
+      
+      state.currentPlayerIdx = nextIdx;
+      state.aiState = { status: 'idle', selectedIdx: null, penaltyTimeLeft: 0 };
+      
+      loadNewProblem();
+      renderGame();
+      
+      // 전달 후 차례가 AI라면 AI 작동 촉발
+      runAiLogic();
+    }
+
+    // AI 사고 판단 기법 구현
+    function runAiLogic() {
+      if (aiTurnTimeout) clearTimeout(aiTurnTimeout);
+      if (aiPenaltyInterval) clearInterval(aiPenaltyInterval);
+
+      const currentPlayer = state.players[state.currentPlayerIdx];
+      if (!currentPlayer || !currentPlayer.isAI || state.gameState !== 'PLAYING') return;
+
+      // 1) AI 연산 개시 뇌파 애니메이션 표시
+      state.aiState = { status: 'thinking', selectedIdx: null, penaltyTimeLeft: 0 };
+      renderGame();
+
+      // 고민 지연 1.5초~2.5초 시뮬레이션
+      const thinkingDelay = 1500 + Math.random() * 1000;
+      
+      aiTurnTimeout = setTimeout(() => {
+        if (!state.currentProblem) return;
+
+        // 50%의 오답률 산정
+        const willBeCorrect = Math.random() >= 0.5;
+        const correctIndex = state.currentProblem.options.indexOf(state.currentProblem.correct);
+
+        if (willBeCorrect) {
+          // 정답 시 바로 통과 처리 연출
+          state.aiState = { status: 'correct_pass', selectedIdx: correctIndex, penaltyTimeLeft: 0 };
+          playSound('correct');
+          renderGame();
+
+          aiTurnTimeout = setTimeout(() => {
+            passBomb();
+          }, 1200);
+
+        } else {
+          // 오답 시: 임의의 다른 잘못된 인덱스를 찍고 5초 카운트다운 페널티 페이즈 돌입
+          const wrongIndices = [];
+          state.currentProblem.options.forEach((opt, idx) => {
+            if (opt !== state.currentProblem.correct) wrongIndices.push(idx);
+          });
+          const chosenWrongIdx = wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
+
+          playSound('wrong');
+          state.aiState = {
+            status: 'wrong_penalty',
+            selectedIdx: chosenWrongIdx,
+            penaltyTimeLeft: 5
+          };
+          renderGame();
+
+          let penaltyCount = 5;
+          aiPenaltyInterval = setInterval(() => {
+            penaltyCount -= 1;
+            state.aiState.penaltyTimeLeft = penaltyCount;
+            renderGame();
+
+            if (penaltyCount <= 0) {
+              clearInterval(aiPenaltyInterval);
+              // 페널티 소멸: 5초 뒤 다시 뇌를 굴려 완벽하게 맞춘 후 인계
+              playSound('correct');
+              state.aiState = { status: 'correct_pass', selectedIdx: correctIndex, penaltyTimeLeft: 0 };
+              renderGame();
+
+              aiTurnTimeout = setTimeout(() => {
+                passBomb();
+              }, 1000);
+            }
+          }, 1000);
+        }
+      }, thinkingDelay);
+    }
+
+    // ==========================================
+    // 4-7. 사용자 풀이 클릭 인터랙션
+    // ==========================================
+    function handleOptionClick(idx) {
+      const currentPlayer = state.players[state.currentPlayerIdx];
+      // AI 턴이거나 이미 정답이 판정되어 이탈 중일 때는 무시
+      if (currentPlayer.isAI || state.gameState !== 'PLAYING') return;
+      if (state.disabledOptions.includes(idx) || state.userSelectedIdx !== null) return;
+
+      const chosenOption = state.currentProblem.options[idx];
+      state.userSelectedIdx = idx;
+
+      if (chosenOption === state.currentProblem.correct) {
+        playSound('correct');
+        renderGame();
+        
+        // 정답 시 0.8초 후 차례 패스
+        setTimeout(() => {
+          passBomb();
+        }, 800);
+      } else {
+        playSound('wrong');
+        state.disabledOptions.push(idx);
+        state.userSelectedIdx = null; // 오답 시 재풀이를 위해 초기화
+        renderGame();
+      }
+    }
+
+    // ==========================================
+    // 4-8. 라운드 종료 (폭발) 및 서바이벌 판정
+    // ==========================================
+    function handleBombExplode() {
+      clearAllTimers();
+      playSound('explosion');
+
+      const deadPlayer = state.players[state.currentPlayerIdx];
+      deadPlayer.isAlive = false;
+
+      // 생존 순위 기록
+      state.eliminatedHistory.unshift(deadPlayer); // 탈락자를 처음에 삽입하여 랭킹 역순 기록
+
+      const alivePlayers = state.players.filter(p => p.isAlive);
+
+      if (alivePlayers.length <= 1) {
+        state.gameState = 'GAME_OVER';
+        showGameOverOverlay();
+      } else {
+        state.gameState = 'ROUND_END';
+        showRoundEndOverlay(deadPlayer, alivePlayers);
+      }
+    }
+
+    // 중간 라운드 정산 팝업 호출
+    function showRoundEndOverlay(deadPlayer, alivePlayers) {
+      const roundEndOverlay = document.getElementById('round-end-overlay');
+      const eliminatedBanner = document.getElementById('round-eliminated-banner');
+      const survivorsList = document.getElementById('round-survivors-list');
+
+      // 탈락자 명시
+      eliminatedBanner.innerHTML = `
+        <span class="text-3xl">${deadPlayer.emoji}</span>
+        <div class="text-left">
+          <span class="text-xs text-red-400 uppercase tracking-wider font-extrabold">이번 라운드 탈락자</span>
+          <h4 class="text-lg font-bold text-white">${deadPlayer.name}</h4>
+        </div>
+      `;
+
+      // 생존자 명단
+      survivorsList.innerHTML = alivePlayers.map(p => `
+        <span class="px-3.5 py-1.5 bg-slate-800 border border-slate-700 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-sm">
+          <span>${p.emoji}</span>
+          <span>${p.name}</span>
+        </span>
+      `).join('');
+
+      roundEndOverlay.classList.remove('hidden');
+    }
+
+    // 다음 라운드 리셋 후 진행
+    function proceedNextRound() {
+      const alivePlayers = state.players.filter(p => p.isAlive);
+      if (alivePlayers.length <= 1) {
+        state.gameState = 'GAME_OVER';
+        showGameOverOverlay();
+        return;
+      }
+
+      // 생존자 중 무작위 1인에게 폭탄 쥐여주기
+      const randomIndex = Math.floor(Math.random() * alivePlayers.length);
+      const nextStartPlayer = alivePlayers[randomIndex];
+
+      state.roundNumber += 1;
+      state.currentPlayerIdx = nextStartPlayer.id;
+      state.timeLeft = 60;
+      state.gameState = 'PLAYING';
+      state.aiState = { status: 'idle', selectedIdx: null, penaltyTimeLeft: 0 };
+      
+      loadNewProblem();
+      
+      document.getElementById('round-end-overlay').classList.add('hidden');
+      
+      renderGame();
+      startRoundTimer();
+
+      // 만일 시작된 플레이어가 AI라면 즉시 연산 촉발
+      if (nextStartPlayer.isAI) {
+        runAiLogic();
+      }
+    }
+
+    // 최종 승부 종료 화면 표출
+    function showGameOverOverlay() {
+      const gameOverOverlay = document.getElementById('game-over-overlay');
+      const winnerBanner = document.getElementById('game-winner-banner');
+      const rankingBox = document.getElementById('elimination-ranking-box');
+
+      const winner = state.players.find(p => p.isAlive);
+
+      if (winner) {
+        winnerBanner.innerHTML = `
+          <span class="text-5xl animate-bounce select-none">${winner.emoji}</span>
+          <h3 class="text-2xl font-black text-yellow-300 mt-2">${winner.name}</h3>
+          <p class="text-xs text-slate-400 mt-1">강력한 스피드로 폭탄을 밀어내고 끝까지 살아남았습니다!</p>
+        `;
+      } else {
+        winnerBanner.innerHTML = `<p class="text-sm text-slate-400">생존 우승자가 없습니다.</p>`;
+      }
+
+      // 전장 서바이벌 순위표 매핑
+      let rankHTML = '';
+      if (winner) {
+        rankHTML += `
+          <div class="flex items-center justify-between p-2.5 bg-yellow-500/5 border border-yellow-500/20 rounded-xl text-sm">
+            <span class="flex items-center gap-2 text-yellow-300 font-black">
+              👑 1등 ${winner.name}
+            </span>
+            <span class="text-xs text-yellow-400 font-bold">최종 우승자</span>
+          </div>
+        `;
+      }
+
+      // 탈락 순위 역추적 계산
+      state.eliminatedHistory.forEach((player, index) => {
+        const rank = index + 2; // 역순으로 삽입되었으므로 index가 낮을수록 나중에 죽은 고순위자
+        rankHTML += `
+          <div class="flex items-center justify-between p-2.5 bg-slate-800/40 border border-slate-800 rounded-xl text-sm text-slate-400">
+            <span class="flex items-center gap-2">
+              👤 ${rank}등 ${player.name}
+            </span>
+            <span class="text-xs text-rose-500 font-extrabold">폭사 탈락</span>
+          </div>
+        `;
+      });
+
+      rankingBox.innerHTML = rankHTML;
+      gameOverOverlay.classList.remove('hidden');
+    }
+
+
+    // ==========================================
+    // 4-9. 전역 UI 렌더링 템플릿 엔진 (바닐라 최적화)
+    // ==========================================
+    function renderGame() {
+      // 1. 헤더 라운드 배지 갱신
+      document.getElementById('header-round-badge').textContent = `ROUND ${state.roundNumber}`;
+
+      // 2. 타이머 수치 및 이펙트 최신화
+      updateTimerUI();
+
+      // 3. 원탁 배정 플레이어 4명 원형 컴포지션 빌딩
+      const container = document.getElementById('players-circle-container');
+      const positions = [
+        "bottom-2 left-1/2 -translate-x-1/2", // 플레이어 (하단)
+        "right-1 top-1/2 -translate-y-1/2",   // AI 1 (우측)
+        "top-2 left-1/2 -translate-x-1/2",    // AI 2 (상단)
+        "left-1 top-1/2 -translate-y-1/2"     // AI 3 (좌측)
+      ];
+
+      container.innerHTML = state.players.map((p, index) => {
+        const isCurrent = state.currentPlayerIdx === p.id;
+        
+        let statusLabel = '대기 중';
+        if (p.isAlive) {
+          if (isCurrent) {
+            if (p.isAI) {
+              if (state.aiState.status === 'thinking') {
+                statusLabel = `<span class="text-amber-400 animate-pulse">고민하는 중...💭</span>`;
+              } else if (state.aiState.status === 'wrong_penalty') {
+                statusLabel = `<span class="text-red-400 font-extrabold animate-pulse">틀림! 패널티 (${state.aiState.penaltyTimeLeft}s)</span>`;
+              } else {
+                statusLabel = `<span class="text-emerald-400 font-bold">정답 통과! 👉</span>`;
               }
-            }}
-            className="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-lg text-slate-400 transition-colors"
-          >
-            <RotateCcw className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
+            } else {
+              statusLabel = `<span class="text-red-400 font-bold animate-pulse">내 턴! 정답 클릭! 👇</span>`;
+            }
+          }
+        }
 
-      {/* 2. 원형 테이블 배치 */}
-      <main className="flex-1 my-6 flex flex-col justify-center items-center relative">
-        <div className="relative w-full max-w-[500px] h-[340px] md:h-[400px] flex items-center justify-center">
-          
-          <div className="absolute w-[220px] h-[220px] md:w-[280px] md:h-[280px] border-2 border-dashed border-slate-800 rounded-full animate-[spin_180s_linear_infinite] pointer-events-none"></div>
+        // 상태별 테두리 및 그림자 동적 세팅
+        let cardBorderClass = 'border-slate-800';
+        if (!p.isAlive) {
+          cardBorderClass = 'opacity-30 border-slate-950 scale-95';
+        } else if (isCurrent) {
+          cardBorderClass = 'border-red-500 shadow-red-500/20 scale-105 ring-2 ring-red-500/50 bg-slate-850';
+        }
 
-          <div className="absolute z-20 flex flex-col items-center">
-            <div className={`relative flex items-center justify-center transition-all duration-300 ${
-              isTimeUrgent ? 'animate-[bounce_0.3s_infinite] scale-110' : 'animate-[pulse_1.5s_infinite]'
-            }`}>
-              <div className="absolute -top-7 right-5 animate-pulse">
-                <span className={`text-4xl inline-block origin-bottom ${isTimeUrgent ? 'animate-ping' : ''}`}>🔥</span>
+        return `
+          <div class="absolute ${positions[index]} transition-all duration-300 pointer-events-auto">
+            <div class="relative flex flex-col items-center p-3 rounded-2xl border bg-slate-900/90 w-28 md:w-32 shadow-lg ${cardBorderClass}">
+              
+              <!-- 탈락 시 블랙 배너 -->
+              ${!p.isAlive ? `
+                <div class="absolute inset-0 bg-slate-950/80 rounded-2xl flex flex-col items-center justify-center z-10">
+                  <span class="text-2xl">💥</span>
+                  <span class="text-xs text-red-500 font-extrabold uppercase">OUT</span>
+                </div>
+              ` : ''}
+
+              <!-- 폭탄 잡고 있는 배지 표시 -->
+              ${isCurrent && p.isAlive ? `
+                <div class="absolute -top-6 bg-red-500 text-white px-2 py-0.5 rounded-full text-[9px] font-black tracking-widest animate-[bounce_1s_infinite]">
+                  BOMB!
+                </div>
+              ` : ''}
+
+              <!-- 아바타 원형 -->
+              <div class="w-11 h-11 rounded-full bg-gradient-to-br ${p.avatarColor} flex items-center justify-center text-xl md:text-2xl shadow-md relative">
+                ${p.emoji}
               </div>
-              <span className="text-8xl select-none">💣</span>
 
-              {isTimeUrgent && (
-                <div className="absolute -inset-4 bg-red-600/20 rounded-full filter blur-md -z-10 animate-ping"></div>
-              )}
-            </div>
-
-            <div className="mt-3 text-center">
-              <div className={`text-4xl md:text-5xl font-mono font-black ${
-                isTimeUrgent ? 'text-red-500 animate-pulse' : 'text-amber-400'
-              }`}>
-                {timeLeft}s
-              </div>
-              <span className="text-xs text-slate-500 uppercase tracking-widest">Round Timer</span>
-            </div>
-          </div>
-
-          {players.map((p, index) => {
-            const positions = [
-              "bottom-2 left-1/2 -translate-x-1/2", 
-              "right-1 top-1/2 -translate-y-1/2",   
-              "top-2 left-1/2 -translate-x-1/2",    
-              "left-1 top-1/2 -translate-y-1/2"     
-            ];
-
-            const isCurrent = currentPlayerIdx === p.id;
-            
-            return (
-              <div 
-                key={p.id} 
-                className={`absolute ${positions[index]} transition-all duration-500 z-10`}
-              >
-                <div className={`relative flex flex-col items-center p-3 rounded-2xl border bg-slate-900/90 w-28 md:w-32 shadow-lg transition-transform duration-300 ${
-                  !p.isAlive 
-                    ? 'opacity-30 border-slate-950 line-through scale-95' 
-                    : isCurrent 
-                      ? 'border-red-500 shadow-red-500/20 scale-105 bg-slate-850 ring-2 ring-red-500/50' 
-                      : 'border-slate-800'
-                }`}>
-                  
-                  {!p.isAlive && (
-                    <div className="absolute inset-0 bg-slate-950/80 rounded-2xl flex flex-col items-center justify-center z-10">
-                      <span className="text-2xl">💥</span>
-                      <span className="text-xs text-red-500 font-extrabold">OUT</span>
-                    </div>
-                  )}
-
-                  {isCurrent && p.isAlive && (
-                    <div className="absolute -top-6 bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px] font-black tracking-widest animate-[bounce_1s_infinite]">
-                      BOMB!
-                    </div>
-                  )}
-
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${p.avatarColor} flex items-center justify-center text-2xl shadow-md relative`}>
-                    {p.emoji}
-                  </div>
-
-                  <div className="text-center mt-2 w-full">
-                    <div className="text-xs md:text-sm font-bold truncate text-white">{p.name}</div>
-                    
-                    {p.isAlive && (
-                      <div className="mt-1 text-[10px]">
-                        {isCurrent ? (
-                          p.isAI ? (
-                            aiState.status === 'thinking' ? (
-                              <span className="text-amber-400 animate-pulse">문제 푸는중...💭</span>
-                            ) : aiState.status === 'wrong_penalty' ? (
-                              <span className="text-red-400 font-extrabold animate-pulse">틀림! 패널티 ({aiState.penaltyTimeLeft}s)</span>
-                            ) : (
-                              <span className="text-emerald-400 font-bold">통과 성공! 👉</span>
-                            )
-                          ) : (
-                            <span className="text-red-400 font-bold animate-pulse">내 차례! 아래 정답클릭! 👇</span>
-                          )
-                        ) : (
-                          <span className="text-slate-500">대기 중</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+              <!-- 유저명 및 상태 구문 -->
+              <div class="text-center mt-2 w-full">
+                <div class="text-xs md:text-sm font-bold truncate text-white">${p.name}</div>
+                <div class="mt-1 text-[10px] h-3.5 flex items-center justify-center">
+                  ${p.isAlive ? statusLabel : ''}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </main>
 
-      {/* 3. 하단 문제 출제 구역 */}
-      <footer className="w-full max-w-2xl mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-2xl relative">
-        {currentPlayer && currentPlayer.isAI ? (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <div className="inline-flex items-center gap-3 bg-slate-950/80 px-6 py-4 rounded-2xl border border-slate-800 shadow-inner">
-              <span className="text-3xl animate-bounce">{currentPlayer.emoji}</span>
-              <div className="text-left">
-                <h4 className="text-base font-black text-white">{currentPlayer.name} 차례</h4>
-                <div className="text-sm text-slate-400 mt-0.5">
-                  {aiState.status === 'thinking' && (
-                    <span className="text-amber-400">
-                      숫자 <strong className="text-white text-lg">{currentProblem?.num}</strong>의 소인수분해 공식을 고민하고 있습니다...
-                    </span>
-                  )}
-                  {aiState.status === 'wrong_penalty' && (
-                    <span className="text-rose-400 flex items-center gap-1.5">
-                      <AlertTriangle className="w-4 h-4 text-red-500 animate-bounce" />
-                      소인수분해를 틀렸습니다! <strong className="text-white">5초</strong> 대기 패널티 적용 중...
-                    </span>
-                  )}
-                  {aiState.status === 'correct_pass' && (
-                    <span className="text-emerald-400 font-bold">
-                      정답 <strong className="text-white text-lg">{currentProblem?.correct}</strong>를 맞춰 다음 사람에게 폭탄을 보냅니다!
-                    </span>
-                  )}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 4. 하단 제어부 가이드 보드 갱신
+      const footer = document.getElementById('console-footer');
+      const currentPlayer = state.players[state.currentPlayerIdx];
+
+      if (currentPlayer.isAI) {
+        // ==========================================
+        // AI가 대결 중일 때의 비활성 하단 콘솔 뷰
+        // ==========================================
+        let aiConsoleStatusText = '';
+        if (state.aiState.status === 'thinking') {
+          aiConsoleStatusText = `숫자 <strong class="text-white text-lg">${state.currentProblem.num}</strong>의 소인수분해 공식을 고민하고 있습니다...`;
+        } else if (state.aiState.status === 'wrong_penalty') {
+          aiConsoleStatusText = `소인수분해를 틀렸습니다! <strong class="text-white">5초</strong> 패널티 적용 중...`;
+        } else {
+          aiConsoleStatusText = `정답 <strong class="text-white text-lg">${state.currentProblem.correct}</strong>를 맞춰 다음 사람에게 폭탄을 전달합니다!`;
+        }
+
+        footer.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-4 text-center">
+            <div class="inline-flex items-center gap-3 bg-slate-950/80 px-5 py-3.5 rounded-2xl border border-slate-800 shadow-inner">
+              <span class="text-3xl animate-bounce">${currentPlayer.emoji}</span>
+              <div class="text-left">
+                <h4 class="text-sm font-black text-white">${currentPlayer.name} 차례</h4>
+                <div class="text-xs text-slate-400 mt-0.5">
+                  <span class="flex items-center gap-1.5">${aiConsoleStatusText}</span>
                 </div>
               </div>
             </div>
 
-            {currentProblem && (
-              <div className="grid grid-cols-2 gap-3 w-full mt-6 opacity-40 pointer-events-none">
-                {currentProblem.options.map((option, idx) => {
-                  const isSelectedByAi = aiState.selectedIdx === idx;
-                  const isCorrectAnswer = option === currentProblem.correct;
-                  
-                  let btnStyle = "bg-slate-950/40 border-slate-800 text-slate-400";
-                  if (isSelectedByAi) {
-                    btnStyle = isCorrectAnswer 
-                      ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" 
-                      : "bg-red-500/20 border-red-500 text-red-400";
-                  }
+            <!-- AI 턴일 때의 흐릿한 보기 시연 (인터랙션 차단) -->
+            <div class="grid grid-cols-2 gap-3 w-full mt-5 opacity-40 pointer-events-none">
+              ${state.currentProblem.options.map((option, idx) => {
+                const isSelectedByAi = state.aiState.selectedIdx === idx;
+                const isCorrectAnswer = option === state.currentProblem.correct;
+                
+                let btnStyle = "bg-slate-950/40 border-slate-800 text-slate-400";
+                if (isSelectedByAi) {
+                  btnStyle = isCorrectAnswer 
+                    ? "bg-emerald-500/20 border-emerald-500 text-emerald-400" 
+                    : "bg-red-500/20 border-red-500 text-red-400";
+                }
 
-                  return (
-                    <div 
-                      key={idx} 
-                      className={`py-3.5 px-4 rounded-xl border text-center font-bold text-lg ${btnStyle}`}
-                    >
-                      {option}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                return `
+                  <div class="py-3 px-4 rounded-xl border text-center font-bold text-base md:text-lg ${btnStyle}">
+                    ${option}
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
-        ) : (
+        `;
+      } else {
+        // ==========================================
+        // 플레이어가 폭탄을 안고 해결하는 인터랙티브 뷰
+        // ==========================================
+        footer.innerHTML = `
           <div>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
               <div>
-                <span className="text-xs text-indigo-400 font-extrabold uppercase tracking-widest bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20">
+                <span class="text-xs text-indigo-400 font-extrabold uppercase tracking-widest bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20">
                   나의 미션 🎯
                 </span>
-                <h3 className="text-lg md:text-xl font-bold mt-2 text-white">
+                <h3 class="text-sm md:text-base font-bold mt-2 text-white">
                   다음 숫자를 올바르게 소인수분해 하세요:
                 </h3>
               </div>
-              <div className="text-4xl md:text-5xl font-black text-amber-400 bg-slate-950/80 px-6 py-2 rounded-2xl border border-slate-800 text-center tracking-wider shadow-inner">
-                {currentProblem?.num}
+              <div class="text-4xl md:text-5xl font-black text-amber-400 bg-slate-950/80 px-6 py-2.5 rounded-2xl border border-slate-800 text-center tracking-wider shadow-inner font-mono">
+                ${state.currentProblem.num}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              {currentProblem?.options.map((option, idx) => {
-                const isCorrect = option === currentProblem.correct;
-                const isDisabled = disabledOptions.includes(idx);
-                const isSelected = userSelectedIdx === idx;
+            <!-- 4지선다 버튼 클릭 시스템 -->
+            <div class="grid grid-cols-2 gap-3">
+              ${state.currentProblem.options.map((option, idx) => {
+                const isCorrect = option === state.currentProblem.correct;
+                const isDisabled = state.disabledOptions.includes(idx);
+                const isSelected = state.userSelectedIdx === idx;
 
-                let btnStyles = "border-slate-800 bg-slate-950/60 hover:bg-slate-950 hover:border-indigo-500 text-slate-100";
-                
+                let btnStyles = "border-slate-800 bg-slate-950/60 hover:bg-slate-950 hover:border-indigo-500 text-slate-100 transition-all";
+                let iconHTML = '';
+
                 if (isDisabled) {
                   btnStyles = "bg-red-950/20 border-red-900/40 text-red-700 cursor-not-allowed opacity-50";
+                  // XCircle SVG
+                  iconHTML = `<svg class="w-5 h-5 text-red-700 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
                 } else if (isSelected) {
-                  btnStyles = isCorrect 
-                    ? "bg-emerald-500 border-emerald-400 text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.4)]" 
-                    : "bg-red-500 border-red-400 text-white";
+                  if (isCorrect) {
+                    btnStyles = "bg-emerald-500 border-emerald-400 text-slate-950 shadow-[0_0_20px_rgba(16,185,129,0.4)]";
+                    // CheckCircle2 SVG
+                    iconHTML = `<svg class="w-5 h-5 text-slate-950 shrink-0 animate-bounce" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+                  } else {
+                    btnStyles = "bg-red-500 border-red-400 text-white";
+                  }
                 }
 
-                return (
+                return `
                   <button
-                    key={idx}
-                    disabled={isDisabled || userSelectedIdx !== null}
-                    onClick={() => handleOptionClick(option, idx)}
-                    className={`py-3.5 px-4 rounded-xl border text-center font-black text-lg md:text-xl transition-all flex items-center justify-center gap-2 ${btnStyles}`}
+                    ${isDisabled || state.userSelectedIdx !== null ? 'disabled' : ''}
+                    onclick="handleOptionClick(${idx})"
+                    class="py-3 px-4 rounded-xl border text-center font-black text-base md:text-lg transition-all flex items-center justify-center gap-2 ${btnStyles}"
                   >
-                    {isDisabled && <XCircle className="w-5 h-5 text-red-700 shrink-0" />}
-                    {isSelected && isCorrect && <CheckCircle2 className="w-5 h-5 text-slate-950 shrink-0 animate-bounce" />}
-                    <span>{option}</span>
+                    ${iconHTML}
+                    <span>${option}</span>
                   </button>
-                );
-              })}
+                `;
+              }).join('')}
             </div>
           </div>
-        )}
-      </footer>
+        `;
+      }
+    }
 
-      {/* 4. 라운드 종료 중간 스크린 오버레이 */}
-      {gameState === 'ROUND_END' && (
-        <RoundTransitionScreen 
-          roundNumber={roundNumber}
-          players={players}
-          onNext={startNextRound}
-          isMuted={isMuted}
-        />
-      )}
-
-      {/* 5. 최종 게임 오버 스크린 오버레이 */}
-      {gameState === 'GAME_OVER' && (
-        <GameOverScreen 
-          players={players}
-          eliminatedHistory={eliminatedHistory}
-          onRestart={() => setGameState('LOBBY')}
-        />
-      )}
-    </div>
-  );
-}
+    // 초기 상태화 셋업
+    window.onload = function() {
+      state.players = JSON.parse(JSON.stringify(INITIAL_PLAYERS));
+    }
+  </script>
+</body>
+</html>
