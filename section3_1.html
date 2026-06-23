@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>방정식 마왕성 대모험 - 중1 수학 일차방정식</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DungGeunMo&family=Noto+Sans+KR:wght@400;700;900&display=swap');
+    
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    
+    .pixel-font {
+      font-family: 'DungGeunMo', monospace;
+    }
+
+    /* 태블릿 터치 스크롤 방지용 */
+    .no-scroll {
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col no-scroll">
+
+  <!-- ==================== 게임 메인 컨테이너 ==================== -->
+  <div id="game-container" class="flex-1 flex flex-col justify-between max-w-5xl mx-auto w-full p-3 md:p-6 relative">
+    
+    <!-- HEADER: 상단 바 (점수 및 상태) -->
+    <header class="flex justify-between items-center bg-slate-900/80 border-2 border-amber-500/50 rounded-2xl p-3 shadow-lg backdrop-blur-sm">
+      <div class="flex items-center space-x-3">
+        <span class="pixel-font text-amber-400 text-xl md:text-2xl">🔥 방정식 마왕성</span>
+      </div>
+      <div class="flex items-center space-x-4 text-sm md:text-base">
+        <div class="bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+          <span>남은 몬스터: </span>
+          <span id="monster-count" class="text-rose-400 font-bold">4</span>
+        </div>
+        <button id="btn-info" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1.5 rounded-lg transition-all text-xs md:text-sm">
+          도움말
+        </button>
+      </div>
+    </header>
+
+    <!-- ==================== 1. 시작 화면 ==================== -->
+    <div id="screen-start" class="flex-1 flex flex-col items-center justify-center my-6 text-center space-y-6">
+      <div class="space-y-3">
+        <div class="inline-block bg-amber-500/20 text-amber-400 border border-amber-500/30 px-4 py-1.5 rounded-full text-xs md:text-sm font-bold tracking-widest uppercase">
+          중학교 1학년 1학기 수학 - 일차방정식의 풀이
+        </div>
+        <h1 class="pixel-font text-4xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 drop-shadow-lg leading-tight">
+          방정식 마왕성<br>대모험
+        </h1>
+        <p class="text-slate-400 text-sm md:text-base max-w-md mx-auto">
+          마왕성의 수수께끼 방정식을 풀어 몬스터들을 소탕하고 대마왕을 쓰러뜨려 평화를 되찾으세요!
+        </p>
+      </div>
+
+      <!-- 용사 프리뷰 캐릭터 카드 -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-2xl flex items-center space-x-4 max-w-xs w-full justify-center">
+        <svg class="w-16 h-16 text-amber-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+        </svg>
+        <div class="text-left">
+          <div class="text-xs text-amber-500 font-bold">플레이어 캐릭터</div>
+          <div class="text-lg font-bold text-slate-100">수학 용사 아벨</div>
+          <div class="text-xs text-emerald-400">체력(HP): 100 / 100</div>
+        </div>
+      </div>
+
+      <button id="btn-start" class="w-full max-w-xs bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-slate-950 font-black text-xl py-4 rounded-2xl shadow-lg shadow-orange-500/20 active:scale-95 transition-all pixel-font">
+        ⚔️ 모험 시작하기
+      </button>
+    </div>
+
+    <!-- ==================== 2. 탐험(맵) 화면 ==================== -->
+    <div id="screen-map" class="hidden flex-1 flex flex-col md:flex-row gap-4 my-4 items-stretch justify-center">
+      
+      <!-- 맵 보드 영역 -->
+      <div class="flex-1 bg-slate-900 border-2 border-slate-800 rounded-3xl p-4 flex flex-col justify-between shadow-2xl relative">
+        <div class="text-center mb-2">
+          <span class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-400">태블릿 터치나 방향 키패드로 이동하세요.</span>
+        </div>
+        
+        <!-- 6x6 그리드 맵 -->
+        <div id="dungeon-map" class="grid grid-cols-6 gap-2 aspect-square max-w-md mx-auto w-full bg-slate-950 p-2 rounded-2xl border border-slate-800">
+          <!-- JS에서 동적으로 격자 타일을 렌더링 -->
+        </div>
+
+        <div class="mt-2 text-center text-xs text-slate-500 flex justify-center gap-4">
+          <span class="flex items-center gap-1">🟩 출발지</span>
+          <span class="flex items-center gap-1">📦 상자(체력 회복)</span>
+          <span class="flex items-center gap-1">👹 몬스터</span>
+          <span class="flex items-center gap-1">👑 마왕</span>
+        </div>
+      </div>
+
+      <!-- 맵 우측: 상태 정보 및 방향 키패드 -->
+      <div class="w-full md:w-80 flex flex-col justify-between gap-4">
+        <!-- 용사 정보창 -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4 shadow-xl">
+          <h3 class="pixel-font text-amber-400 text-lg mb-2">🛡️ 용사 상태</h3>
+          <div class="space-y-2">
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="text-slate-400">체력 (HP)</span>
+                <span id="map-hp-text" class="text-emerald-400 font-bold">100 / 100</span>
+              </div>
+              <div class="w-full bg-slate-800 h-3.5 rounded-full overflow-hidden border border-slate-700">
+                <div id="map-hp-bar" class="bg-gradient-to-r from-emerald-500 to-green-400 h-full transition-all duration-300" style="width: 100%;"></div>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-2 text-xs">
+              <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                <div class="text-slate-400">퇴치한 적</div>
+                <div id="stat-defeated" class="text-lg font-bold text-amber-500">0마리</div>
+              </div>
+              <div class="bg-slate-950 p-2 rounded-xl border border-slate-800">
+                <div class="text-slate-400">획득 보물</div>
+                <div id="stat-chest" class="text-lg font-bold text-emerald-500">0개</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 방향 키패드 (태블릿 최적화 큰 버튼) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-4 flex flex-col items-center shadow-xl">
+          <h4 class="text-xs text-slate-400 mb-3 font-bold">터치 컨트롤러</h4>
+          <div class="grid grid-cols-3 gap-2 w-full max-w-[200px]">
+            <div></div>
+            <button id="btn-move-up" class="bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 active:bg-amber-600 rounded-2xl p-4 text-center text-xl font-black shadow-lg transition-all">
+              ▲
+            </button>
+            <div></div>
+            <button id="btn-move-left" class="bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 active:bg-amber-600 rounded-2xl p-4 text-center text-xl font-black shadow-lg transition-all">
+              ◀
+            </button>
+            <div class="flex items-center justify-center text-slate-600 text-xs">MOVE</div>
+            <button id="btn-move-right" class="bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 active:bg-amber-600 rounded-2xl p-4 text-center text-xl font-black shadow-lg transition-all">
+              ▶
+            </button>
+            <div></div>
+            <button id="btn-move-down" class="bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 active:bg-amber-600 rounded-2xl p-4 text-center text-xl font-black shadow-lg transition-all">
+              ▼
+            </button>
+            <div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 3. 전투(방정식) 화면 ==================== -->
+    <div id="screen-battle" class="hidden flex-1 flex flex-col lg:flex-row gap-4 my-2 items-stretch">
+      
+      <!-- 왼쪽: 전투 애니메이션 및 방정식 입력 -->
+      <div class="flex-1 flex flex-col justify-between bg-slate-900 border-2 border-slate-800 rounded-3xl p-4 shadow-2xl">
+        
+        <!-- 적 캐릭터 및 HP 게이지 바 -->
+        <div class="flex justify-between items-center bg-slate-950 p-4 rounded-2xl border border-slate-800">
+          <div class="flex items-center space-x-3">
+            <div id="battle-monster-avatar" class="w-14 h-14 bg-rose-500/10 border border-rose-500/30 rounded-xl flex items-center justify-center text-3xl">
+              👾
+            </div>
+            <div>
+              <div id="battle-monster-name" class="font-bold text-rose-400">슬라임</div>
+              <div class="flex items-center space-x-2">
+                <div class="w-24 md:w-36 bg-slate-800 h-2 rounded-full overflow-hidden">
+                  <div id="battle-monster-hp-bar" class="bg-rose-500 h-full transition-all duration-300" style="width: 100%;"></div>
+                </div>
+                <span id="battle-monster-hp-text" class="text-xs text-rose-300 font-mono">20/20</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="text-right">
+            <div class="text-xs text-slate-500">나의 체력 (HP)</div>
+            <div id="battle-hero-hp-text" class="text-sm font-bold text-emerald-400">100 / 100</div>
+          </div>
+        </div>
+
+        <!-- 중앙: 문제 출제 영역 -->
+        <div id="equation-card" class="flex-1 flex flex-col justify-center items-center py-6 px-4 bg-slate-950 my-3 rounded-2xl border border-slate-800 relative overflow-hidden">
+          <div class="absolute top-2 left-3 text-xs font-bold text-amber-500 flex items-center gap-1">
+            <span class="animate-ping inline-block w-2 h-2 rounded-full bg-amber-500"></span>
+            일차방정식을 풀어 x의 값을 구하세요!
+          </div>
+          
+          <!-- 방정식 렌더러 -->
+          <div id="equation-display" class="my-4 transition-all duration-300">
+            <!-- 수식 구조가 이곳에 주입됨 -->
+          </div>
+
+          <!-- 답변 입력창 (포커스 안가는 더미 박스, 내부 패드로만 입력) -->
+          <div class="flex items-center space-x-2 mt-4">
+            <span class="text-2xl font-bold text-slate-400">x = </span>
+            <div id="dummy-input" class="w-28 h-12 bg-slate-900 border-2 border-amber-500 rounded-xl flex items-center justify-center text-2xl font-bold font-mono tracking-widest text-amber-400 shadow-inner">
+              
+            </div>
+          </div>
+        </div>
+
+        <!-- 하단: 가상 터치 키패드 -->
+        <div class="bg-slate-950 p-3 rounded-2xl border border-slate-800">
+          <div class="grid grid-cols-4 gap-2">
+            <button class="btn-key bg-slate-800 hover:bg-slate-700 active:bg-amber-600 font-bold p-3 rounded-xl text-lg transition-all" data-key="1">1</button>
+            <button class="btn-key bg-slate-800 hover:bg-slate-700 active:bg-amber-600 font-bold p-3 rounded-xl text-lg transition-all" data-key="2">2</button>
+            <button class="btn-key bg-slate-800 hover:bg-slate-700 active:bg-amber-600 font-bold p-3 rounded-xl text-lg transition-all" data-key="3">3</button>
+            <button class="btn-key bg-rose-950 hover:bg-rose-900 text-rose-300 font-bold p-3 rounded-xl text-lg transition-all" data-key="-">－</button>
+            
+            <button class="btn-key bg-slate-800 hover:bg-slate-700 active:bg-amber-600 font-bold p-3 rounded-xl text-lg transition-all" data-key="4">4</button>
+            <button class="btn-key bg-slate-800 hover:bg-slate-700 active:bg-amber-600 font-bold p-3 rounded-xl text-lg transition-all" data-key="5">5</button>
+            <button class="btn-key bg-slate-800 hover:bg-slate-700 active:bg-amber-600 font-bold p-3 rounded-xl text-lg transition-all" data-key="6">6</button>
+            <button class="btn-key bg-amber-950 hover:bg-amber-900 text-amber-300 font-bold p-3 rounded-xl text-sm transition-all" data-key="back">지우기</button>
+            
+            <button class="btn-key bg-slate-800 hover:bg-slate-700 active:bg-amber-600 font-bold p-3 rounded-xl text-lg transition-all" data-key="7">7</button>
+            <button class="btn-key bg-slate-800 hover:bg-slate-700 active:bg-amber-600 font-bold p-3 rounded-xl text-lg transition-all" data-key="8">8</button>
+            <button class="btn-key bg-slate-800 hover:bg-slate-700 active:bg-amber-600 font-bold p-3 rounded-xl text-lg transition-all" data-key="9">9</button>
+            <button class="btn-key bg-slate-800 hover:bg-slate-700 active:bg-amber-600 font-bold p-3 rounded-xl text-lg transition-all col-span-1" data-key="0">0</button>
+            
+            <button id="btn-submit" class="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-slate-950 font-black p-3 rounded-xl text-lg shadow-lg col-span-4 active:scale-95 transition-all">
+              공 격 (입력 완료)
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 오른쪽: 드로잉 풀이 연습장 (학생 필기용 캔버스) -->
+      <div class="w-full lg:w-96 flex flex-col justify-between bg-slate-900 border-2 border-slate-800 rounded-3xl p-4 shadow-2xl">
+        <div class="flex justify-between items-center mb-2">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-amber-400">📝</span>
+            <span class="font-bold text-sm">연습장 (식 풀이용 공간)</span>
+          </div>
+          <button id="btn-clear-canvas" class="text-xs bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700 transition-all">
+            모두 지우기
+          </button>
+        </div>
+
+        <!-- 스크래치패드 캔버스 컨테이너 -->
+        <div class="flex-1 bg-white rounded-2xl relative min-h-[160px] lg:min-h-0 overflow-hidden cursor-crosshair">
+          <canvas id="scratchpad" class="absolute top-0 left-0 w-full h-full"></canvas>
+        </div>
+
+        <!-- 펜 선택 제어 바 -->
+        <div class="flex items-center justify-between mt-2 pt-1 border-t border-slate-800 text-xs">
+          <span class="text-slate-400">펜 색상:</span>
+          <div class="flex space-x-2">
+            <button class="btn-color w-6 h-6 rounded-full bg-slate-950 border-2 border-amber-500" data-color="#020617"></button>
+            <button class="btn-color w-6 h-6 rounded-full bg-blue-600" data-color="#2563eb"></button>
+            <button class="btn-color w-6 h-6 rounded-full bg-rose-600" data-color="#dc2626"></button>
+            <button class="btn-color w-6 h-6 rounded-full bg-emerald-600" data-color="#10b981"></button>
+          </div>
+          <button id="btn-eraser" class="bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded border border-slate-700 transition-all text-[11px]">
+            지우개
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 4. 게임 성공 / 클리어 화면 ==================== -->
+    <div id="screen-clear" class="hidden flex-1 flex flex-col items-center justify-center my-6 text-center space-y-6">
+      <div class="animate-bounce text-6xl">👑✨🏆</div>
+      <div class="space-y-2">
+        <h1 class="pixel-font text-4xl md:text-5xl text-emerald-400 font-bold leading-tight">
+          평화를 되찾았습니다!
+        </h1>
+        <p class="text-slate-300 max-w-md mx-auto text-sm md:text-base">
+          마왕성의 모든 일차방정식을 돌파하고 드래곤 대마왕을 격퇴했습니다. 당신은 진정한 수학 마스터입니다!
+        </p>
+      </div>
+
+      <!-- 최종 결과 요약 카드 -->
+      <div class="bg-slate-900 border-2 border-emerald-500/30 p-6 rounded-3xl shadow-2xl max-w-sm w-full space-y-3">
+        <div class="text-emerald-400 font-bold text-lg border-b border-slate-800 pb-2">최종 전적 보고서</div>
+        <div class="flex justify-between text-sm">
+          <span class="text-slate-400">퇴치한 마물</span>
+          <span id="clear-monsters" class="font-bold text-slate-100">4마리</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-slate-400">남은 체력 (HP)</span>
+          <span id="clear-hp" class="font-bold text-emerald-400">100 / 100</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span class="text-slate-400">발견한 숨겨진 보물</span>
+          <span id="clear-chests" class="font-bold text-amber-400">0개</span>
+        </div>
+      </div>
+
+      <button id="btn-restart-clear" class="w-full max-w-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-lg py-4 rounded-2xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all pixel-font">
+        🔄 처음부터 다시 하기
+      </button>
+    </div>
+
+    <!-- ==================== 5. 게임 오버 화면 ==================== -->
+    <div id="screen-gameover" class="hidden flex-1 flex flex-col items-center justify-center my-6 text-center space-y-6">
+      <div class="text-6xl animate-pulse">💀</div>
+      <div class="space-y-2">
+        <h1 class="pixel-font text-4xl md:text-5xl text-rose-500 font-bold leading-tight">
+          체력이 소진되었습니다
+        </h1>
+        <p class="text-slate-400 max-w-md mx-auto text-sm">
+          방정식의 수수께끼가 너무 강했습니다! 오답을 줄이고 차근차근 다시 도전해 보세요.
+        </p>
+      </div>
+
+      <button id="btn-restart-over" class="w-full max-w-xs bg-rose-600 hover:bg-rose-500 text-white font-black text-lg py-4 rounded-2xl shadow-lg shadow-rose-500/20 active:scale-95 transition-all pixel-font">
+        🔄 던전 다시 도전하기
+      </button>
+    </div>
+
+  </div>
+
+  <!-- 도움말 레이어 모달 -->
+  <div id="modal-info" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 border-2 border-amber-500 rounded-3xl max-w-md w-full p-6 space-y-4">
+      <h3 class="pixel-font text-xl text-amber-400 font-bold flex items-center gap-2">
+        📖 수학 용사의 가이드북
+      </h3>
+      <div class="text-xs md:text-sm text-slate-300 space-y-3 leading-relaxed">
+        <p>🛡️ <span class="text-slate-100 font-bold">진행 방식:</span><br>
+        맵에서 타일을 터치하거나 우측 하단 방향 키패드로 이동하세요. 몬스터(👾, 👹, 👑)를 만나면 배틀이 시작됩니다.</p>
+        
+        <p>🎯 <span class="text-slate-100 font-bold">전투 요령:</span><br>
+        출제된 <strong>일차방정식</strong>을 풀고 화면의 가상 패드를 활용해 정답($x$값)을 입력하세요.<br>
+        - **정답**: 용사가 적을 공격하여 적의 HP를 깎습니다.<br>
+        - **오답**: 몬스터의 반격으로 용사의 HP가 감소합니다.</p>
+        
+        <p>📦 <span class="text-slate-100 font-bold">회복 보석함:</span><br>
+        맵 중간의 보석함을 열면 방정식 보너스 문제를 풀 수 있고, 맞출 시 <span class="text-emerald-400 font-bold">HP가 완전히 회복</span>됩니다!</p>
+      </div>
+      <button id="btn-close-info" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all">
+        확인했습니다
+      </button>
+    </div>
+  </div>
+
+  <!-- 결과 팝업 메세지 오버레이 (정답/오답 표시용 임시 모달) -->
+  <div id="combat-feedback" class="hidden fixed inset-0 flex items-center justify-center pointer-events-none z-40">
+    <div id="feedback-box" class="transform scale-95 opacity-0 transition-all duration-300 px-8 py-5 rounded-3xl shadow-2xl text-center">
+      <span id="feedback-icon" class="text-5xl block mb-2">✅</span>
+      <span id="feedback-text" class="text-2xl font-black block">정 답!</span>
+    </div>
+  </div>
+
+  <!-- ==================== JS 로직 및 게임 제어 엔진 ==================== -->
+  <script>
+    // --- (0) Web Audio API 효과음 신디사이저 ---
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+      playStep() {
+        this.init(); if (!this.ctx) return;
+        let osc = this.ctx.createOscillator();
+        let gain = this.ctx.createGain();
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+      }
+      playCorrect() {
+        this.init(); if (!this.ctx) return;
+        let now = this.ctx.currentTime;
+        let notes = [261.63, 329.63, 392.00, 523.25]; // C E G C
+        notes.forEach((freq, idx) => {
+          let osc = this.ctx.createOscillator();
+          let gain = this.ctx.createGain();
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+          gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.2);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + 0.2);
+        });
+      }
+      playWrong() {
+        this.init(); if (!this.ctx) return;
+        let osc = this.ctx.createOscillator();
+        let gain = this.ctx.createGain();
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(90, this.ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.3);
+      }
+      playChest() {
+        this.init(); if (!this.ctx) return;
+        let now = this.ctx.currentTime;
+        let notes = [293.66, 349.23, 440.00, 587.33]; // D F A D
+        notes.forEach((freq, idx) => {
+          let osc = this.ctx.createOscillator();
+          let gain = this.ctx.createGain();
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+          gain.gain.setValueAtTime(0.15, now + idx * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.06 + 0.25);
+          osc.start(now + idx * 0.06);
+          osc.stop(now + idx * 0.06 + 0.25);
+        });
+      }
+    }
+    const sound = new SoundEngine();
+
+    // --- (1) 게임 핵심 상태 정보 관리 ---
+    const GameState = {
+      player: { x: 0, y: 5, hp: 100, maxHp: 100, defeatedCount: 0, chestsOpened: 0 },
+      mapWidth: 6,
+      mapHeight: 6,
+      currentMonster: null, // 격퇴 대상 몬스터
+      currentChest: null, // 발견한 보석함 정보
+      inputBuffer: "", // 가상 키패드 입력 값
+      currentProblem: { questionHtml: "", answer: 0 },
+      isBattleActive: false,
+      
+      // 던전 맵 타일 정의
+      // W = 벽(이동 불가능), . = 빈 길, P = 플레이어 시작점
+      // S = 슬라임(쉬움), G = 고블린(보통), O = 골렘(어려움), B = 마왕(최상)
+      // C = 회복 보석 상자
+      mapGrid: [
+        ['W', 'W', 'W', 'W', 'W', 'B'],
+        ['.', '.', 'O', '.', '.', '.'],
+        ['W', 'W', 'W', 'W', 'G', 'W'],
+        ['.', '.', '.', '.', '.', '.'],
+        ['S', 'W', 'W', 'W', 'W', 'W'],
+        ['.', '.', '.', 'C', '.', '.'] // 5,0가 원래 아벨 시작위치
+      ]
+    };
+
+    // --- (2) 일차방정식 자동 문제 생성기 ---
+    // 모든 문제는 정수 범위에서 정수 해를 가지도록 수식을 역설계함
+    function generateEquation(tier) {
+      let x = 0;
+      let html = "";
+      
+      // 난이도 결정 처리
+      switch (tier) {
+        case 'S': // 쉬움 (슬라임): x + a = b 또는 ax = b 형태
+          {
+            const type = Math.random() > 0.5 ? 'add' : 'mul';
+            x = Math.floor(Math.random() * 15) - 7; // -7 ~ 7 (0 제외 권장)
+            if (x === 0) x = 3;
+            
+            if (type === 'add') {
+              const a = Math.floor(Math.random() * 10) + 1;
+              const sign = Math.random() > 0.5 ? 1 : -1;
+              const b = x + (a * sign);
+              const signChar = sign > 0 ? '+' : '-';
+              html = `<span class="text-3xl md:text-5xl font-extrabold tracking-wide pixel-font text-amber-300">x ${signChar} ${a} = ${b}</span>`;
+            } else {
+              const a = Math.floor(Math.random() * 7) + 2; // 계수 2~8
+              const b = a * x;
+              html = `<span class="text-3xl md:text-5xl font-extrabold tracking-wide pixel-font text-amber-300">${a}x = ${b}</span>`;
+            }
+          }
+          break;
+          
+        case 'G': // 보통 (고블린): ax + b = c 형태
+          {
+            x = Math.floor(Math.random() * 17) - 8; // -8 ~ 8
+            if (x === 0) x = -2;
+            const a = Math.floor(Math.random() * 5) + 2; // 계수 2~6
+            const b = Math.floor(Math.random() * 15) + 1;
+            const sign = Math.random() > 0.5 ? 1 : -1;
+            const c = (a * x) + (b * sign);
+            const signChar = sign > 0 ? '+' : '-';
+            html = `<span class="text-3xl md:text-5xl font-extrabold tracking-wide pixel-font text-amber-300">${a}x ${signChar} ${b} = ${c}</span>`;
+          }
+          break;
+          
+        case 'O': // 어려움 (골렘): x/a + b = c (분수식)
+          {
+            // 나눗셈을 감안하여 분모 a를 결정하고 역으로 x 생성
+            const a = Math.floor(Math.random() * 3) + 2; // 분모: 2, 3, 4 중 하나
+            const xVal = (Math.floor(Math.random() * 6) + 1) * (Math.random() > 0.5 ? 1 : -1); // 몫이 정수
+            x = xVal * a; // 실제 정답은 x
+            
+            const b = Math.floor(Math.random() * 7) + 1;
+            const sign = Math.random() > 0.5 ? 1 : -1;
+            const c = xVal + (b * sign);
+            const signChar = sign > 0 ? '+' : '-';
+            
+            html = `
+              <div class="flex items-center justify-center font-extrabold pixel-font text-3xl md:text-5xl text-amber-300 space-x-2">
+                <div class="flex flex-col items-center">
+                  <span class="border-b-4 border-amber-300 px-3 pb-1">x</span>
+                  <span class="pt-1">${a}</span>
+                </div>
+                <span>${signChar} ${b} = ${c}</span>
+              </div>
+            `;
+          }
+          break;
+          
+        case 'B': // 최상 (드래곤 보스): 분배법칙 a(x+b) = c 또는 양변 미지수 ax + b = cx + d
+          {
+            const type = Math.random() > 0.5 ? 'bracket' : 'both';
+            if (type === 'bracket') {
+              x = Math.floor(Math.random() * 13) - 6; // -6 ~ 6
+              if (x === 0) x = 4;
+              const a = Math.floor(Math.random() * 4) + 2; // 2~5
+              const b = Math.floor(Math.random() * 6) + 1;
+              const sign = Math.random() > 0.5 ? 1 : -1;
+              const c = a * (x + (b * sign));
+              const signChar = sign > 0 ? '+' : '-';
+              html = `<span class="text-2xl md:text-4xl font-extrabold tracking-wide pixel-font text-amber-300">${a}(x ${signChar} ${b}) = ${c}</span>`;
+            } else {
+              x = Math.floor(Math.random() * 11) - 5; // -5 ~ 5
+              if (x === 0) x = -3;
+              // ax + b = cx + d 형태 (a != c 필수)
+              const a = Math.floor(Math.random() * 4) + 2; // 2~5
+              let c = Math.floor(Math.random() * 3) - 4; // 음수 계수 주로 배치 (-4 ~ -2)
+              if (a === c) c = -1;
+              
+              const b = Math.floor(Math.random() * 12) + 1;
+              const signB = Math.random() > 0.5 ? 1 : -1;
+              const bTerm = b * signB;
+              const bChar = signB > 0 ? '+' : '-';
+              
+              // d 결정 공식: ax + b = cx + d => d = ax + b - cx
+              const d = (a * x) + bTerm - (c * x);
+              const dChar = d >= 0 ? '+ ' + d : '- ' + Math.abs(d);
+              
+              html = `<span class="text-2xl md:text-4xl font-extrabold tracking-wide pixel-font text-amber-300">${a}x ${bChar} ${b} = ${c}x ${dChar}</span>`;
+            }
+          }
+          break;
+          
+        case 'C': // 보석상자 보너스 문제 (쉬움~보통 무작위)
+          return generateEquation(Math.random() > 0.5 ? 'S' : 'G');
+      }
+
+      return { questionHtml: html, answer: x };
+    }
+
+    // --- (3) UI 화면 스위칭 시스템 ---
+    function showScreen(screenId) {
+      document.getElementById('screen-start').classList.add('hidden');
+      document.getElementById('screen-map').classList.add('hidden');
+      document.getElementById('screen-battle').classList.add('hidden');
+      document.getElementById('screen-clear').classList.add('hidden');
+      document.getElementById('screen-gameover').classList.add('hidden');
+      
+      document.getElementById(screenId).classList.remove('hidden');
+      
+      // 캔버스 사이즈 보정 (전투 화면 진입 시)
+      if (screenId === 'screen-battle') {
+        setTimeout(resizeCanvas, 50);
+      }
+    }
+
+    // --- (4) 맵 드로잉 및 플레이어 상호작용 시스템 ---
+    function initMap() {
+      const mapContainer = document.getElementById('dungeon-map');
+      mapContainer.innerHTML = '';
+      
+      let monsterCount = 0;
+      
+      for (let y = 0; y < GameState.mapHeight; y++) {
+        for (let x = 0; x < GameState.mapWidth; x++) {
+          const tile = document.createElement('div');
+          tile.className = "relative rounded-xl flex items-center justify-center font-bold text-base md:text-2xl transition-all cursor-pointer select-none border border-slate-900";
+          
+          const cellType = GameState.mapGrid[y][x];
+          
+          // 각 타일 종류에 맞는 연출 클래스 매핑
+          if (cellType === 'W') {
+            tile.className += " bg-slate-800 text-slate-600 border-none cursor-not-allowed";
+            tile.innerHTML = '🧱';
+          } else {
+            tile.className += " bg-slate-900 hover:bg-slate-800/80 active:bg-slate-800";
+            
+            // 특수 타일 표현
+            if (cellType === 'S') {
+              tile.innerHTML = '👾';
+              monsterCount++;
+            } else if (cellType === 'G') {
+              tile.innerHTML = '👹';
+              monsterCount++;
+            } else if (cellType === 'O') {
+              tile.innerHTML = '🪨';
+              monsterCount++;
+            } else if (cellType === 'B') {
+              tile.innerHTML = '👑';
+              monsterCount++;
+            } else if (cellType === 'C') {
+              tile.innerHTML = '📦';
+            }
+          }
+          
+          // 출발 원점 하이라이트
+          if (x === 0 && y === 5 && cellType === '.') {
+            tile.className += " ring-2 ring-emerald-500/50";
+            tile.innerHTML = '<span class="text-xs text-emerald-400 font-bold">🟩</span>';
+          }
+
+          // 플레이어 현재 실시간 위치 오버레이
+          if (GameState.player.x === x && GameState.player.y === y) {
+            tile.innerHTML = '<span class="animate-pulse text-2xl md:text-3xl filter drop-shadow">🧙‍♂️</span>';
+            tile.className += " bg-slate-850 ring-2 ring-amber-500 ring-offset-2 ring-offset-slate-950";
+          }
+          
+          // 타일 터치 직접 이동 이벤트 등록 (태블릿 직관성 극대화)
+          tile.addEventListener('click', () => {
+            if (cellType !== 'W') {
+              handleTileClick(x, y);
+            }
+          });
+          
+          mapContainer.appendChild(tile);
+        }
+      }
+      
+      // 마왕 처치 전 수집용 보스 카운팅 정보 업데이트
+      document.getElementById('monster-count').innerText = monsterCount;
+    }
+
+    // 타일 직접 클릭/터치 이동 로직
+    function handleTileClick(targetX, targetY) {
+      const currentX = GameState.player.x;
+      const currentY = GameState.player.y;
+      
+      // 인접한 동서남북 한 칸씩만 이동 허용
+      const distance = Math.abs(currentX - targetX) + Math.abs(currentY - targetY);
+      if (distance === 1) {
+        movePlayerTo(targetX, targetY);
+      }
+    }
+
+    // 플레이어 좌표 이동 제어 및 이벤트 검증 트리거
+    function movePlayerTo(x, y) {
+      if (x < 0 || x >= GameState.mapWidth || y < 0 || y >= GameState.mapHeight) return;
+      if (GameState.mapGrid[y][x] === 'W') return; // 벽 패스 거부
+      
+      GameState.player.x = x;
+      GameState.player.y = y;
+      
+      sound.playStep();
+      initMap();
+      updateMapUI();
+      
+      // 이동한 위치 타일 이벤트 확인
+      setTimeout(() => {
+        checkCellEvent(x, y);
+      }, 250);
+    }
+
+    // 맵 이동 단축키 및 컨트롤러 트리거 매핑
+    function handleDirectionMove(dir) {
+      let nx = GameState.player.x;
+      let ny = GameState.player.y;
+      
+      if (dir === 'up') ny--;
+      else if (dir === 'down') ny++;
+      else if (dir === 'left') nx--;
+      else if (dir === 'right') nx++;
+      
+      movePlayerTo(nx, ny);
+    }
+
+    // 플레이어 맵 기준 상태 정보 갱신
+    function updateMapUI() {
+      document.getElementById('map-hp-text').innerText = `${GameState.player.hp} / ${GameState.player.maxHp}`;
+      const hpPercent = (GameState.player.hp / GameState.player.maxHp) * 100;
+      document.getElementById('map-hp-bar').style.width = `${hpPercent}%`;
+      
+      document.getElementById('stat-defeated').innerText = `${GameState.player.defeatedCount}마리`;
+      document.getElementById('stat-chest').innerText = `${GameState.player.chestsOpened}개`;
+    }
+
+    // --- (5) 이벤트 타일 도착 판정 (전투 혹은 아이템 획득) ---
+    function checkCellEvent(x, y) {
+      const cell = GameState.mapGrid[y][x];
+      
+      if (cell === 'S' || cell === 'G' || cell === 'O' || cell === 'B') {
+        // 전투 매칭 진입
+        setupBattle(cell, x, y);
+      } else if (cell === 'C') {
+        // 보너스 회복 아이템 보석 상자 발견
+        setupChest(x, y);
+      }
+    }
+
+    // --- (6) 전투(배틀) 세부 설정 로직 ---
+    function setupBattle(monsterTier, tileX, tileY) {
+      GameState.isBattleActive = true;
+      GameState.inputBuffer = "";
+      updateDummyInput();
+      
+      let name = "슬라임";
+      let hp = 20;
+      let avatar = "👾";
+      
+      if (monsterTier === 'G') {
+        name = "골목대장 고블린";
+        hp = 40;
+        avatar = "👹";
+      } else if (monsterTier === 'O') {
+        name = "바위 수호신 골렘";
+        hp = 60;
+        avatar = "🪨";
+      } else if (monsterTier === 'B') {
+        name = "대마왕 골드드래곤";
+        hp = 100;
+        avatar = "👑";
+      }
+      
+      GameState.currentMonster = {
+        tier: monsterTier,
+        name: name,
+        hp: hp,
+        maxHp: hp,
+        x: tileX,
+        y: tileY
+      };
+      
+      // 문제 생성
+      const prob = generateEquation(monsterTier);
+      GameState.currentProblem = prob;
+      
+      // 배틀 뷰포트 상태 바인딩
+      document.getElementById('battle-monster-name').innerText = name;
+      document.getElementById('battle-monster-avatar').innerText = avatar;
+      document.getElementById('battle-hero-hp-text').innerText = `${GameState.player.hp} / ${GameState.player.maxHp}`;
+      
+      updateMonsterHPBar();
+      renderCurrentProblem();
+      clearCanvasDrawing(); // 이전 낙서 초기화
+      
+      showScreen('screen-battle');
+    }
+
+    // 회복 보물상자 조우 시 설정
+    function setupChest(tileX, tileY) {
+      GameState.isBattleActive = false; // 전투 아님 표시
+      GameState.inputBuffer = "";
+      updateDummyInput();
+      
+      sound.playChest();
+      
+      GameState.currentChest = { x: tileX, y: tileY };
+      
+      // 보너스 상자 문제 설정
+      const prob = generateEquation('C');
+      GameState.currentProblem = prob;
+      
+      // 배틀 디자인 영역을 상자 전용 피드백으로 일시 개편
+      document.getElementById('battle-monster-name').innerText = "잠겨있는 보물상자";
+      document.getElementById('battle-monster-avatar').innerText = "🎁";
+      document.getElementById('battle-monster-hp-text').innerText = "보너스 수수께끼";
+      document.getElementById('battle-monster-hp-bar').style.width = "100%";
+      document.getElementById('battle-hero-hp-text').innerText = `${GameState.player.hp} / ${GameState.player.maxHp}`;
+      
+      renderCurrentProblem();
+      clearCanvasDrawing();
+      
+      showScreen('screen-battle');
+    }
+
+    function renderCurrentProblem() {
+      document.getElementById('equation-display').innerHTML = GameState.currentProblem.questionHtml;
+    }
+
+    function updateMonsterHPBar() {
+      const monster = GameState.currentMonster;
+      if (!monster) return;
+      document.getElementById('battle-monster-hp-text').innerText = `${monster.hp} / ${monster.maxHp}`;
+      const percent = (monster.hp / monster.maxHp) * 100;
+      document.getElementById('battle-monster-hp-bar').style.width = `${percent}%`;
+    }
+
+    // --- (7) 가상 터치 키패드 입력 처리 로직 ---
+    function handleVirtualKeyPress(key) {
+      if (key === 'back') {
+        GameState.inputBuffer = GameState.inputBuffer.slice(0, -1);
+      } else if (key === '-') {
+        // 음수 부호 기호는 맨 처음에만 허용
+        if (GameState.inputBuffer === "") {
+          GameState.inputBuffer = "-";
+        }
+      } else {
+        // 글자 수 제한 (최대 5글자 이상 타이핑 방지)
+        if (GameState.inputBuffer.length < 5) {
+          // - 뒤에 바로 0이 오지 못하게 처리 및 예외 관리
+          if (GameState.inputBuffer === "0") {
+            GameState.inputBuffer = key;
+          } else {
+            GameState.inputBuffer += key;
+          }
+        }
+      }
+      updateDummyInput();
+    }
+
+    function updateDummyInput() {
+      document.getElementById('dummy-input').innerText = GameState.inputBuffer || "?";
+    }
+
+    // --- (8) 공격 제출 및 정오답 체크 로직 ---
+    function submitAnswer() {
+      if (GameState.inputBuffer === "" || GameState.inputBuffer === "-") {
+        return; // 값 미입력 차단
+      }
+      
+      const userAnswer = parseInt(GameState.inputBuffer, 10);
+      const correctAnswer = GameState.currentProblem.answer;
+      
+      if (userAnswer === correctAnswer) {
+        handleTurnResult(true);
+      } else {
+        handleTurnResult(false);
+      }
+    }
+
+    // 턴 교대 데미지 계산 및 시뮬레이션
+    function handleTurnResult(isCorrect) {
+      const feedbackOverlay = document.getElementById('combat-feedback');
+      const feedbackBox = document.getElementById('feedback-box');
+      const feedbackIcon = document.getElementById('feedback-icon');
+      const feedbackText = document.getElementById('feedback-text');
+      
+      feedbackOverlay.classList.remove('hidden');
+      
+      if (isCorrect) {
+        // 정답 성공 연출
+        sound.playCorrect();
+        feedbackIcon.innerText = "✅";
+        feedbackText.innerText = "공격 성공!";
+        feedbackBox.className = "transform scale-100 opacity-100 transition-all duration-200 px-8 py-5 rounded-3xl shadow-2xl text-center bg-emerald-500 text-white";
+        
+        // 피격 몬스터 진동 연출용 임시 타겟
+        document.getElementById('battle-monster-avatar').classList.add('animate-bounce');
+        
+        setTimeout(() => {
+          document.getElementById('battle-monster-avatar').classList.remove('animate-bounce');
+          feedbackOverlay.classList.add('hidden');
+          feedbackBox.classList.add('opacity-0');
+          
+          if (GameState.isBattleActive) {
+            // 몬스터 데미지 처리
+            executeMonsterDamage(20);
+          } else {
+            // 상자 열기 보너스 성공 처리
+            executeChestReward();
+          }
+        }, 1200);
+        
+      } else {
+        // 오답 피격 연출
+        sound.playWrong();
+        feedbackIcon.innerText = "❌";
+        feedbackText.innerText = `피격당함! (정답: ${correctAnswerHint()})`;
+        feedbackBox.className = "transform scale-100 opacity-100 transition-all duration-200 px-8 py-5 rounded-3xl shadow-2xl text-center bg-rose-600 text-white";
+        
+        // 화면 진동 연출용
+        document.getElementById('equation-card').classList.add('animate-shake');
+        
+        setTimeout(() => {
+          document.getElementById('equation-card').classList.remove('animate-shake');
+          feedbackOverlay.classList.add('hidden');
+          feedbackBox.classList.add('opacity-0');
+          
+          // 용사 데미지 처리
+          executeHeroDamage();
+        }, 1600);
+      }
+    }
+
+    // 정답 힌트 알려주기 도우미
+    function correctAnswerHint() {
+      return GameState.currentProblem.answer;
+    }
+
+    // 몬스터 체력 감소 처리
+    function executeMonsterDamage(damage) {
+      const monster = GameState.currentMonster;
+      monster.hp -= damage;
+      if (monster.hp < 0) monster.hp = 0;
+      
+      updateMonsterHPBar();
+      
+      if (monster.hp <= 0) {
+        // 격퇴 승리
+        GameState.player.defeatedCount++;
+        GameState.mapGrid[monster.y][monster.x] = '.'; // 빈 길로 개간
+        
+        setTimeout(() => {
+          if (monster.tier === 'B') {
+            // 대마왕 격파 -> 게임 올 클리어 무대 이동
+            showGameClearScreen();
+          } else {
+            // 일반 격퇴 완료
+            backToMap();
+          }
+        }, 300);
+      } else {
+        // 다음 방정식 연쇄 출제
+        GameState.inputBuffer = "";
+        updateDummyInput();
+        GameState.currentProblem = generateEquation(monster.tier);
+        renderCurrentProblem();
+      }
+    }
+
+    // 상자 수수께끼 정답 시
+    function executeChestReward() {
+      GameState.player.chestsOpened++;
+      GameState.player.hp = GameState.player.maxHp; // 용사 완치 체력 공급
+      GameState.mapGrid[GameState.currentChest.y][GameState.currentChest.x] = '.'; // 상자 사용 완료 제거
+      
+      backToMap();
+    }
+
+    // 오답 시 용사 체력 감소
+    function executeHeroDamage() {
+      let dmg = 15; // 기본 슬라임 피해
+      if (GameState.isBattleActive) {
+        const tier = GameState.currentMonster.tier;
+        if (tier === 'G') dmg = 20;
+        else if (tier === 'O') dmg = 25;
+        else if (tier === 'B') dmg = 30; // 보스 피해
+      } else {
+        dmg = 10; // 보물상자 페널티
+      }
+      
+      GameState.player.hp -= dmg;
+      if (GameState.player.hp < 0) GameState.player.hp = 0;
+      
+      document.getElementById('battle-hero-hp-text').innerText = `${GameState.player.hp} / ${GameState.player.maxHp}`;
+      
+      if (GameState.player.hp <= 0) {
+        // 게임오버 무대 이동
+        setTimeout(() => {
+          showScreen('screen-gameover');
+        }, 300);
+      } else {
+        // 현재 상태 유지, 새롭게 방정식 생성 및 다음 기회 부여
+        GameState.inputBuffer = "";
+        updateDummyInput();
+        
+        const tierType = GameState.isBattleActive ? GameState.currentMonster.tier : 'C';
+        GameState.currentProblem = generateEquation(tierType);
+        renderCurrentProblem();
+      }
+    }
+
+    // 맵 탐험 화면 복귀
+    function backToMap() {
+      GameState.currentMonster = null;
+      GameState.currentChest = null;
+      initMap();
+      updateMapUI();
+      showScreen('screen-map');
+    }
+
+    function showGameClearScreen() {
+      document.getElementById('clear-monsters').innerText = `${GameState.player.defeatedCount}마리`;
+      document.getElementById('clear-hp').innerText = `${GameState.player.hp} / ${GameState.player.maxHp}`;
+      document.getElementById('clear-chests').innerText = `${GameState.player.chestsOpened}개`;
+      showScreen('screen-clear');
+    }
+
+    // --- (9) 중학교 수학시간 용 캔버스 메모(연습장) 기능 ---
+    const canvas = document.getElementById('scratchpad');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let currentColor = '#020617'; // 기본 네이비 블랙 펜
+    let currentLineWidth = 2.5;
+
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+      clearCanvasDrawing();
+    }
+
+    function clearCanvasDrawing() {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // 마우스 장치 입력 지원
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      const pos = getMousePos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      const pos = getMousePos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = currentLineWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    });
+
+    canvas.addEventListener('mouseup', () => isDrawing = false);
+    canvas.addEventListener('mouseleave', () => isDrawing = false);
+
+    // 태블릿 터치 스크린 입력 필수 바인딩 (e.preventDefault 중요)
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isDrawing = true;
+      const pos = getTouchPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      if (!isDrawing) return;
+      const pos = getTouchPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = currentLineWidth;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      isDrawing = false;
+    }, { passive: false });
+
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+
+    function getTouchPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+    }
+
+    // --- (10) 게임 데이터 리셋 및 초기 기동 ---
+    function restartGame() {
+      GameState.player = {
+        x: 0,
+        y: 5,
+        hp: 100,
+        maxHp: 100,
+        defeatedCount: 0,
+        chestsOpened: 0
+      };
+      
+      // 원본 던전 맵 다시 초기화 (초기 상태 복제)
+      GameState.mapGrid = [
+        ['W', 'W', 'W', 'W', 'W', 'B'],
+        ['.', '.', 'O', '.', '.', '.'],
+        ['W', 'W', 'W', 'W', 'G', 'W'],
+        ['.', '.', '.', '.', '.', '.'],
+        ['S', 'W', 'W', 'W', 'W', 'W'],
+        ['.', '.', '.', 'C', '.', '.']
+      ];
+      
+      initMap();
+      updateMapUI();
+      showScreen('screen-map');
+    }
+
+    // --- (11) 모든 이벤트 리스너 마운트 ---
+    window.addEventListener('load', () => {
+      
+      // 시작하기 버튼 클릭
+      document.getElementById('btn-start').addEventListener('click', () => {
+        sound.init();
+        restartGame();
+      });
+
+      // 가상 키패드 버튼 바인딩
+      document.querySelectorAll('.btn-key').forEach(button => {
+        button.addEventListener('click', () => {
+          const key = button.getAttribute('data-key');
+          handleVirtualKeyPress(key);
+        });
+      });
+
+      // 키보드 물리적 번호 및 기호 입력도 매핑 (태블릿 블루투스 키보드 배려)
+      window.addEventListener('keydown', (e) => {
+        const key = e.key;
+        if (document.getElementById('screen-battle').classList.contains('hidden')) return;
+        
+        if (key >= '0' && key <= '9') {
+          handleVirtualKeyPress(key);
+        } else if (key === '-') {
+          handleVirtualKeyPress('-');
+        } else if (key === 'Backspace' || key === 'Delete') {
+          handleVirtualKeyPress('back');
+        } else if (key === 'Enter') {
+          submitAnswer();
+        }
+      });
+
+      // 공격(입력완료) 제출 버튼
+      document.getElementById('btn-submit').addEventListener('click', submitAnswer);
+
+      // 방향 키패드 버튼 컨트롤러
+      document.getElementById('btn-move-up').addEventListener('click', () => handleDirectionMove('up'));
+      document.getElementById('btn-move-down').addEventListener('click', () => handleDirectionMove('down'));
+      document.getElementById('btn-move-left').addEventListener('click', () => handleDirectionMove('left'));
+      document.getElementById('btn-move-right').addEventListener('click', () => handleDirectionMove('right'));
+
+      // 키보드 방향키 연동 지원
+      window.addEventListener('keydown', (e) => {
+        if (!document.getElementById('screen-map').classList.contains('hidden')) {
+          if (e.key === 'ArrowUp') handleDirectionMove('up');
+          if (e.key === 'ArrowDown') handleDirectionMove('down');
+          if (e.key === 'ArrowLeft') handleDirectionMove('left');
+          if (e.key === 'ArrowRight') handleDirectionMove('right');
+        }
+      });
+
+      // 리스타트 버튼들
+      document.getElementById('btn-restart-clear').addEventListener('click', restartGame);
+      document.getElementById('btn-restart-over').addEventListener('click', restartGame);
+
+      // 모달 수수께끼 도움말 제어
+      const infoModal = document.getElementById('modal-info');
+      document.getElementById('btn-info').addEventListener('click', () => infoModal.classList.remove('hidden'));
+      document.getElementById('btn-close-info').addEventListener('click', () => infoModal.classList.add('hidden'));
+
+      // 필기 연습장 제어판 버튼 바인딩
+      document.getElementById('btn-clear-canvas').addEventListener('click', clearCanvasDrawing);
+      
+      // 색상 펜 전환
+      document.querySelectorAll('.btn-color').forEach(btn => {
+        btn.addEventListener('click', () => {
+          // 활성화 표시 링 보강
+          document.querySelectorAll('.btn-color').forEach(b => b.classList.remove('border-2', 'border-amber-500'));
+          btn.classList.add('border-2', 'border-amber-500');
+          currentColor = btn.getAttribute('data-color');
+          currentLineWidth = 2.5;
+        });
+      });
+
+      // 지우개 선택
+      document.getElementById('btn-eraser').addEventListener('click', () => {
+        currentColor = '#ffffff'; // 배경색 칠하기 모드로 지우개 효과 우회
+        currentLineWidth = 18; // 굵게 지우개 세팅
+      });
+
+      // 태블릿 세로 및 가로 전환 시 캔버스 스케일 동적 보정
+      window.addEventListener('resize', resizeCanvas);
+    });
+  </script>
+</body>
+</html>
