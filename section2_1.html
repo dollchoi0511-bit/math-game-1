@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>브롤 퀴즈 배틀 - 수학 일차방정식</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Brawl Stars aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Lilita+One&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0b051d;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .brawl-font {
+            font-family: 'Lilita One', 'Black Han Sans', sans-serif;
+            text-shadow: 3px 3px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000;
+        }
+        .brawl-border {
+            box-shadow: 0 8px 0px #000;
+            border: 4px solid #000;
+        }
+        .brawl-button {
+            transition: all 0.1s ease;
+            box-shadow: 0 6px 0px #800d0d, 0 8px 10px rgba(0,0,0,0.5);
+            border: 3px solid #000;
+        }
+        .brawl-button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0px #800d0d, 0 4px 6px rgba(0,0,0,0.5);
+        }
+        .brawl-button-blue {
+            box-shadow: 0 6px 0px #003366, 0 8px 10px rgba(0,0,0,0.5);
+        }
+        .brawl-button-blue:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0px #003366, 0 4px 6px rgba(0,0,0,0.5);
+        }
+        /* Shake effect for wrong answers */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .shake {
+            animation: shake 0.2s ease-in-out 2;
+        }
+        /* Custom scrollbar for game rules */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1135;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #FFCB05;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col justify-between items-center relative p-0 m-0 select-none">
+
+    <script>
+        // Web Audio Context Synthesizer for rich arcade sounds without external assets
+        class AudioSynth {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playBtn() {
+                this.init();
+                let osc = this.ctx.createOscillator();
+                let gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.15);
+            }
+            playCorrect() {
+                this.init();
+                let now = this.ctx.currentTime;
+                // Double chime (E5 -> G5)
+                [523.25, 659.25, 783.99].forEach((freq, i) => {
+                    let osc = this.ctx.createOscillator();
+                    let gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                    gain.gain.setValueAtTime(0.1, now + i * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.15);
+                    osc.start(now + i * 0.08);
+                    osc.stop(now + i * 0.08 + 0.2);
+                });
+            }
+            playWrong() {
+                this.init();
+                let osc = this.ctx.createOscillator();
+                let gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(60, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.35);
+            }
+            playPowerUp() {
+                this.init();
+                let now = this.ctx.currentTime;
+                for (let i = 0; i < 5; i++) {
+                    let osc = this.ctx.createOscillator();
+                    let gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'sine';
+                    let freq = 200 * Math.pow(1.5, i);
+                    osc.frequency.setValueAtTime(freq, now + i * 0.06);
+                    gain.gain.setValueAtTime(0.1, now + i * 0.06);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.06 + 0.2);
+                    osc.start(now + i * 0.06);
+                    osc.stop(now + i * 0.06 + 0.25);
+                }
+            }
+            playBattleStart() {
+                this.init();
+                let now = this.ctx.currentTime;
+                // Descending retro impact sirens
+                let osc = this.ctx.createOscillator();
+                let gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.5);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start();
+                osc.stop(now + 0.5);
+            }
+            playTick() {
+                this.init();
+                let osc = this.ctx.createOscillator();
+                let gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1000, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.06);
+            }
+            playWin() {
+                this.init();
+                let now = this.ctx.currentTime;
+                let notes = [523, 659, 783, 1046, 1318];
+                notes.forEach((freq, idx) => {
+                    let osc = this.ctx.createOscillator();
+                    let gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.02, now + idx * 0.12 + 0.4);
+                    osc.start(now + idx * 0.12);
+                    osc.stop(now + idx * 0.12 + 0.5);
+                });
+            }
+            playLose() {
+                this.init();
+                let now = this.ctx.currentTime;
+                let notes = [311, 293, 277, 220];
+                notes.forEach((freq, idx) => {
+                    let osc = this.ctx.createOscillator();
+                    let gain = this.ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.2);
+                    gain.gain.setValueAtTime(0.15, now + idx * 0.2);
+                    gain.gain.exponentialRampToValueAtTime(0.02, now + idx * 0.2 + 0.5);
+                    osc.start(now + idx * 0.2);
+                    osc.stop(now + idx * 0.2 + 0.6);
+                });
+            }
+        }
+        const sound = new AudioSynth();
+    </script>
+
+    <div id="lobbyScreen" class="absolute inset-0 z-30 flex flex-col justify-between items-center bg-gradient-to-b from-[#180a2b] via-[#2d1154] to-[#0d041a] p-4 text-white overflow-y-auto">
+        <!-- Header -->
+        <div class="w-full flex justify-between items-center max-w-4xl mt-2">
+            <div class="flex items-center space-x-2">
+                <div class="bg-yellow-500 text-black px-3 py-1 rounded-full font-bold text-xs shadow-md border-2 border-black">중1 수학 특공대</div>
+            </div>
+            <div class="flex items-center bg-[#130722] border-2 border-[#ffcb05] px-3 py-1 rounded-full text-sm font-bold shadow-md">
+                <i class="fa-solid fa-trophy text-yellow-500 mr-2"></i>
+                <span id="lobbyTrophies" class="text-yellow-400">0</span>
+            </div>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="text-center my-4">
+            <h1 class="text-5xl md:text-7xl brawl-font text-[#ffcb05] tracking-wider mb-2 select-none transform hover:scale-105 duration-200">
+                브롤 퀴즈 배틀
+            </h1>
+            <p class="text-sm md:text-base text-purple-300 font-semibold">
+                중학교 1학년 1학기 <span class="text-yellow-400 underline decoration-2">일차방정식</span> 수학 대작전!
+            </p>
+        </div>
+
+        <!-- Selection panel / Rules & Brawlers -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-4xl flex-grow items-center mb-6">
+            <!-- Rules -->
+            <div class="lg:col-span-5 bg-black/40 border-2 border-purple-500/50 rounded-2xl p-4 h-full flex flex-col justify-between text-sm">
+                <div>
+                    <h2 class="text-lg font-bold text-[#00c3ff] mb-2 flex items-center">
+                        <i class="fa-solid fa-circle-info mr-2"></i>게임 규칙 설명
+                    </h2>
+                    <ul class="space-y-2 text-gray-300">
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-1">●</span>
+                            <span>전장에 소환되어 적 로봇들을 색출해 처치하세요.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-500 mr-1">●</span>
+                            <span>처치 목표 수: <strong>랜덤 설정 (5 ~ 15명)</strong></span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-yellow-500 mr-1">●</span>
+                            <span>로봇과 만나면 <strong>방정식 3문제 퀴즈</strong>가 시작됩니다.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-yellow-500 mr-1">●</span>
+                            <span>기본 시간은 <strong>15초</strong>이며, 시간 초과 시 게임오버!</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-green-400 mr-1">●</span>
+                            <span>처치 시 드롭되는 <strong>파워큐브</strong>를 모으면, 퀴즈 도중 시간을 <strong>+10초 연장(총 25초)</strong>할 수 있습니다.</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="mt-4 pt-3 border-t border-purple-500/20 text-center">
+                    <span class="text-xs text-yellow-500/80 font-mono">가상 조이스틱 터치 드래그 • WASD / 방향키로 이동</span>
+                </div>
+            </div>
+
+            <!-- Brawler Selection Carousel -->
+            <div class="lg:col-span-7 flex flex-col justify-between h-full bg-black/30 rounded-2xl p-4 border-2 border-yellow-500/30">
+                <h3 class="text-lg font-bold text-center text-yellow-400 mb-2">원하는 브롤러를 선택하세요!</h3>
+                
+                <div class="grid grid-cols-3 gap-3 my-2" id="brawlerGrid">
+                    <!-- Shelly -->
+                    <button onclick="selectBrawler('shelly')" id="btn-shelly" class="brawler-card relative bg-[#2a134a] border-4 border-[#ffcb05] rounded-xl p-2 flex flex-col items-center justify-center cursor-pointer transition transform hover:scale-105">
+                        <div class="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center border-2 border-black mb-1 overflow-hidden shadow-inner">
+                            <svg class="w-10 h-10 mt-2" viewBox="0 0 40 40">
+                                <circle cx="20" cy="18" r="12" fill="#ffbda3" />
+                                <path d="M 8,16 Q 14,2 20,4 Q 26,2 32,16 Z" fill="#7a22a3" /> <!-- Purple hair -->
+                                <circle cx="16" cy="16" r="1.5" fill="#000" />
+                                <circle cx="24" cy="16" r="1.5" fill="#000" />
+                                <path d="M 17,23 Q 20,26 23,23" stroke="#000" stroke-width="2" fill="none" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold text-white tracking-tight">셸리 (밸런스)</span>
+                        <div class="text-[9px] text-gray-300">이동속도: 보통</div>
+                        <div class="absolute -top-1 -right-1 bg-yellow-500 text-black text-[9px] px-1 font-bold rounded-md uppercase border border-black shadow">SELECTED</div>
+                    </button>
+
+                    <!-- Colt -->
+                    <button onclick="selectBrawler('colt')" id="btn-colt" class="brawler-card relative bg-[#131d35] border-2 border-gray-600 rounded-xl p-2 flex flex-col items-center justify-center cursor-pointer transition transform hover:scale-105 opacity-60">
+                        <div class="w-12 h-12 bg-blue-700 rounded-full flex items-center justify-center border-2 border-black mb-1 overflow-hidden shadow-inner">
+                            <svg class="w-10 h-10 mt-2" viewBox="0 0 40 40">
+                                <circle cx="20" cy="18" r="12" fill="#ffcca3" />
+                                <path d="M 10,14 Q 14,-2 20,2 Q 26,-2 30,14 Z" fill="#e62d66" /> <!-- Pinkish/Red hair -->
+                                <circle cx="15" cy="15" r="1.5" fill="#000" />
+                                <circle cx="25" cy="15" r="1.5" fill="#000" />
+                                <path d="M 16,22 Q 20,24 24,22" stroke="#000" stroke-width="2" fill="none" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold text-white tracking-tight">콜트 (스피드)</span>
+                        <div class="text-[9px] text-gray-300">이동속도: 빠름</div>
+                        <div class="absolute -top-1 -right-1 bg-blue-500 text-white text-[9px] px-1 font-bold rounded-md uppercase border border-black hidden shadow">SELECTED</div>
+                    </button>
+
+                    <!-- El Primo -->
+                    <button onclick="selectBrawler('primo')" id="btn-primo" class="brawler-card relative bg-[#112a1d] border-2 border-gray-600 rounded-xl p-2 flex flex-col items-center justify-center cursor-pointer transition transform hover:scale-105 opacity-60">
+                        <div class="w-12 h-12 bg-teal-800 rounded-full flex items-center justify-center border-2 border-black mb-1 overflow-hidden shadow-inner">
+                            <svg class="w-10 h-10 mt-2" viewBox="0 0 40 40">
+                                <circle cx="20" cy="18" r="12" fill="#d2a275" />
+                                <path d="M 10,10 L 30,10 L 30,22 L 10,22 Z" fill="#038c8c" /> <!-- Luchador Mask -->
+                                <circle cx="16" cy="17" r="2.5" fill="#ffcb05" />
+                                <circle cx="24" cy="17" r="2.5" fill="#ffcb05" />
+                                <circle cx="16" cy="17" r="1" fill="#000" />
+                                <circle cx="24" cy="17" r="1" fill="#000" />
+                                <path d="M 15,23 Q 20,20 25,23" stroke="#000" stroke-width="2" fill="none" />
+                            </svg>
+                        </div>
+                        <span class="text-xs font-bold text-white tracking-tight">엘 프리모 (탱커)</span>
+                        <div class="text-[9px] text-gray-300">이동속도: 보통 (큰 크기)</div>
+                        <div class="absolute -top-1 -right-1 bg-[#038c8c] text-white text-[9px] px-1 font-bold rounded-md uppercase border border-black hidden shadow">SELECTED</div>
+                    </button>
+                </div>
+
+                <!-- Random Target Display -->
+                <div class="mt-2 bg-purple-950/80 border border-purple-500/30 rounded-lg p-3 text-center">
+                    <span class="text-gray-400 text-xs">이번 매치의 매치 타겟</span>
+                    <div class="text-xl font-bold text-yellow-400 mt-1 flex justify-center items-center">
+                        <i class="fa-solid fa-crosshairs mr-2"></i>
+                        처치해야 할 적 로봇 수: &nbsp;<span id="targetCountSpan" class="text-2xl font-black text-red-500 font-mono">10</span>명
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start Button -->
+        <button onclick="startGame()" class="brawl-button bg-gradient-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400 text-white font-extrabold text-2xl md:text-4xl py-4 px-16 rounded-2xl brawl-font tracking-wide mb-4 flex items-center space-x-3 select-none">
+            <span>게임 시작!</span>
+            <i class="fa-solid fa-play text-xl md:text-2xl animate-pulse"></i>
+        </button>
+    </div>
+
+    <div id="gameScreen" class="absolute inset-0 z-10 flex flex-col justify-between hidden">
+        <!-- Canvas Game Map Container -->
+        <div class="relative w-full h-full bg-[#1e2019]">
+            <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+            <!-- Minimap Top Right -->
+            <div class="absolute top-4 right-4 bg-black/60 border-2 border-yellow-500 rounded-xl p-1 shadow-lg pointer-events-none hidden md:block">
+                <canvas id="minimapCanvas" width="100" height="100" class="rounded-lg opacity-85"></canvas>
+                <div class="text-[10px] text-center text-yellow-400 font-bold mt-1 font-mono">MAP OVERVIEW</div>
+            </div>
+
+            <!-- Top HUD overlay: Game Goals & Status -->
+            <div class="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
+                <!-- Left: Back & Target Counts -->
+                <div class="flex flex-col space-y-2">
+                    <button onclick="exitToLobby()" class="pointer-events-auto bg-red-600 hover:bg-red-500 text-white font-bold px-3 py-1.5 rounded-lg border-2 border-black shadow text-sm flex items-center">
+                        <i class="fa-solid fa-chevron-left mr-1"></i> 포기하기
+                    </button>
+                    <div class="bg-black/70 border border-purple-500 text-white px-3 py-2 rounded-xl flex items-center shadow-lg">
+                        <div class="mr-3 bg-red-600 p-1.5 rounded-lg border border-black">
+                            <i class="fa-solid fa-robot text-lg text-white"></i>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-gray-400 font-bold leading-none uppercase">Enemies Eliminated</div>
+                            <div class="text-lg font-black font-mono text-red-400 leading-none mt-1">
+                                <span id="eliminatedEnemiesCount">0</span> / <span id="targetEnemiesCount">10</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Center: Help banner on map -->
+                <div class="hidden md:flex bg-black/50 text-white px-4 py-2 rounded-full border border-yellow-400/30 text-xs items-center max-w-sm text-center">
+                    <span class="text-yellow-400 font-bold mr-1">TIPS:</span> 
+                    풀숲(수풀)에 숨으면 적 로봇이 쉽게 눈치채지 못합니다! 다가가서 접촉하면 수학 배틀이 펼쳐집니다.
+                </div>
+
+                <!-- Right HUD: Power Cubes & State -->
+                <div class="flex flex-col items-end space-y-2">
+                    <div class="bg-black/70 border border-[#48e809] text-white px-3 py-2 rounded-xl flex items-center shadow-lg">
+                        <div>
+                            <div class="text-[10px] text-gray-400 font-bold leading-none uppercase text-right">Power Cubes</div>
+                            <div class="text-lg font-black font-mono text-[#48e809] leading-none mt-1 text-right">
+                                <span id="powerCubeCount">0</span>개 보유
+                            </div>
+                        </div>
+                        <div class="ml-3 bg-[#48e809]/20 p-1.5 rounded-lg border border-[#48e809]">
+                            <!-- SVG Lightning Power Cube representation -->
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                                <rect x="3" y="3" width="18" height="18" rx="4" fill="#48e809" stroke="#000" stroke-width="2"/>
+                                <path d="M13 5L8 13H12L11 19L16 11H12L13 5Z" fill="#fff" stroke="#000" stroke-width="1.5" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Virtual Joystick Controls for Mobile Screens -->
+            <div id="mobileControls" class="absolute bottom-8 left-8 right-8 flex justify-between items-end pointer-events-none md:hidden">
+                <!-- Left: Advanced Smooth 360° Virtual Joystick -->
+                <div id="joystickContainer" class="pointer-events-auto relative w-32 h-32 rounded-full bg-black/40 border-4 border-purple-500/30 flex items-center justify-center shadow-2xl backdrop-blur-sm">
+                    <!-- Outer limit guide ring -->
+                    <div class="absolute w-16 h-16 rounded-full border border-purple-500/10 pointer-events-none"></div>
+                    <!-- Joystick Control Handle (Knob) -->
+                    <div id="joystickKnob" class="absolute w-14 h-14 rounded-full bg-gradient-to-b from-yellow-400 to-amber-500 border-4 border-black flex items-center justify-center shadow-lg pointer-events-none transition-transform duration-75">
+                        <i class="fa-solid fa-gamepad text-black text-sm opacity-60"></i>
+                    </div>
+                </div>
+                
+                <!-- Right: Active info banner with Power-up reminder on mobile -->
+                <div class="bg-black/75 px-4 py-2.5 rounded-2xl border-2 border-yellow-500 text-yellow-400 font-black text-xs shadow-lg max-w-[150px] text-center mb-1">
+                    <i class="fa-solid fa-crosshairs text-red-500 mr-1 animate-pulse"></i>
+                    로봇에게 다가가서 부딪치세요!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="quizScreen" class="absolute inset-0 z-40 bg-[#0f0724]/95 flex flex-col justify-between p-4 text-white hidden">
+        <!-- Battle Intro Screen Swiper (Triggers for 1.2 seconds) -->
+        <div id="battleIntroSwiper" class="absolute inset-0 bg-red-600 z-50 flex flex-col justify-center items-center transition-transform duration-500 transform translate-y-0">
+            <div class="text-center">
+                <div class="text-yellow-400 text-lg md:text-2xl tracking-wider uppercase font-bold mb-1">WARNING! ENEMY ENCOUNTERED!</div>
+                <h2 class="text-5xl md:text-8xl brawl-font text-white drop-shadow-lg tracking-widest animate-bounce">
+                    QUIZ BATTLE!
+                </h2>
+                <p class="text-sm text-yellow-200 mt-2 font-semibold">15초 안에 중1 일차방정식 3문제를 해결하세요!</p>
+            </div>
+        </div>
+
+        <!-- Upper Banner: Steps indicator & Time limit -->
+        <div class="w-full flex justify-between items-center max-w-4xl mx-auto mt-2">
+            <!-- Stage Status -->
+            <div class="flex items-center space-x-2 bg-[#1b103c] border border-purple-500 px-3 py-1.5 rounded-xl shadow-lg">
+                <i class="fa-solid fa-bolt text-[#00c3ff]"></i>
+                <span class="text-sm font-bold">로봇 전투 현황:</span>
+                <span class="text-yellow-400 font-bold font-mono" id="quizCurrentProgress">1 / 3 문제</span>
+            </div>
+
+            <!-- Power Cube Booster Trigger inside Quiz -->
+            <div id="cubeActivationArea" class="flex items-center space-x-2">
+                <button id="btnUsePowerCube" onclick="activatePowerCubeInQuiz()" class="pointer-events-auto bg-gradient-to-r from-green-600 to-[#48e809] hover:from-green-500 text-white font-extrabold px-3 py-2 rounded-xl border-2 border-black shadow-md flex items-center animate-pulse text-xs md:text-sm disabled:opacity-40 disabled:animate-none disabled:pointer-events-none">
+                    <!-- SVG Power Cube icon -->
+                    <svg class="w-4 h-4 mr-1.5" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="18" height="18" rx="4" fill="#48e809" stroke="#000" stroke-width="1.5"/>
+                        <path d="M13 5L8 13H12L11 19L16 11H12L13 5Z" fill="#fff" stroke="#000" stroke-width="1.2"/>
+                    </svg>
+                    <span>파워큐브 사용 (+10초)</span>
+                </button>
+                <div class="bg-black/60 px-2.5 py-1.5 rounded-lg border border-green-500/50 text-xs font-mono font-bold text-[#48e809]">
+                    보유: <span id="quizCubeCount">0</span>개
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Quiz Center Area -->
+        <div class="w-full max-w-2xl mx-auto bg-[#1b103c]/90 border-4 border-black rounded-3xl p-4 md:p-6 shadow-2xl flex-grow flex flex-col justify-between my-4" id="quizCardBox">
+            
+            <!-- Timer Bar -->
+            <div class="w-full mb-4">
+                <div class="flex justify-between items-end text-sm font-bold text-gray-300 mb-1">
+                    <span id="timeLimitStatus" class="text-[#00c3ff]">남은 시간</span>
+                    <span id="quizTimerText" class="text-2xl font-black font-mono text-red-500">15.00초</span>
+                </div>
+                <!-- Main Progress bar -->
+                <div class="w-full bg-black/60 h-5 rounded-full border-2 border-black overflow-hidden p-0.5">
+                    <div id="quizTimerBar" class="bg-gradient-to-r from-green-500 via-yellow-400 to-red-500 h-full w-full rounded-full transition-all duration-100 ease-linear"></div>
+                </div>
+            </div>
+
+            <!-- Math Question Text Box -->
+            <div class="bg-black/40 rounded-2xl p-4 md:p-6 text-center border-2 border-purple-500/30 flex-grow flex flex-col justify-center items-center">
+                <span class="text-xs text-yellow-500 font-bold uppercase tracking-wider mb-2">다음 일차방정식을 푸시오</span>
+                <div class="text-3xl md:text-5xl font-extrabold text-white font-mono leading-relaxed select-text" id="quizEquationFormula">
+                    3x + 5 = 11
+                </div>
+                <div class="text-xs text-purple-300 mt-2">일차방정식을 만족하는 미지수 x의 값은 무엇일까요?</div>
+            </div>
+
+            <!-- Quiz Multiple-Choice Options Grid -->
+            <div class="grid grid-cols-2 gap-3 mt-4" id="quizAnswersGrid">
+                <!-- Dynamically populated buttons -->
+                <button class="brawl-button brawl-button-blue bg-gradient-to-r from-blue-700 to-sky-500 py-3 rounded-xl font-bold font-mono text-xl text-white">x = 1</button>
+                <button class="brawl-button brawl-button-blue bg-gradient-to-r from-blue-700 to-sky-500 py-3 rounded-xl font-bold font-mono text-xl text-white">x = 2</button>
+                <button class="brawl-button brawl-button-blue bg-gradient-to-r from-blue-700 to-sky-500 py-3 rounded-xl font-bold font-mono text-xl text-white">x = 3</button>
+                <button class="brawl-button brawl-button-blue bg-gradient-to-r from-blue-700 to-sky-500 py-3 rounded-xl font-bold font-mono text-xl text-white">x = 4</button>
+            </div>
+        </div>
+
+        <!-- Lower Panel Feedback / Tip Area -->
+        <div class="w-full max-w-2xl mx-auto mb-2 text-center text-xs md:text-sm text-purple-300/80 font-semibold px-4">
+            <i class="fa-solid fa-skull-crossbones text-red-500 mr-1 animate-pulse"></i> 오답 클릭 시 시간 제한이 <strong class="text-red-400">3초 감점</strong>됩니다! 신중하게 답을 골라야 합니다.
+        </div>
+    </div>
+
+    <div id="gameOverScreen" class="absolute inset-0 z-50 bg-[#0d041a]/95 flex flex-col justify-center items-center p-6 text-white hidden">
+        <div class="max-w-md text-center p-8 bg-[#1f0e34] border-4 border-red-600 rounded-3xl brawl-border">
+            <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center border-4 border-black mx-auto mb-4 shadow">
+                <i class="fa-solid fa-face-frown text-4xl text-white animate-bounce"></i>
+            </div>
+            <h1 class="text-4xl md:text-6xl brawl-font text-red-500 mb-2">DEFEAT!</h1>
+            <p class="text-sm text-gray-300 font-semibold mb-6">
+                제한 시간 내에 일차방정식을 해결하지 못해 로봇의 습격을 받았습니다!
+            </p>
+
+            <div class="bg-black/50 p-4 rounded-xl border border-red-500/30 text-left space-y-2 mb-6 text-sm font-semibold">
+                <div class="text-yellow-400 font-bold border-b border-red-500/20 pb-1 text-center">배틀 성적표</div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">목표 로봇 수:</span>
+                    <span class="font-bold text-white font-mono" id="ovGoalCount">0명</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">처치한 로봇 수:</span>
+                    <span class="font-bold text-red-400 font-mono" id="ovDefeatedCount">0명</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">남은 잔여 로봇:</span>
+                    <span class="font-bold text-yellow-500 font-mono" id="ovRemainingCount">0명</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col space-y-3">
+                <button onclick="restartMatchDirectly()" class="brawl-button bg-gradient-to-r from-red-600 to-orange-500 text-white font-black text-xl py-3 px-8 rounded-xl">
+                    다시 도전하기
+                </button>
+                <button onclick="exitToLobby()" class="brawl-button brawl-button-blue bg-gradient-to-r from-gray-700 to-gray-500 text-white font-black text-lg py-2.5 px-8 rounded-xl">
+                    메인 메뉴로 가기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="victoryScreen" class="absolute inset-0 z-50 bg-[#071302]/95 flex flex-col justify-center items-center p-6 text-white hidden">
+        <div class="max-w-md text-center p-8 bg-[#0f2e05] border-4 border-yellow-400 rounded-3xl brawl-border animate-fade-in">
+            <!-- Trophies icon -->
+            <div class="w-24 h-24 bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full flex items-center justify-center border-4 border-black mx-auto mb-4 shadow relative">
+                <i class="fa-solid fa-trophy text-5xl text-white"></i>
+                <div class="absolute -bottom-2 bg-yellow-400 text-black border border-black font-extrabold text-[10px] px-2 rounded">VICTORY</div>
+            </div>
+            
+            <h1 class="text-4xl md:text-6xl brawl-font text-[#ffcb05] tracking-wider mb-2">VICTORY!</h1>
+            <p class="text-sm text-yellow-100 font-bold mb-6">
+                엄청납니다! 전장의 모든 일차방정식 로봇들을 제압하고 영광의 승리를 이뤄냈습니다!
+            </p>
+
+            <div class="bg-black/50 p-4 rounded-xl border border-yellow-500/30 text-left space-y-2 mb-6 text-sm font-semibold">
+                <div class="text-[#ffcb05] font-bold border-b border-yellow-500/20 pb-1 text-center">승리 성적 기록</div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">처치한 로봇 수:</span>
+                    <span class="font-bold text-yellow-400 font-mono" id="vcDefeatedCount">0명</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">획득 트로피 점수:</span>
+                    <span class="font-bold text-[#48e809] font-mono">+10 Trophies</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col space-y-3">
+                <button onclick="restartMatchDirectly()" class="brawl-button bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-black text-xl py-3 px-8 rounded-xl">
+                    한 판 더 하기!
+                </button>
+                <button onclick="exitToLobby()" class="brawl-button brawl-button-blue bg-gradient-to-r from-purple-700 to-indigo-600 text-white font-black text-lg py-2.5 px-8 rounded-xl">
+                    대기실로 복귀
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // High-fidelity Procedural Math Generator for Middle school level 1 equations
+        class MiddleSchoolEquationGenerator {
+            // Generates 3 unique equation questions with single variable 'x'
+            static generateThreeEquations() {
+                const list = [];
+                const types = [1, 2, 3, 4]; // 4 distinct types of algebraic formats
+                
+                // Shuffle type choices
+                types.sort(() => Math.random() - 0.5);
+
+                for (let i = 0; i < 3; i++) {
+                    let type = types[i % types.length];
+                    let qObj = null;
+
+                    while (!qObj) {
+                        qObj = this.buildSingleEquation(type);
+                        // Ensure no duplicate math formulas
+                        if (list.some(item => item.formula === qObj.formula)) {
+                            qObj = null;
+                        }
+                    }
+                    list.push(qObj);
+                }
+                return list;
+            }
+
+            // Builds single randomized equation based on type selection
+            static buildSingleEquation(type) {
+                let x = 0, a = 0, b = 0, c = 0, d = 0, formula = "", distractors = [];
+
+                switch (type) {
+                    case 1: // ax + b = c
+                        x = this.getRandomInt(-8, 12, [0]);
+                        a = this.getRandomInt(2, 8);
+                        b = this.getRandomInt(-12, 15, [0]);
+                        c = a * x + b;
+                        formula = `${a}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)} = ${c}`;
+                        break;
+
+                    case 2: // ax + b = cx + d
+                        x = this.getRandomInt(-6, 8, [0]);
+                        a = this.getRandomInt(4, 9);
+                        c = this.getRandomInt(1, a - 1); // ensures integer result and positive (a - c)
+                        b = this.getRandomInt(-10, 10, [0]);
+                        d = (a - c) * x + b;
+                        formula = `${a}x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)} = ${c}x ${d >= 0 ? '+ ' + d : '- ' + Math.abs(d)}`;
+                        break;
+
+                    case 3: // a(x + b) = c
+                        x = this.getRandomInt(-7, 7, [0]);
+                        b = this.getRandomInt(-5, 5, [0]);
+                        a = this.getRandomInt(2, 6);
+                        c = a * (x + b);
+                        formula = `${a}(x ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)}) = ${c}`;
+                        break;
+
+                    case 4: // x / a + b = c (Fractions)
+                        a = this.getRandomInt(2, 4); // denominators
+                        x = a * this.getRandomInt(-4, 5, [0]); // guarantees integer division
+                        b = this.getRandomInt(-6, 6, [0]);
+                        c = Math.round(x / a) + b;
+                        formula = `\\frac{x}{${a}} ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)} = ${c}`;
+                        // Since HTML is plain text without LaTeX compiler in game container, format nicely:
+                        formula = `x/${a} ${b >= 0 ? '+ ' + b : '- ' + Math.abs(b)} = ${c}`;
+                        break;
+                }
+
+                // Generate distractors
+                distractors = this.createDistractors(x);
+
+                return {
+                    formula: formula,
+                    correctAnswer: x,
+                    options: distractors
+                };
+            }
+
+            static getRandomInt(min, max, exclude = []) {
+                let num;
+                do {
+                    num = Math.floor(Math.random() * (max - min + 1)) + min;
+                } while (exclude.includes(num));
+                return num;
+            }
+
+            // Create intelligent distractor values close to correct answer
+            static createDistractors(ans) {
+                const optionsSet = new Set();
+                optionsSet.add(ans);
+
+                let attempts = 0;
+                while (optionsSet.size < 4 && attempts < 50) {
+                    let offset = this.getRandomInt(-5, 5, [0]);
+                    let d = ans + offset;
+                    
+                    // Distractor alternatives including negative sign errors
+                    if (Math.random() < 0.25) d = -ans;
+                    if (Math.random() < 0.1) d = 0;
+
+                    optionsSet.add(d);
+                    attempts++;
+                }
+
+                // Fallback distractors if somehow sets are not unique
+                while (optionsSet.size < 4) {
+                    let next = ans + optionsSet.size;
+                    optionsSet.add(next);
+                }
+
+                const arr = Array.from(optionsSet);
+                // Shuffle array
+                return arr.sort(() => Math.random() - 0.5);
+            }
+        }
+    </script>
+
+    <script>
+        // High fidelity map grid representation
+        // W: Wall, G: Grass, B: Bush (Allows hiding)
+        const MAP_TILE_SIZE = 64;
+        const GRID_COLS = 22;
+        const GRID_ROWS = 22;
+
+        const MAP_LAYOUT = [
+            ['W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W'],
+            ['W','G','G','G','B','B','B','G','G','G','W','W','G','G','G','B','B','B','G','G','G','W'],
+            ['W','G','W','G','B','B','B','G','W','G','W','W','G','W','G','B','B','B','G','W','G','W'],
+            ['W','G','W','G','G','G','G','G','W','G','G','G','G','W','G','G','G','G','G','W','G','W'],
+            ['W','G','W','W','W','G','W','W','W','W','G','G','W','W','W','W','G','W','W','W','G','W'],
+            ['W','B','B','G','G','G','G','G','B','B','B','B','B','B','G','G','G','G','G','B','B','W'],
+            ['W','B','B','G','W','W','W','G','B','B','B','B','B','B','G','W','W','W','G','B','B','W'],
+            ['W','G','G','G','W','W','W','G','G','G','W','W','G','G','G','W','W','W','G','G','G','W'],
+            ['W','G','W','G','G','G','G','G','W','G','W','W','G','W','G','G','G','G','G','W','G','W'],
+            ['W','G','W','W','G','W','W','G','W','G','G','G','G','W','G','W','W','G','W','W','G','W'],
+            ['W','G','G','G','G','W','W','G','G','G','G','G','G','G','G','W','W','G','G','G','G','W'],
+            ['W','G','G','G','G','W','W','G','G','G','G','G','G','G','G','W','W','G','G','G','G','W'],
+            ['W','G','W','W','G','W','W','G','W','G','G','G','G','W','G','W','W','G','W','W','G','W'],
+            ['W','G','W','G','G','G','G','G','W','G','W','W','G','W','G','G','G','G','G','W','G','W'],
+            ['W','G','G','G','W','W','W','G','G','G','W','W','G','G','G','W','W','W','G','G','G','W'],
+            ['W','B','B','G','W','W','W','G','B','B','B','B','B','B','G','W','W','W','G','B','B','W'],
+            ['W','B','B','G','G','G','G','G','B','B','B','B','B','B','G','G','G','G','G','B','B','W'],
+            ['W','G','W','W','W','G','W','W','W','W','G','G','W','W','W','W','G','W','W','W','G','W'],
+            ['W','G','W','G','G','G','G','G','W','G','G','G','G','W','G','G','G','G','G','W','G','W'],
+            ['W','G','W','G','B','B','B','G','W','G','W','W','G','W','G','B','B','B','G','W','G','W'],
+            ['W','G','G','G','B','B','B','G','G','G','W','W','G','G','G','B','B','B','G','G','G','W'],
+            ['W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W','W']
+        ];
+    </script>
+
+    <script>
+        // Core game state
+        let gameState = {
+            trophies: parseInt(localStorage.getItem('brawl_trophies') || '0'),
+            currentBrawler: 'shelly',
+            targetEnemies: 8,
+            eliminatedEnemies: 0,
+            powerCubes: 0,
+            activeEnemies: [],
+            droppedCubes: [],
+            player: {
+                x: 100,
+                y: 100,
+                speed: 4,
+                radius: 18,
+                inBush: false,
+                sizeMultiplier: 1.0
+            },
+            keys: {},
+            gameActive: false,
+            // Quiz specifics
+            activeQuizIndex: 0,
+            activeQuestions: [],
+            quizEnemyRef: null,
+            timer: 0,
+            maxTimer: 15,
+            powerCubeUsedInCurrentQuiz: false,
+            quizInterval: null
+        };
+
+        // Virtual Touch Joystick State
+        let joystick = {
+            active: false,
+            startX: 0,
+            startY: 0,
+            dx: 0, // 가로 이동 벡터 (-1 ~ 1)
+            dy: 0, // 세로 이동 벡터 (-1 ~ 1)
+            maxDistance: 45 // 조이스틱 가동 반경
+        };
+
+        // UI references
+        const lobbyScreen = document.getElementById('lobbyScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const quizScreen = document.getElementById('quizScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const victoryScreen = document.getElementById('victoryScreen');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const minimapCanvas = document.getElementById('minimapCanvas');
+        const mctx = minimapCanvas.getContext('2d');
+
+        // Brawlers config
+        const BRAWLER_PROFILES = {
+            shelly: {
+                color: '#7a22a3', // purple hair
+                skin: '#ffbda3',
+                speed: 4,
+                size: 1.0,
+                hat: false,
+                name: '셸리'
+            },
+            colt: {
+                color: '#e62d66', // pink/red
+                skin: '#ffcca3',
+                speed: 5.2,
+                size: 0.9,
+                hat: false,
+                name: '콜트'
+            },
+            primo: {
+                color: '#038c8c', // luchador mask
+                skin: '#d2a275',
+                speed: 3.8,
+                size: 1.25,
+                hat: true,
+                name: '엘 프리모'
+            }
+        };
+
+        // Initialize Lobby trophies display
+        document.getElementById('lobbyTrophies').textContent = gameState.trophies;
+
+        // Brawler Switcher Action
+        function selectBrawler(brawlerId) {
+            sound.playBtn();
+            gameState.currentBrawler = brawlerId;
+            
+            // Toggle visual styling selection
+            document.querySelectorAll('.brawler-card').forEach(card => {
+                card.classList.remove('border-[#ffcb05]', 'bg-[#2a134a]');
+                card.classList.add('border-gray-600', 'opacity-60');
+                const badge = card.querySelector('div.absolute');
+                if (badge) badge.classList.add('hidden');
+            });
+
+            const targetBtn = document.getElementById(`btn-${brawlerId}`);
+            targetBtn.classList.add('border-[#ffcb05]', 'bg-[#2a134a]');
+            targetBtn.classList.remove('border-gray-600', 'opacity-60');
+            const targetBadge = targetBtn.querySelector('div.absolute');
+            if (targetBadge) targetBadge.classList.remove('hidden');
+        }
+
+        // Rolling Random Enemy Count (5 to 15)
+        function rollRandomTarget() {
+            gameState.targetEnemies = Math.floor(Math.random() * 11) + 5; // 5 ~ 15
+            document.getElementById('targetCountSpan').textContent = gameState.targetEnemies;
+        }
+
+        // Spawn Map elements & enemies
+        function setupBattlemap() {
+            // Find open tiles to spawn player and enemies
+            let validTiles = [];
+            for (let r = 1; r < GRID_ROWS - 1; r++) {
+                for (let c = 1; c < GRID_COLS - 1; c++) {
+                    if (MAP_LAYOUT[r][c] === 'G' || MAP_LAYOUT[r][c] === 'B') {
+                        validTiles.push({ r, c });
+                    }
+                }
+            }
+
+            // Spawn Player at centered safe zone
+            gameState.player.x = (GRID_COLS / 2) * MAP_TILE_SIZE + MAP_TILE_SIZE/2;
+            gameState.player.y = (GRID_ROWS / 2) * MAP_TILE_SIZE + MAP_TILE_SIZE/2;
+            
+            // Adjust speeds based on selected profiles
+            const profile = BRAWLER_PROFILES[gameState.currentBrawler];
+            gameState.player.speed = profile.speed;
+            gameState.player.sizeMultiplier = profile.size;
+
+            // Spawn random target list of enemy robots
+            gameState.activeEnemies = [];
+            gameState.droppedCubes = [];
+            gameState.eliminatedEnemies = 0;
+            gameState.powerCubes = 0;
+
+            // Pick dynamic random positions for robots
+            let availableSpots = [...validTiles];
+            // Remove tiles too close to center spawn point
+            availableSpots = availableSpots.filter(spot => {
+                let px = spot.c * MAP_TILE_SIZE + MAP_TILE_SIZE/2;
+                let py = spot.r * MAP_TILE_SIZE + MAP_TILE_SIZE/2;
+                let dist = Math.hypot(px - gameState.player.x, py - gameState.player.y);
+                return dist > 180; // Safe distance
+            });
+
+            // If somehow short on coordinates, reset to basic spots
+            if (availableSpots.length < gameState.targetEnemies) {
+                availableSpots = [...validTiles];
+            }
+
+            // Shuffle spots
+            availableSpots.sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < gameState.targetEnemies; i++) {
+                let spot = availableSpots[i % availableSpots.length];
+                let ex = spot.c * MAP_TILE_SIZE + MAP_TILE_SIZE/2;
+                let ey = spot.r * MAP_TILE_SIZE + MAP_TILE_SIZE/2;
+                
+                gameState.activeEnemies.push({
+                    id: i,
+                    x: ex,
+                    y: ey,
+                    baseX: ex,
+                    baseY: ey,
+                    patrolRadius: 60 + Math.random() * 40,
+                    patrolAngle: Math.random() * Math.PI * 2,
+                    patrolSpeed: 1 + Math.random() * 1.5,
+                    radius: 20,
+                    color: i % 2 === 0 ? '#ff3333' : '#ff7700', // Robot colors
+                    type: i % 2 === 0 ? 'melee' : 'boss'
+                });
+            }
+
+            // Sync indicators
+            updateHUD();
+        }
+
+        // Re-calculate window sizes nicely
+        function handleResize() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+
+        // Initialize keyboard listeners
+        window.addEventListener('keydown', e => {
+            gameState.keys[e.key.toLowerCase()] = true;
+            if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(e.key.toLowerCase())) {
+                e.preventDefault(); // Stop window scrolls
+            }
+        });
+        window.addEventListener('keyup', e => {
+            gameState.keys[e.key.toLowerCase()] = false;
+        });
+
+        // Setup Virtual Controls for Touch Screens / Mouse Drag
+        const setupMobileControls = () => {
+            const container = document.getElementById('joystickContainer');
+            const knob = document.getElementById('joystickKnob');
+            
+            if (!container || !knob) return;
+
+            // 공통 핸들러 (좌표 갱신)
+            const handleMove = (clientX, clientY) => {
+                const rect = container.getBoundingClientRect();
+                const startX = rect.left + rect.width / 2;
+                const startY = rect.top + rect.height / 2;
+
+                let deltaX = clientX - startX;
+                let deltaY = clientY - startY;
+                let distance = Math.hypot(deltaX, deltaY);
+
+                if (distance > joystick.maxDistance) {
+                    deltaX = (deltaX / distance) * joystick.maxDistance;
+                    deltaY = (deltaY / distance) * joystick.maxDistance;
+                    distance = joystick.maxDistance;
+                }
+
+                // 조이스틱 손잡이 그래픽 변형
+                knob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+
+                // 이동 벡터 계산 (-1 ~ 1)
+                joystick.dx = deltaX / joystick.maxDistance;
+                joystick.dy = deltaY / joystick.maxDistance;
+            };
+
+            const stopJoystick = () => {
+                joystick.active = false;
+                joystick.dx = 0;
+                joystick.dy = 0;
+                knob.style.transform = `translate(0px, 0px)`;
+            };
+
+            // [터치 이벤트 추가]
+            container.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                joystick.active = true;
+                const touch = e.touches[0];
+                handleMove(touch.clientX, touch.clientY);
+            });
+
+            container.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (!joystick.active) return;
+                const touch = e.touches[0];
+                handleMove(touch.clientX, touch.clientY);
+            });
+
+            container.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                stopJoystick();
+            });
+
+            container.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                stopJoystick();
+            });
+
+            // [마우스 드래그 지원 - PC 웹 반응성 테스트용]
+            container.addEventListener('mousedown', (e) => {
+                joystick.active = true;
+                handleMove(e.clientX, e.clientY);
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!joystick.active) return;
+                handleMove(e.clientX, e.clientY);
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (joystick.active) stopJoystick();
+            });
+        };
+        
+        // 윈도우 로드 시 즉각 조이스틱 셋업
+        window.addEventListener('DOMContentLoaded', () => {
+            setupMobileControls();
+        });
+    </script>
+
+    <script>
+        // Check collision between entity circle and wall bounds
+        function checkWallCollision(newX, newY, radius) {
+            const centerCol = Math.floor(newX / MAP_TILE_SIZE);
+            const centerRow = Math.floor(newY / MAP_TILE_SIZE);
+            const tilesToCheck = [];
+
+            for (let r = centerRow - 1; r <= centerRow + 1; r++) {
+                for (let c = centerCol - 1; c <= centerCol + 1; c++) {
+                    if (r >= 0 && r < GRID_ROWS && c >= 0 && c < GRID_COLS) {
+                        if (MAP_LAYOUT[r][c] === 'W') {
+                            tilesToCheck.push({
+                                x: c * MAP_TILE_SIZE,
+                                y: r * MAP_TILE_SIZE,
+                                size: MAP_TILE_SIZE
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Perform circular-AABB collision check
+            for (let wall of tilesToCheck) {
+                let closestX = Math.max(wall.x, Math.min(newX, wall.x + wall.size));
+                let closestY = Math.max(wall.y, Math.min(newY, wall.y + wall.size));
+
+                let distanceX = newX - closestX;
+                let distanceY = newY - closestY;
+                let distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
+
+                if (distanceSquared < (radius * radius)) {
+                    return true; // Collided
+                }
+            }
+            return false;
+        }
+
+        // Find type of tile player is standing on
+        function getCurrentTileType(px, py) {
+            const c = Math.floor(px / MAP_TILE_SIZE);
+            const r = Math.floor(py / MAP_TILE_SIZE);
+            if (r >= 0 && r < GRID_ROWS && c >= 0 && c < GRID_COLS) {
+                return MAP_LAYOUT[r][c];
+            }
+            return 'W';
+        }
+
+        // Main game frame updater
+        function updateGameFrame() {
+            if (!gameState.gameActive) return;
+
+            let dx = 0;
+            let dy = 0;
+
+            // 터치 조이스틱이 활성화되어 있다면 해당 이동 벡터를 사용, 그렇지 않다면 키보드 처리
+            if (joystick.active) {
+                dx = joystick.dx;
+                dy = joystick.dy;
+            } else {
+                if (gameState.keys['w'] || gameState.keys['arrowup']) dy = -1;
+                if (gameState.keys['s'] || gameState.keys['arrowdown']) dy = 1;
+                if (gameState.keys['a'] || gameState.keys['arrowleft']) dx = -1;
+                if (gameState.keys['d'] || gameState.keys['arrowright']) dx = 1;
+
+                // Normalize diagonal keyboard speeds
+                if (dx !== 0 && dy !== 0) {
+                    dx *= 0.7071;
+                    dy *= 0.7071;
+                }
+            }
+
+            // Check collision with X axis
+            let testX = gameState.player.x + dx * gameState.player.speed;
+            if (!checkWallCollision(testX, gameState.player.y, gameState.player.radius * gameState.player.sizeMultiplier)) {
+                gameState.player.x = testX;
+            }
+            // Check Y axis
+            let testY = gameState.player.y + dy * gameState.player.speed;
+            if (!checkWallCollision(gameState.player.x, testY, gameState.player.radius * gameState.player.sizeMultiplier)) {
+                gameState.player.y = testY;
+            }
+
+            // Identify if player inside high bushes
+            let currentTile = getCurrentTileType(gameState.player.x, gameState.player.y);
+            gameState.player.inBush = (currentTile === 'B');
+
+            // Patrol loop and trigger detection logic for robots
+            gameState.activeEnemies.forEach(enemy => {
+                // Update simple patrol pattern
+                enemy.patrolAngle += 0.015 * enemy.patrolSpeed;
+                let targetX = enemy.baseX + Math.cos(enemy.patrolAngle) * enemy.patrolRadius;
+                let targetY = enemy.baseY + Math.sin(enemy.patrolAngle) * enemy.patrolRadius;
+
+                // Move patrol unless colliding with structural boundary
+                if (!checkWallCollision(targetX, enemy.y, enemy.radius)) {
+                    enemy.x = targetX;
+                }
+                if (!checkWallCollision(enemy.x, targetY, enemy.radius)) {
+                    enemy.y = targetY;
+                }
+
+                // Check collision/contact with player
+                let distanceToPlayer = Math.hypot(enemy.x - gameState.player.x, enemy.y - gameState.player.y);
+                
+                // If touching, launch math brawl
+                if (distanceToPlayer < (enemy.radius + gameState.player.radius * gameState.player.sizeMultiplier)) {
+                    triggerQuizBattle(enemy);
+                }
+            });
+
+            // Handle Power Cube pickups
+            for (let i = gameState.droppedCubes.length - 1; i >= 0; i--) {
+                let cube = gameState.droppedCubes[i];
+                let dist = Math.hypot(cube.x - gameState.player.x, cube.y - gameState.player.y);
+                if (dist < (16 + gameState.player.radius * gameState.player.sizeMultiplier)) {
+                    // Picked up!
+                    gameState.powerCubes++;
+                    sound.playPowerUp();
+                    gameState.droppedCubes.splice(i, 1);
+                    updateHUD();
+                }
+            }
+
+            // Draw everything onto Canvas
+            renderCanvas();
+            renderMinimap();
+
+            // Loop frame
+            requestAnimationFrame(updateGameFrame);
+        }
+    </script>
+
+    <script>
+        function renderCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Compute camera position (player centered)
+            let cameraX = gameState.player.x - canvas.width / 2;
+            let cameraY = gameState.player.y - canvas.height / 2;
+
+            // Restrict camera to map bounds
+            const maxCamX = GRID_COLS * MAP_TILE_SIZE - canvas.width;
+            const maxCamY = GRID_ROWS * MAP_TILE_SIZE - canvas.height;
+            cameraX = Math.max(0, Math.min(cameraX, maxCamX));
+            cameraY = Math.max(0, Math.min(cameraY, maxCamY));
+
+            // 1. Draw Ground Texture & Grid pattern
+            ctx.fillStyle = '#1c140c'; // Warm brown showdown theme ground
+            ctx.fillRect(-cameraX, -cameraY, GRID_COLS * MAP_TILE_SIZE, GRID_ROWS * MAP_TILE_SIZE);
+
+            // Subtle grid lines
+            ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+            ctx.lineWidth = 2;
+            for (let r = 0; r <= GRID_ROWS; r++) {
+                ctx.beginPath();
+                ctx.moveTo(-cameraX, r * MAP_TILE_SIZE - cameraY);
+                ctx.lineTo(GRID_COLS * MAP_TILE_SIZE - cameraX, r * MAP_TILE_SIZE - cameraY);
+                ctx.stroke();
+            }
+            for (let c = 0; c <= GRID_COLS; c++) {
+                ctx.beginPath();
+                ctx.moveTo(c * MAP_TILE_SIZE - cameraX, -cameraY);
+                ctx.lineTo(c * MAP_TILE_SIZE - cameraX, GRID_ROWS * MAP_TILE_SIZE - cameraY);
+                ctx.stroke();
+            }
+
+            // 2. Render Walls and bushes under player
+            for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                    const tile = MAP_LAYOUT[r][c];
+                    const tx = c * MAP_TILE_SIZE - cameraX;
+                    const ty = r * MAP_TILE_SIZE - cameraY;
+
+                    if (tile === 'W') {
+                        // Shadow element
+                        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                        ctx.fillRect(tx, ty + 8, MAP_TILE_SIZE, MAP_TILE_SIZE);
+
+                        // Front Face block
+                        ctx.fillStyle = '#3a2512'; // Rocky wall body
+                        ctx.fillRect(tx, ty, MAP_TILE_SIZE, MAP_TILE_SIZE);
+                        ctx.strokeStyle = '#000000';
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(tx, ty, MAP_TILE_SIZE, MAP_TILE_SIZE);
+
+                        // Highlight Top
+                        ctx.fillStyle = '#5c3d1d';
+                        ctx.fillRect(tx + 4, ty + 4, MAP_TILE_SIZE - 8, MAP_TILE_SIZE / 3);
+                    } else if (tile === 'B') {
+                        // Semi transparent green bush underlay
+                        ctx.fillStyle = '#1b5e20';
+                        ctx.fillRect(tx, ty, MAP_TILE_SIZE, MAP_TILE_SIZE);
+                    }
+                }
+            }
+
+            // 3. Draw Dropped Power Cubes on map
+            gameState.droppedCubes.forEach(cube => {
+                const cx = cube.x - cameraX;
+                const cy = cube.y - cameraY;
+
+                // Pulsing size
+                const pulse = 1 + 0.1 * Math.sin(Date.now() / 150);
+
+                // Draw shiny shadow
+                ctx.beginPath();
+                ctx.arc(cx, cy + 6, 12, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.fill();
+
+                // Shiny cube box (Green/Neon)
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.scale(pulse, pulse);
+                ctx.fillStyle = '#48e809';
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = '#000000';
+                
+                // Draw rounded rect cube
+                ctx.beginPath();
+                ctx.roundRect(-10, -10, 20, 20, 4);
+                ctx.fill();
+                ctx.stroke();
+
+                // Lightning symbol inside cube
+                ctx.beginPath();
+                ctx.moveTo(2, -7);
+                ctx.lineTo(-4, 1);
+                ctx.lineTo(1, 1);
+                ctx.lineTo(-2, 7);
+                ctx.lineTo(4, -1);
+                ctx.lineTo(-1, -1);
+                ctx.closePath();
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            // 4. Render Enemy Robots
+            gameState.activeEnemies.forEach(enemy => {
+                // If robot is in bush AND player is NOT in bush, hide robot unless extremely close
+                const enemyTileType = getCurrentTileType(enemy.x, enemy.y);
+                const isEnemyInBush = (enemyTileType === 'B');
+                const dist = Math.hypot(enemy.x - gameState.player.x, enemy.y - gameState.player.y);
+
+                if (isEnemyInBush && !gameState.player.inBush && dist > 110) {
+                    return; // Stealth! Do not render
+                }
+
+                const ex = enemy.x - cameraX;
+                const ey = enemy.y - cameraY;
+
+                // Draw circle base shadow
+                ctx.beginPath();
+                ctx.arc(ex, ey + 8, enemy.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.fill();
+
+                // Robot body
+                ctx.beginPath();
+                ctx.arc(ex, ey, enemy.radius, 0, Math.PI * 2);
+                ctx.fillStyle = enemy.color;
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // Robot Eye (Glowing cyan or orange)
+                ctx.beginPath();
+                ctx.arc(ex + 4, ey - 3, 5, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffea00';
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Robot Metal details
+                ctx.fillStyle = '#7a7a7a';
+                ctx.fillRect(ex - 10, ey + 4, 20, 6);
+                ctx.strokeRect(ex - 10, ey + 4, 20, 6);
+
+                // Anger Indicator text
+                ctx.fillStyle = '#000000';
+                ctx.font = '9px Arial';
+                ctx.fillText("AI ROBOT", ex - 18, ey - 24);
+
+                // Math sign badge floating
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(ex - 12, ey - 12, 7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#ff0000';
+                ctx.font = 'bold 9px sans-serif';
+                ctx.fillText("x", ex - 15, ey - 9);
+            });
+
+            // 5. Draw Player Character
+            const px = gameState.player.x - cameraX;
+            const py = gameState.player.y - cameraY;
+            const size = gameState.player.radius * gameState.player.sizeMultiplier;
+            const profile = BRAWLER_PROFILES[gameState.currentBrawler];
+
+            // Render Ring base indicator
+            ctx.beginPath();
+            ctx.ellipse(px, py + size - 2, size, size/3, 0, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 195, 255, 0.4)';
+            ctx.fill();
+            ctx.strokeStyle = '#00c3ff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Handle Bush hiding (semi transparency visual indicator)
+            ctx.save();
+            if (gameState.player.inBush) {
+                ctx.globalAlpha = 0.55;
+            }
+
+            // Draw player skin/body
+            ctx.beginPath();
+            ctx.arc(px, py, size, 0, Math.PI * 2);
+            ctx.fillStyle = profile.skin;
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Hair/Cap render based on choices
+            ctx.beginPath();
+            ctx.arc(px, py - size * 0.4, size * 0.9, Math.PI, Math.PI * 2);
+            ctx.fillStyle = profile.color;
+            ctx.fill();
+            ctx.stroke();
+
+            // Eyes & details
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(px - 5, py - 2, 4, 0, Math.PI * 2);
+            ctx.arc(px + 5, py - 2, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(px - 5, py - 2, 2, 0, Math.PI * 2);
+            ctx.arc(px + 5, py - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Smile
+            ctx.beginPath();
+            ctx.arc(px, py + 4, 5, 0, Math.PI);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.restore();
+
+            // 6. Draw HUD Nameplate floating directly above player
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.strokeText(profile.name, px, py - size - 8);
+            ctx.fillText(profile.name, px, py - size - 8);
+
+            // 7. Render Bushes TOP overlay (Allows hiding visual effect nicely)
+            for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                    const tile = MAP_LAYOUT[r][c];
+                    const tx = c * MAP_TILE_SIZE - cameraX;
+                    const ty = r * MAP_TILE_SIZE - cameraY;
+
+                    if (tile === 'B') {
+                        // Drawing thick stylized bush leaves
+                        ctx.fillStyle = '#2e7d32'; // Dark forest green top overlay
+                        ctx.beginPath();
+                        ctx.roundRect(tx - 2, ty - 2, MAP_TILE_SIZE + 4, MAP_TILE_SIZE + 4, 12);
+                        ctx.fill();
+
+                        // Inner details
+                        ctx.fillStyle = '#1b5e20';
+                        ctx.beginPath();
+                        ctx.arc(tx + 20, ty + 20, 15, 0, Math.PI*2);
+                        ctx.arc(tx + 45, ty + 40, 18, 0, Math.PI*2);
+                        ctx.arc(tx + 40, ty + 15, 12, 0, Math.PI*2);
+                        ctx.fill();
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script>
+        function renderMinimap() {
+            mctx.fillStyle = 'rgba(10, 5, 20, 0.8)';
+            mctx.fillRect(0, 0, minimapCanvas.width, minimapCanvas.height);
+
+            const mapScaleX = minimapCanvas.width / (GRID_COLS * MAP_TILE_SIZE);
+            const mapScaleY = minimapCanvas.height / (GRID_ROWS * MAP_TILE_SIZE);
+
+            // Draw wall bounds & bushes on minimap
+            for (let r = 0; r < GRID_ROWS; r++) {
+                for (let c = 0; c < GRID_COLS; c++) {
+                    const tile = MAP_LAYOUT[r][c];
+                    if (tile === 'W') {
+                        mctx.fillStyle = '#4e3419';
+                        mctx.fillRect(c * MAP_TILE_SIZE * mapScaleX, r * MAP_TILE_SIZE * mapScaleY, MAP_TILE_SIZE * mapScaleX, MAP_TILE_SIZE * mapScaleY);
+                    } else if (tile === 'B') {
+                        mctx.fillStyle = '#1b5e20';
+                        mctx.fillRect(c * MAP_TILE_SIZE * mapScaleX, r * MAP_TILE_SIZE * mapScaleY, MAP_TILE_SIZE * mapScaleX, MAP_TILE_SIZE * mapScaleY);
+                    }
+                }
+            }
+
+            // Draw player position as green dot
+            const px = gameState.player.x * mapScaleX;
+            const py = gameState.player.y * mapScaleY;
+            mctx.beginPath();
+            mctx.arc(px, py, 4, 0, Math.PI*2);
+            mctx.fillStyle = '#48e809';
+            mctx.fill();
+
+            // Draw enemies as red dots
+            gameState.activeEnemies.forEach(enemy => {
+                const ex = enemy.x * mapScaleX;
+                const ey = enemy.y * mapScaleY;
+                mctx.beginPath();
+                mctx.arc(ex, ey, 3, 0, Math.PI*2);
+                mctx.fillStyle = '#ff3333';
+                mctx.fill();
+            });
+        }
+    </script>
+
+    <script>
+        // Start match transition
+        function startGame() {
+            sound.playBtn();
+            lobbyScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            gameState.gameActive = true;
+            rollRandomTarget();
+            setupBattlemap();
+            handleResize();
+
+            // Start standard canvas update loops
+            requestAnimationFrame(updateGameFrame);
+        }
+
+        // Return to main lobby
+        function exitToLobby() {
+            sound.playBtn();
+            gameState.gameActive = false;
+            clearInterval(gameState.quizInterval);
+
+            // Interface reset
+            lobbyScreen.classList.remove('hidden');
+            gameScreen.classList.add('hidden');
+            quizScreen.classList.add('hidden');
+            gameOverScreen.classList.add('hidden');
+            victoryScreen.classList.add('hidden');
+
+            document.getElementById('lobbyTrophies').textContent = gameState.trophies;
+        }
+
+        // Action when user clicks restart from End game screens
+        function restartMatchDirectly() {
+            sound.playBtn();
+            gameOverScreen.classList.add('hidden');
+            victoryScreen.classList.add('hidden');
+            quizScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            gameState.gameActive = true;
+            rollRandomTarget();
+            setupBattlemap();
+            handleResize();
+        }
+
+        // Update indicators on display overlay
+        function updateHUD() {
+            document.getElementById('eliminatedEnemiesCount').textContent = gameState.eliminatedEnemies;
+            document.getElementById('targetEnemiesCount').textContent = gameState.targetEnemies;
+            document.getElementById('powerCubeCount').textContent = gameState.powerCubes;
+            document.getElementById('quizCubeCount').textContent = gameState.powerCubes;
+        }
+
+        // Listen resize windows
+        window.addEventListener('resize', handleResize);
+    </script>
+
+    <script>
+        // Triggered when colliding with a robot
+        function triggerQuizBattle(enemy) {
+            // Pause action loop
+            gameState.gameActive = false;
+            gameState.quizEnemyRef = enemy;
+
+            // Audio & transitions
+            sound.playBattleStart();
+            quizScreen.classList.remove('hidden');
+
+            const introSwiper = document.getElementById('battleIntroSwiper');
+            introSwiper.classList.remove('translate-y-full');
+            introSwiper.classList.add('translate-y-0');
+
+            // Slide out banner animation after 1.2 seconds
+            setTimeout(() => {
+                introSwiper.classList.add('translate-y-full');
+            }, 1200);
+
+            // Generate middle school 1st semester linear equations
+            gameState.activeQuestions = MiddleSchoolEquationGenerator.generateThreeEquations();
+            gameState.activeQuizIndex = 0;
+            gameState.powerCubeUsedInCurrentQuiz = false;
+
+            // Reset base clock limit (15 seconds)
+            gameState.maxTimer = 15;
+            gameState.timer = gameState.maxTimer;
+
+            // Setup Booster options depending on Cube balance
+            const cubeBtn = document.getElementById('btnUsePowerCube');
+            if (gameState.powerCubes > 0) {
+                cubeBtn.disabled = false;
+                cubeBtn.classList.remove('opacity-40');
+            } else {
+                cubeBtn.disabled = true;
+                cubeBtn.classList.add('opacity-40');
+            }
+
+            updateHUD();
+            displayCurrentQuizQuestion();
+
+            // Run active quiz ticking intervals
+            if (gameState.quizInterval) clearInterval(gameState.quizInterval);
+            gameState.quizInterval = setInterval(tickQuizTimer, 100);
+        }
+
+        // Ticking interval handler
+        function tickQuizTimer() {
+            gameState.timer -= 0.1;
+            if (gameState.timer <= 0) {
+                gameState.timer = 0;
+                clearInterval(gameState.quizInterval);
+                triggerQuizDefeat();
+            }
+
+            // Play warning sound when low on time
+            if (gameState.timer > 0 && gameState.timer < 5 && Math.floor(gameState.timer * 10) % 10 === 0) {
+                sound.playTick();
+            }
+
+            // Sync visual bar indicators
+            const bar = document.getElementById('quizTimerBar');
+            const pct = (gameState.timer / gameState.maxTimer) * 100;
+            bar.style.width = `${pct}%`;
+
+            // Change progress bar color smoothly depending on intensity
+            if (pct > 50) {
+                bar.className = "bg-gradient-to-r from-green-500 to-yellow-400 h-full w-full rounded-full transition-all duration-100 ease-linear";
+            } else if (pct > 25) {
+                bar.className = "bg-gradient-to-r from-yellow-400 to-orange-500 h-full w-full rounded-full transition-all duration-100 ease-linear";
+            } else {
+                bar.className = "bg-gradient-to-r from-orange-500 to-red-600 h-full w-full rounded-full transition-all duration-100 ease-linear";
+            }
+
+            document.getElementById('quizTimerText').textContent = `${Math.max(0, gameState.timer).toFixed(2)}초`;
+        }
+
+        // Build active math visual templates
+        function displayCurrentQuizQuestion() {
+            const currentQ = gameState.activeQuestions[gameState.activeQuizIndex];
+            
+            // Step header indicators
+            document.getElementById('quizCurrentProgress').textContent = `${gameState.activeQuizIndex + 1} / 3 문제 완료`;
+
+            // Formula Text
+            document.getElementById('quizEquationFormula').textContent = currentQ.formula;
+
+            // Choice options grid renderer
+            const answersGrid = document.getElementById('quizAnswersGrid');
+            answersGrid.innerHTML = ''; // clean old elements
+
+            currentQ.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "brawl-button brawl-button-blue bg-gradient-to-r from-blue-700 to-sky-500 hover:from-blue-600 hover:to-sky-400 py-4 rounded-2xl font-black font-mono text-2xl text-white transform hover:scale-[1.02] transition select-none border-2 border-black";
+                btn.innerHTML = `x = ${opt}`;
+                btn.onclick = () => selectQuizAnswer(opt, btn);
+                answersGrid.appendChild(btn);
+            });
+        }
+
+        // Power Cube use command inside Math battle
+        function activatePowerCubeInQuiz() {
+            if (gameState.powerCubes <= 0 || gameState.powerCubeUsedInCurrentQuiz) return;
+
+            sound.playPowerUp();
+            gameState.powerCubes--;
+            gameState.powerCubeUsedInCurrentQuiz = true;
+
+            // Adjust timers: default 15 + 10 = 25s
+            gameState.maxTimer = 25;
+            gameState.timer += 10.0; // Instantly reward +10 seconds onto current timer
+
+            // Disable btn options
+            const cubeBtn = document.getElementById('btnUsePowerCube');
+            cubeBtn.disabled = true;
+            cubeBtn.classList.add('opacity-40');
+
+            // Sound and effects
+            document.getElementById('timeLimitStatus').innerHTML = `<span class="text-[#48e809] animate-pulse"><i class="fa-solid fa-circle-up mr-1"></i>파워부스트 활성화 (+10초)</span>`;
+
+            updateHUD();
+        }
+
+        // Triggered when click options
+        function selectQuizAnswer(selectedValue, buttonElement) {
+            const currentQ = gameState.activeQuestions[gameState.activeQuizIndex];
+
+            if (selectedValue === currentQ.correctAnswer) {
+                // Correct Answer!
+                sound.playCorrect();
+                buttonElement.className = "brawl-button bg-gradient-to-r from-green-600 to-emerald-500 py-4 rounded-2xl font-black font-mono text-2xl text-white border-2 border-black pointer-events-none";
+
+                // Freeze briefly then transition next
+                setTimeout(() => {
+                    advanceQuizSequence();
+                }, 400);
+
+            } else {
+                // Wrong Answer!
+                sound.playWrong();
+                
+                // Shake full question box to notify error
+                const cardBox = document.getElementById('quizCardBox');
+                cardBox.classList.add('shake');
+                setTimeout(() => { cardBox.classList.remove('shake'); }, 400);
+
+                // Give feedback
+                buttonElement.className = "brawl-button bg-gradient-to-r from-red-600 to-rose-500 py-4 rounded-2xl font-black font-mono text-2xl text-white border-2 border-black pointer-events-none";
+                
+                // Deduct 3 seconds penalty!
+                gameState.timer = Math.max(0, gameState.timer - 3.0);
+                document.getElementById('quizTimerText').textContent = `${Math.max(0, gameState.timer).toFixed(2)}초`;
+                
+                // Flashing red banner briefly on timer indicators
+                const timerText = document.getElementById('quizTimerText');
+                timerText.classList.add('text-red-600', 'scale-110');
+                setTimeout(() => { timerText.classList.remove('text-red-600', 'scale-110'); }, 500);
+            }
+        }
+
+        // Transition loop
+        function advanceQuizSequence() {
+            gameState.activeQuizIndex++;
+            if (gameState.activeQuizIndex >= 3) {
+                // Success! All 3 questions solved!
+                clearInterval(gameState.quizInterval);
+                triggerQuizVictory();
+            } else {
+                displayCurrentQuizQuestion();
+            }
+        }
+
+        // Quiz success action
+        function triggerQuizVictory() {
+            // Close Quiz Screen
+            quizScreen.classList.add('hidden');
+            gameState.gameActive = true;
+
+            // Clear defeated enemy robot reference
+            if (gameState.quizEnemyRef) {
+                // Remove from enemy list
+                const index = gameState.activeEnemies.findIndex(e => e.id === gameState.quizEnemyRef.id);
+                if (index !== -1) {
+                    // Drop a Power Cube at location!
+                    gameState.droppedCubes.push({
+                        x: gameState.quizEnemyRef.x,
+                        y: gameState.quizEnemyRef.y
+                    });
+                    
+                    gameState.activeEnemies.splice(index, 1);
+                }
+            }
+
+            gameState.eliminatedEnemies++;
+            updateHUD();
+
+            // Check if victory condition met
+            if (gameState.eliminatedEnemies >= gameState.targetEnemies) {
+                triggerMatchVictory();
+            } else {
+                // Loop canvas updates back
+                requestAnimationFrame(updateGameFrame);
+            }
+        }
+
+        // Quiz Fail / Timeout action
+        function triggerQuizDefeat() {
+            sound.playLose();
+            gameState.gameActive = false;
+            quizScreen.classList.add('hidden');
+            gameOverScreen.classList.remove('hidden');
+
+            // Set final scores on report card
+            document.getElementById('ovGoalCount').textContent = `${gameState.targetEnemies}명`;
+            document.getElementById('ovDefeatedCount').textContent = `${gameState.eliminatedEnemies}명`;
+            document.getElementById('ovRemainingCount').textContent = `${gameState.targetEnemies - gameState.eliminatedEnemies}명`;
+        }
+
+        // Full Match Win celebration
+        function triggerMatchVictory() {
+            sound.playWin();
+            gameState.gameActive = false;
+            gameScreen.classList.add('hidden');
+            victoryScreen.classList.remove('hidden');
+
+            // Award trophy count
+            gameState.trophies += 10;
+            localStorage.setItem('brawl_trophies', gameState.trophies.toString());
+
+            document.getElementById('vcDefeatedCount').textContent = `${gameState.eliminatedEnemies}명`;
+        }
+    </script>
+</body>
+</html>
