@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quarantine Zone: 수학 검역소</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&family=Noto+Sans+KR:wght@300;400;700&display=swap');
+        
+        .font-mono-tech {
+            font-family: 'Share Tech Mono', 'Orbitron', 'Noto Sans KR', monospace;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #09090b;
+            color: #f4f4f5;
+            overflow-x: hidden;
+        }
+
+        /* Scanline Animation Effect */
+        .scanlines {
+            position: relative;
+            overflow: hidden;
+        }
+        .scanlines::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        /* Pulsing Alert Glow */
+        @keyframes pulse-glow {
+            0%, 100% { border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 0 5px rgba(239, 68, 68, 0.2); }
+            50% { border-color: rgba(239, 68, 68, 0.8); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
+        }
+        .warning-glow {
+            animation: pulse-glow 2s infinite;
+        }
+
+        /* Green Terminal Pulsing Glow */
+        @keyframes green-glow {
+            0%, 100% { border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 5px rgba(16, 185, 129, 0.1); }
+            50% { border-color: rgba(16, 185, 129, 0.7); box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+        }
+        .terminal-glow {
+            animation: green-glow 3s infinite;
+        }
+
+        /* CRT Screen curve */
+        .crt-screen {
+            border-radius: 12px;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 0 20px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Scrollbar customizing */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #18181b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #10b981;
+        }
+    </style>
+</head>
+<body class="scanlines bg-zinc-950 text-zinc-100 min-h-screen flex flex-col justify-between">
+
+    <!-- Top Status Bar (Padding & spacing optimized for tablets) -->
+    <header class="bg-zinc-900 border-b border-zinc-800 px-4 md:px-6 py-2.5 flex flex-wrap justify-between items-center gap-3 z-10 shadow-lg">
+        <div class="flex items-center space-x-3">
+            <span class="bg-red-950 text-red-400 border border-red-800 text-[10px] sm:text-xs px-2 py-0.5 sm:py-1 rounded font-bold uppercase tracking-wider font-mono-tech animate-pulse">
+                Quarantine Zone
+            </span>
+            <h1 class="text-lg md:text-xl font-bold font-mono-tech tracking-wider text-emerald-400">MATH CHECKPOINT v2.5</h1>
+        </div>
+        
+        <!-- Live Dashboard Stats (Tight alignment to fit in one row) -->
+        <div class="flex items-center space-x-4 md:space-x-6 flex-wrap font-mono-tech text-xs sm:text-sm">
+            <div class="flex items-center space-x-1.5">
+                <span class="text-zinc-400 text-xs uppercase">Day</span>
+                <span id="stat-day" class="text-emerald-400 font-bold text-base">1</span>
+            </div>
+            
+            <!-- Trust Gauge (신뢰도) -->
+            <div class="flex flex-col w-24 sm:w-28 md:w-36">
+                <div class="flex justify-between text-[10px] uppercase text-zinc-400 mb-0.5">
+                    <span>신뢰도</span>
+                    <span id="lbl-trust" class="text-emerald-400 font-bold">100%</span>
+                </div>
+                <div class="h-1.5 w-full bg-zinc-950 rounded border border-zinc-800 overflow-hidden">
+                    <div id="bar-trust" class="h-full bg-gradient-to-r from-red-500 to-emerald-500 transition-all duration-300" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- Infection Level (감염도) -->
+            <div class="flex flex-col w-24 sm:w-28 md:w-36">
+                <div class="flex justify-between text-[10px] uppercase text-zinc-400 mb-0.5">
+                    <span>감염도</span>
+                    <span id="lbl-infection" class="text-red-400 font-bold">0%</span>
+                </div>
+                <div class="h-1.5 w-full bg-zinc-950 rounded border border-zinc-800 overflow-hidden">
+                    <div id="bar-infection" class="h-full bg-red-600 transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Credits -->
+            <div class="flex items-center space-x-1.5 bg-zinc-950 px-2.5 py-0.5 rounded border border-zinc-800">
+                <span class="text-yellow-500 font-bold text-xs">CR</span>
+                <span id="stat-credits" class="text-zinc-100 font-bold text-xs sm:text-sm">100</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container (Optimized Layout Grid) -->
+    <main class="flex-grow p-2 sm:p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 max-w-7xl mx-auto w-full">
+        
+        <!-- LEFT PANEL: Daily Manual & Upgrade Shop -->
+        <!-- md:col-span-6 handles 2-column layout on tablets, lg:col-span-4 handles 3-column on desktops -->
+        <section class="col-span-1 md:col-span-6 lg:col-span-4 flex flex-col space-y-4 md:space-y-6">
+            
+            <!-- Daily Manual Panel -->
+            <div class="bg-zinc-900 border border-zinc-800 p-4 md:p-5 rounded-lg flex-grow flex flex-col justify-between crt-screen terminal-glow relative">
+                <div class="absolute top-2 right-3 font-mono-tech text-xxs text-emerald-600 select-none">MANUAL_LOG_0</div>
+                <div>
+                    <h2 class="text-emerald-400 font-bold border-b border-zinc-800 pb-2 mb-3 text-sm md:text-base uppercase tracking-wider flex items-center">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        오늘의 검역 프로토콜
+                    </h2>
+                    
+                    <!-- Scrollable inner container to prevent stretching on tablet heights -->
+                    <div id="manual-content" class="space-y-3 text-xs sm:text-sm text-zinc-300 max-h-[180px] md:max-h-[240px] lg:max-h-[380px] overflow-y-auto pr-1">
+                        <!-- Mathematical rules loaded dynamically -->
+                        <div class="p-2.5 bg-zinc-950 rounded border border-zinc-800">
+                            <span class="text-amber-400 font-bold block mb-0.5">기본 무결성 검사 (Rule 1)</span>
+                            <p class="font-mono-tech text-emerald-500 font-semibold text-sm text-center py-0.5">나이(A) + 출생년도(Y) = 2026</p>
+                            <p class="text-[11px] text-zinc-400 mt-0.5">출생 연도와 나이 정보는 항상 올해 연도(2026년) 기준과 일치해야 합니다.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 border-t border-zinc-800 pt-3">
+                    <h3 class="text-red-400 font-bold text-[11px] uppercase tracking-wider mb-1">판정 가이드라인</h3>
+                    <ul class="text-[11px] text-zinc-400 space-y-1 list-disc pl-3.5">
+                        <li><strong class="text-emerald-500">통과:</strong> 모든 연산 규칙 및 검증 공식을 완벽히 통과하는 정상인.</li>
+                        <li><strong class="text-amber-500">격리:</strong> 공식 검증 실패, 단순 불일치, 혹은 정보 훼손 변이자.</li>
+                        <li><strong class="text-red-500">처분:</strong> 심각한 규칙 오차 및 감염 특이 신호가 다수 검출된 침입 좀비.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Upgrades / Items panel (Compact formatting) -->
+            <div id="upgrades-panel" class="bg-zinc-900 border border-zinc-800 p-4 md:p-5 rounded-lg flex flex-col">
+                <h2 class="text-yellow-500 font-bold border-b border-zinc-800 pb-2 mb-3 uppercase tracking-wider flex items-center text-xs md:text-sm">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    보안 본부 기술 업그레이드
+                </h2>
+                
+                <!-- Scrollable list wrapper for smaller screens -->
+                <div class="grid grid-cols-1 gap-2.5 max-h-[160px] md:max-h-[190px] lg:max-h-none overflow-y-auto pr-1" id="upgrades-list">
+                    <!-- Calculator Upgrade -->
+                    <div class="p-2.5 bg-zinc-950 rounded border border-zinc-800 flex justify-between items-center text-xs">
+                        <div class="flex-grow pr-2">
+                            <span class="font-bold text-zinc-200 block">검역 전용 계산기</span>
+                            <span class="text-zinc-500 text-[10px] sm:text-xs">화면에 팝업 계산기를 띄웁니다.</span>
+                        </div>
+                        <button onclick="buyUpgrade('calculator', 35)" id="btn-up-calc" class="bg-zinc-800 hover:bg-yellow-600 text-yellow-400 font-bold px-2.5 py-1 rounded border border-zinc-700 transition whitespace-nowrap">35 CR</button>
+                    </div>
+                    
+                    <!-- Decoder Tool -->
+                    <div class="p-2.5 bg-zinc-950 rounded border border-zinc-800 flex justify-between items-center text-xs">
+                        <div class="flex-grow pr-2">
+                            <span class="font-bold text-zinc-200 block">암호 해독 가속기</span>
+                            <span class="text-zinc-500 text-[10px] sm:text-xs">??? 영역 1개를 자동 해독합니다. (쿨다운)</span>
+                        </div>
+                        <button onclick="buyUpgrade('decoder', 50)" id="btn-up-dec" class="bg-zinc-800 hover:bg-yellow-600 text-yellow-400 font-bold px-2.5 py-1 rounded border border-zinc-700 transition whitespace-nowrap">50 CR</button>
+                    </div>
+
+                    <!-- Scan Logic Error Detect -->
+                    <div class="p-2.5 bg-zinc-950 rounded border border-zinc-800 flex justify-between items-center text-xs">
+                        <div class="flex-grow pr-2">
+                            <span class="font-bold text-zinc-200 block">지능형 모순 분석기</span>
+                            <span class="text-zinc-500 text-[10px] sm:text-xs">모순율이 감지되면 위험 경보가 작동합니다.</span>
+                        </div>
+                        <button onclick="buyUpgrade('detector', 70)" id="btn-up-det" class="bg-zinc-800 hover:bg-yellow-600 text-yellow-400 font-bold px-2.5 py-1 rounded border border-zinc-700 transition whitespace-nowrap">70 CR</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CENTER PANEL: Quarantine Booth & ID Document -->
+        <!-- md:col-span-6 on tablets, lg:col-span-5 on desktops -->
+        <section class="col-span-1 md:col-span-6 lg:col-span-5 flex flex-col space-y-4 md:space-y-6">
+            
+            <!-- Terminal Booth Window -->
+            <div class="bg-zinc-900 border border-zinc-800 p-4 md:p-5 lg:p-6 rounded-lg flex flex-col justify-between crt-screen relative">
+                <div class="absolute top-2 left-3 font-mono-tech text-xxs text-zinc-600 select-none">STAGE_BOOTH_B</div>
+                
+                <!-- Survivor Profile Area (Compact scaling for tablets) -->
+                <div class="flex items-center space-x-4 pb-3 border-b border-zinc-800">
+                    <!-- Dynamic Canvas Avatar -->
+                    <div class="relative flex-shrink-0">
+                        <canvas id="survivor-avatar" width="100" height="100" class="border-2 border-emerald-500 rounded bg-zinc-950 shadow-inner w-20 h-20 sm:w-24 sm:h-24"></canvas>
+                        <div id="scanner-line" class="absolute left-0 right-0 h-0.5 bg-emerald-400 shadow-md opacity-0 pointer-events-none" style="top: 0%"></div>
+                    </div>
+                    
+                    <div class="flex-grow min-w-0">
+                        <div class="flex justify-between items-start">
+                            <div class="min-w-0">
+                                <span class="text-zinc-500 text-[10px] block uppercase font-mono-tech">ID SCANNING...</span>
+                                <h3 id="survivor-name" class="text-base sm:text-lg font-bold tracking-wider text-zinc-200 truncate">데이터 없음</h3>
+                            </div>
+                            <span id="zombie-warning-tag" class="hidden text-red-500 bg-red-950 border border-red-800 px-1.5 py-0.5 text-[9px] sm:text-xxs rounded font-bold animate-pulse font-mono-tech whitespace-nowrap">
+                                모순율 경보!
+                            </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-1.5 mt-1.5 text-xs">
+                            <div class="bg-zinc-950 p-1 rounded border border-zinc-800 text-center sm:text-left">
+                                <span class="text-zinc-500 text-[9px] block">체온</span>
+                                <span id="survivor-temp" class="font-mono-tech font-bold text-emerald-400 text-xs sm:text-sm">--.-°C</span>
+                            </div>
+                            <div class="bg-zinc-950 p-1 rounded border border-zinc-800 text-center sm:text-left">
+                                <span class="text-zinc-500 text-[9px] block">심박수</span>
+                                <span id="survivor-heart" class="font-mono-tech font-bold text-emerald-400 text-xs sm:text-sm">-- bpm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SURVIVOR PASSPORT / ID DESIGN (Adjusted margins & font scaling) -->
+                <div class="my-4 md:my-5 bg-amber-50 text-zinc-900 p-4 sm:p-5 rounded-lg shadow-xl relative border-l-8 border-amber-500 transform rotate-1">
+                    <!-- Hologram overlay -->
+                    <div class="absolute inset-0 bg-gradient-to-tr from-transparent via-amber-200 to-transparent opacity-30 rounded-lg pointer-events-none"></div>
+                    
+                    <div class="flex justify-between items-center mb-2.5 pb-1.5 border-b border-amber-300">
+                        <span class="text-[9px] sm:text-xxs tracking-widest uppercase font-bold text-amber-800">CITIZEN IDENTITY CARD</span>
+                        <span class="font-mono-tech text-xxs font-bold text-amber-700 select-none">ID-2026-XQ</span>
+                    </div>
+
+                    <!-- Identity Details Matrix -->
+                    <div class="grid grid-cols-2 gap-x-3 gap-y-2.5 text-xs sm:text-sm">
+                        <div>
+                            <span class="text-[10px] font-bold text-amber-800 block">이름 (Name)</span>
+                            <span id="card-name" class="font-bold font-mono-tech text-zinc-800 tracking-wide truncate block">--</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-amber-800 block">성별 (Gender)</span>
+                            <span id="card-gender" class="font-bold text-zinc-800 font-mono-tech">--</span>
+                        </div>
+                        
+                        <!-- These fields can be hidden "???" (Flex wrapping added for narrow screens) -->
+                        <div class="relative">
+                            <span class="text-[10px] font-bold text-amber-800 block">출생년도 (Birth Year)</span>
+                            <div class="flex items-center space-x-1.5 flex-wrap sm:flex-nowrap">
+                                <span id="card-birth" class="font-bold font-mono-tech text-zinc-800">--</span>
+                                <input type="number" id="input-birth" placeholder="추론" class="hidden w-14 sm:w-16 bg-white border border-amber-400 text-[10px] sm:text-xs px-1 py-0.5 rounded focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono-tech">
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-amber-800 block">나이 (Age)</span>
+                            <div class="flex items-center space-x-1.5 flex-wrap sm:flex-nowrap">
+                                <span id="card-age" class="font-bold font-mono-tech text-zinc-800">--</span>
+                                <input type="number" id="input-age" placeholder="추론" class="hidden w-14 sm:w-16 bg-white border border-amber-400 text-[10px] sm:text-xs px-1 py-0.5 rounded focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono-tech">
+                            </div>
+                        </div>
+
+                        <div class="col-span-2">
+                            <span class="text-[10px] font-bold text-amber-800 block">고유 식별 코드 (Citizen Code)</span>
+                            <div class="flex items-center space-x-2">
+                                <span id="card-code" class="font-bold font-mono-tech text-zinc-800 tracking-wider">--</span>
+                                <input type="number" id="input-code" placeholder="추론값 입력" class="hidden flex-grow bg-white border border-amber-400 text-[10px] sm:text-xs px-1.5 py-0.5 rounded focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono-tech">
+                            </div>
+                        </div>
+
+                        <div class="col-span-2 border-t border-dashed border-amber-300 pt-1.5">
+                            <span class="text-[10px] font-bold text-amber-800 block">검증 체크섬 (Verification Checksum)</span>
+                            <div class="flex items-center space-x-2">
+                                <span id="card-checksum" class="font-bold font-mono-tech text-zinc-800">--</span>
+                                <input type="number" id="input-checksum" placeholder="추론값 입력" class="hidden flex-grow bg-white border border-amber-400 text-[10px] sm:text-xs px-1.5 py-0.5 rounded focus:outline-none focus:ring-1 focus:ring-amber-500 font-mono-tech">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Stamp Mark -->
+                    <div class="mt-3.5 flex justify-between items-end">
+                        <div class="text-[9px] text-amber-700">인증 연도: 2026-2027</div>
+                        <div class="border-2 border-amber-400 rounded-full px-2 py-0.5 text-[9px] font-bold text-amber-500 uppercase tracking-widest transform -rotate-12 select-none">
+                            CERTIFIED
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculator Tool Widget (Adjusted pad sizes) -->
+                <div id="calc-widget" class="hidden p-2.5 bg-zinc-950 border border-zinc-800 rounded-lg shadow-inner flex flex-col space-y-1.5">
+                    <div class="flex justify-between items-center border-b border-zinc-800 pb-1">
+                        <span class="text-xxs font-mono-tech text-yellow-500">CALC_SYS_V1.0</span>
+                        <button onclick="toggleCalc()" class="text-zinc-500 hover:text-zinc-200 text-xs font-bold px-1">X</button>
+                    </div>
+                    <div class="flex space-x-1">
+                        <input type="text" id="calc-screen" readonly class="w-full bg-zinc-900 border border-zinc-800 rounded px-2 py-0.5 text-right font-mono-tech text-emerald-400 text-xs sm:text-sm focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-4 gap-1 text-xs font-mono-tech">
+                        <button onclick="pressCalc('C')" class="bg-zinc-800 hover:bg-zinc-700 py-1 rounded font-bold">C</button>
+                        <button onclick="pressCalc('(')" class="bg-zinc-800 hover:bg-zinc-700 py-1 rounded font-bold">(</button>
+                        <button onclick="pressCalc(')')" class="bg-zinc-800 hover:bg-zinc-700 py-1 rounded font-bold">)</button>
+                        <button onclick="pressCalc('/')" class="bg-yellow-900/40 hover:bg-yellow-800 text-yellow-400 py-1 rounded font-bold">/</button>
+                        
+                        <button onclick="pressCalc('7')" class="bg-zinc-900 hover:bg-zinc-800 py-1 rounded">7</button>
+                        <button onclick="pressCalc('8')" class="bg-zinc-900 hover:bg-zinc-800 py-1 rounded">8</button>
+                        <button onclick="pressCalc('9')" class="bg-zinc-900 hover:bg-zinc-800 py-1 rounded">9</button>
+                        <button onclick="pressCalc('*')" class="bg-yellow-900/40 hover:bg-yellow-800 text-yellow-400 py-1 rounded font-bold">*</button>
+                        
+                        <button onclick="pressCalc('4')" class="bg-zinc-900 hover:bg-zinc-800 py-1 rounded">4</button>
+                        <button onclick="pressCalc('5')" class="bg-zinc-900 hover:bg-zinc-800 py-1 rounded">5</button>
+                        <button onclick="pressCalc('6')" class="bg-zinc-900 hover:bg-zinc-800 py-1 rounded">6</button>
+                        <button onclick="pressCalc('-')" class="bg-yellow-900/40 hover:bg-yellow-800 text-yellow-400 py-1 rounded font-bold">-</button>
+                        
+                        <button onclick="pressCalc('1')" class="bg-zinc-900 hover:bg-zinc-800 py-1 rounded">1</button>
+                        <button onclick="pressCalc('2')" class="bg-zinc-900 hover:bg-zinc-800 py-1 rounded">2</button>
+                        <button onclick="pressCalc('3')" class="bg-zinc-900 hover:bg-zinc-800 py-1 rounded">3</button>
+                        <button onclick="pressCalc('+')" class="bg-yellow-900/40 hover:bg-yellow-800 text-yellow-400 py-1 rounded font-bold">+</button>
+                        
+                        <button onclick="pressCalc('0')" class="bg-zinc-900 hover:bg-zinc-800 py-1 col-span-2 rounded">0</button>
+                        <button onclick="pressCalc('.')" class="bg-zinc-900 hover:bg-zinc-800 py-1 rounded">.</button>
+                        <button onclick="pressCalc('=')" class="bg-emerald-900/60 hover:bg-emerald-800 text-emerald-400 py-1 rounded font-bold">=</button>
+                    </div>
+                </div>
+
+                <!-- Decrypter Cooldown UI -->
+                <div id="decrypter-container" class="hidden flex justify-between items-center bg-zinc-950 p-2 rounded border border-zinc-800 text-xs">
+                    <span class="text-zinc-400 text-[11px]">해독기 작동 상태:</span>
+                    <button onclick="useDecrypter()" id="btn-decrypter" class="bg-emerald-950 text-emerald-400 border border-emerald-800 hover:bg-emerald-900 px-2.5 py-1 rounded font-bold text-[11px] transition">
+                        기밀 필드 1개 해독 (즉시 가능)
+                    </button>
+                </div>
+
+                <!-- Note workspace (Tightened height) -->
+                <div class="mt-2 text-xs">
+                    <label class="text-zinc-500 block mb-0.5 font-bold">간이 메모장 (수동 검산용)</label>
+                    <textarea placeholder="자유롭게 연산이나 수식을 메모장에 적어두세요..." class="w-full bg-zinc-950 border border-zinc-800 text-zinc-300 p-2 rounded focus:outline-none focus:border-zinc-700 h-14 font-mono-tech text-xs resize-none"></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: Decision Desk & Status -->
+        <!-- Responsive Grid configuration: spans full column on tablet (md) placing Decision and Goals side-by-side! -->
+        <section class="col-span-1 md:col-span-12 lg:col-span-3 flex flex-col md:grid md:grid-cols-2 lg:flex lg:flex-col gap-4 md:gap-6">
+            
+            <!-- Target Scanner Progress & Decision Console -->
+            <div class="bg-zinc-900 border border-zinc-800 p-4 md:p-5 rounded-lg flex flex-col justify-between crt-screen">
+                <div>
+                    <div class="absolute top-2 left-3 font-mono-tech text-xxs text-zinc-600 select-none">TIME_SYS</div>
+                    <h2 class="text-zinc-400 font-bold border-b border-zinc-800 pb-2 mb-3 uppercase text-xs tracking-wider">
+                        검역 시간 및 판단
+                    </h2>
+                    
+                    <!-- Timer Bar (Slimmer) -->
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center text-[11px] mb-0.5">
+                            <span class="text-zinc-400">남은 정밀진단 제한시간</span>
+                            <span id="timer-text" class="text-red-400 font-mono-tech font-bold text-xs sm:text-sm">30s</span>
+                        </div>
+                        <div class="h-2 w-full bg-zinc-950 rounded border border-zinc-800 overflow-hidden">
+                            <div id="timer-bar" class="h-full bg-emerald-500 transition-all duration-100 ease-linear" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control Console Actions (Bigger click/tap targets, grid layout on wide viewports) -->
+                <div class="flex flex-col space-y-2.5">
+                    <button onclick="processDecision('PASS')" class="w-full py-3 px-4 bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-400 font-extrabold text-base rounded-md transition duration-200 flex flex-col items-center justify-center shadow-md">
+                        <span>통 과 (PASS)</span>
+                        <span class="text-[9px] text-emerald-500 mt-0.5 uppercase tracking-widest font-mono-tech">No Infectious Signs</span>
+                    </button>
+
+                    <button onclick="processDecision('QUARANTINE')" class="w-full py-3 px-4 bg-yellow-950 hover:bg-yellow-900 border border-yellow-800 text-yellow-400 font-extrabold text-base rounded-md transition duration-200 flex flex-col items-center justify-center shadow-md">
+                        <span>격 리 (QUARANTINE)</span>
+                        <span class="text-[9px] text-yellow-500 mt-0.5 uppercase tracking-widest font-mono-tech">Suspected Infection</span>
+                    </button>
+
+                    <button onclick="processDecision('TERMINATE')" class="w-full py-3 px-4 bg-red-950 hover:bg-red-900 border border-red-800 text-red-400 font-extrabold text-base rounded-md transition duration-200 flex flex-col items-center justify-center shadow-md">
+                        <span>처 분 (TERMINATE)</span>
+                        <span class="text-[9px] text-red-500 mt-0.5 uppercase tracking-widest font-mono-tech">Hostile Zombie Target</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stage Progress status (Side-by-side block on tablet) -->
+            <div class="bg-zinc-900 border border-zinc-800 p-4 md:p-5 rounded-lg flex flex-col justify-between crt-screen">
+                <div>
+                    <h2 class="text-zinc-400 font-bold border-b border-zinc-800 pb-2 mb-3 uppercase text-xs tracking-wider">
+                        오늘의 성과 목표
+                    </h2>
+                    <div class="space-y-2.5 text-xs font-mono-tech">
+                        <div class="flex justify-between">
+                            <span class="text-zinc-500">목표 잔여인원:</span>
+                            <span id="target-count" class="text-zinc-200 font-bold">4명</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-500">성공 판정:</span>
+                            <span id="correct-count" class="text-emerald-400 font-bold">0명</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-zinc-500">오판 건수:</span>
+                            <span id="error-count" class="text-red-400 font-bold">0건</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-2.5 bg-zinc-950 border border-zinc-800 rounded">
+                    <span class="text-[10px] text-zinc-500 block font-bold">검문소 가용 단말기 장비</span>
+                    <div class="flex space-x-1.5 mt-1.5 flex-wrap gap-y-1">
+                        <!-- Tools indicator -->
+                        <span id="badge-calc" class="opacity-30 bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-[10px] font-mono-tech">CALC</span>
+                        <span id="badge-dec" class="opacity-30 bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded text-[10px] font-mono-tech">DEC</span>
+                        <span id="badge-det" class="opacity-30 bg-zinc-800 text-zinc-400 px-2.5 py-0.5 rounded text-[10px] font-mono-tech">DETECTOR</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SYSTEM OVERLAYS (Title Screen, Day Clear, Game Over) -->
+
+    <!-- Title Screen Overlay -->
+    <div id="screen-title" class="fixed inset-0 bg-zinc-950 z-50 flex flex-col items-center justify-center p-4 sm:p-6 scanlines">
+        <div class="max-w-xl w-full text-center space-y-6 sm:space-y-8 bg-zinc-900 border border-zinc-800 p-6 sm:p-8 rounded-xl crt-screen terminal-glow relative">
+            <div class="absolute top-4 left-4 font-mono-tech text-xxs text-red-500 animate-pulse select-none">CRITICAL_WARNING_ALERT</div>
+            
+            <div class="space-y-1.5">
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold font-mono-tech tracking-wider text-red-500">QUARANTINE ZONE</h1>
+                <p class="text-emerald-400 font-mono-tech tracking-widest text-xs sm:text-sm uppercase">Mathematical Checkpoint Simulator</p>
+            </div>
+
+            <div class="p-3.5 sm:p-4 bg-zinc-950 rounded border border-zinc-800 text-left text-xs text-zinc-400 space-y-2.5 leading-relaxed max-h-[280px] sm:max-h-none overflow-y-auto">
+                <p class="text-zinc-200 font-semibold">2026년, 바이러스 유행으로 도시가 격리되었습니다.</p>
+                <p>당신은 고도로 엄격해진 검격 시스템의 통제관입니다. 난민들은 변형된 신원 카드를 들고 검문소에 들어옵니다. 그들의 신원 정보는 수학적 공식 및 체크섬 코드로 고도 보안 처리되어 있습니다.</p>
+                <p>바이러스는 그들의 두뇌뿐만 아니라 신원 데이터마저 손상시킵니다! <strong class="text-yellow-400">???</strong>로 숨겨진 기밀 데이터를 계산하고 일치여부를 가려내십시오.</p>
+                <p class="text-red-400 font-semibold">주의: 좀비(감염자)를 잘못 통과시키면 감염도가 상승해 구역이 파괴되며, 정상인을 억울하게 격리하거나 처분하면 지휘부의 신뢰도가 하락해 검문소가 즉시 영구 폐쇄됩니다.</p>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-black text-lg sm:text-xl rounded shadow-lg hover:shadow-emerald-500/20 tracking-widest transition duration-200">
+                격리 구역 통제 개시 (LOGIN)
+            </button>
+        </div>
+    </div>
+
+    <!-- Day Result Stage Clear Screen Overlay -->
+    <div id="screen-result" class="fixed inset-0 bg-zinc-950/95 z-40 hidden flex items-center justify-center p-4 sm:p-6">
+        <div class="max-w-md w-full bg-zinc-900 border border-emerald-800 p-6 sm:p-8 rounded-xl crt-screen text-center space-y-5 sm:space-y-6">
+            <h2 class="text-xl sm:text-2xl font-bold font-mono-tech text-emerald-400 uppercase tracking-widest">일일 성과 심사 보고서</h2>
+            <div class="text-5xl sm:text-6xl font-extrabold font-mono-tech text-yellow-400 my-3" id="stage-grade">S</div>
+            
+            <div class="space-y-2 text-xs sm:text-sm text-zinc-300 font-mono-tech border-y border-zinc-800 py-3.5">
+                <div class="flex justify-between">
+                    <span>검사한 생존자:</span>
+                    <span id="result-total">0명</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>정확한 격리/통과 판정:</span>
+                    <span id="result-correct" class="text-emerald-400">0명</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>오판 건수:</span>
+                    <span id="result-wrong" class="text-red-400">0건</span>
+                </div>
+                <div class="flex justify-between border-t border-zinc-800 pt-2 mt-2">
+                    <span>일일 지급 보조금 (Credits):</span>
+                    <span id="result-reward" class="text-yellow-400">+0 CR</span>
+                </div>
+            </div>
+
+            <button onclick="startNextDay()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-zinc-950 font-bold text-base sm:text-lg rounded shadow transition">
+                다음 날 근무 개시 (Next Day)
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen Overlay -->
+    <div id="screen-gameover" class="fixed inset-0 bg-red-950/95 z-50 hidden flex flex-col items-center justify-center p-4 sm:p-6">
+        <div class="max-w-md w-full bg-zinc-950 border-2 border-red-500 p-6 sm:p-8 rounded-xl text-center space-y-5 sm:space-y-6 warning-glow">
+            <h2 class="text-2xl sm:text-3xl font-extrabold font-mono-tech text-red-500 tracking-wider">검역 구역 붕괴</h2>
+            
+            <p id="gameover-reason" class="text-xs sm:text-sm text-zinc-300 py-1.5">
+                이유는 동적으로 출력됩니다.
+            </p>
+
+            <div class="p-3.5 bg-zinc-900 rounded border border-zinc-800 text-xs sm:text-sm font-mono-tech text-zinc-400 space-y-1.5">
+                <div>최종 유지 일수: <span id="gameover-day" class="text-yellow-400 font-bold">1일</span></div>
+                <div>누적 검사 인원: <span id="gameover-checked" class="text-zinc-200 font-bold">0명</span></div>
+            </div>
+
+            <button onclick="restartGame()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-zinc-950 font-bold text-base sm:text-lg rounded shadow transition">
+                메인 통제소 시스템 리부트 (RESTART)
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer Copyright -->
+    <footer class="bg-zinc-950 text-center py-3 text-xxs text-zinc-600 border-t border-zinc-900">
+        &copy; 2026 QUARANTINE ZONE HQ. ALL MATHEMATICAL INTEGRITY SECURED.
+    </footer>
+
+    <!-- Game Logic & Math Engines -->
+    <script>
+        // AUDIO SYNTHESIZER MODULE
+        class AudioSynth {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playTone(freq, type, duration, gainStart) {
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    let osc = this.ctx.createOscillator();
+                    let gainNode = this.ctx.createGain();
+                    osc.connect(gainNode);
+                    gainNode.connect(this.ctx.destination);
+                    
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gainNode.gain.setValueAtTime(gainStart, this.ctx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.00001, this.ctx.currentTime + duration);
+                    
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {
+                    // Audio Context failed to start or blocked
+                }
+            }
+            click() { this.playTone(800, 'sine', 0.05, 0.1); }
+            success() {
+                this.playTone(600, 'triangle', 0.1, 0.15);
+                setTimeout(() => this.playTone(900, 'triangle', 0.15, 0.15), 100);
+            }
+            fail() {
+                this.playTone(220, 'sawtooth', 0.4, 0.2);
+                setTimeout(() => this.playTone(180, 'sawtooth', 0.3, 0.2), 150);
+            }
+            scan() {
+                this.playTone(440, 'triangle', 0.8, 0.05);
+            }
+            alarm() {
+                this.playTone(520, 'sine', 0.2, 0.2);
+                setTimeout(() => this.playTone(480, 'sine', 0.2, 0.2), 200);
+            }
+        }
+        
+        const audio = new AudioSynth();
+
+        // NAMES SOURCE
+        const FIRST_NAMES = ["민준", "서연", "지훈", "예은", "현우", "지우", "민재", "하은", "도현", "서현", "건우", "수빈", "우진", "다은", "유준", "채원", "태현", "지원", "민성", "소윤"];
+        const LAST_NAMES = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "임", "한", "오", "서", "신", "권", "황", "안", "송", "전", "홍"];
+
+        // GAME INITIAL STATE
+        let state = {
+            day: 1,
+            trust: 100,
+            infection: 0,
+            credits: 60,
+            upgrades: {
+                calculator: false,
+                decoder: false,
+                detector: false
+            },
+            currentStage: null,
+            survivorList: [],
+            currentSurvivor: null,
+            correctCount: 0,
+            errorCount: 0,
+            totalProcessedThisStage: 0,
+            stageTarget: 4,
+            timer: 30,
+            timerInterval: null,
+            calcInput: "",
+            decoderCharges: 1
+        };
+
+        // STAGE DESIGN & CONFIGURATIONS Generator
+        function generateStageConfig(day) {
+            let numSurvivors = 4 + (day - 1); // 4, 5, 6... survivors
+            let timeLimit = Math.max(15, 45 - (day * 3)); // 45s down to 15s
+            let hiddenFieldsCount = 1;
+            if (day >= 3) hiddenFieldsCount = 2;
+            if (day >= 5) hiddenFieldsCount = 3;
+
+            // Generate daily variables for the equations
+            let codeMult = 2 + (day % 3); // 2, 3, 4
+            let codeOffset = 5 + (day * 2); // Dynamic offsets
+
+            return {
+                day: day,
+                target: numSurvivors,
+                timeLimit: timeLimit,
+                hiddenFields: hiddenFieldsCount,
+                mathParams: {
+                    mult: codeMult,
+                    offset: codeOffset,
+                    checksumModulo: 10 + (day % 4) // e.g., mod 10, 11, 12, 13
+                }
+            };
+        }
+
+        // PROCEDURAL CANVAS PORTRAITS GENERATOR
+        function renderPortrait(canvasId, gender, age, isZombie, zombieType) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            // Dark futuristic security scanning background
+            ctx.fillStyle = '#09090b';
+            ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = '#18181b';
+            ctx.lineWidth = 1;
+            for (let i = 10; i < w; i += 10) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, h); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(w, i); ctx.stroke();
+            }
+
+            // Outer scan frame
+            ctx.strokeStyle = isZombie && zombieType === 'MUTANT' ? '#ef4444' : '#10b981';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(4, 4, w-8, h-8);
+
+            // DRAW BASE HUMAN SHAPE
+            // Shoulders
+            ctx.fillStyle = (isZombie && zombieType === 'MUTANT') ? '#451a03' : '#27272a';
+            ctx.beginPath();
+            ctx.ellipse(w/2, h + 15, 32, 25, 0, 0, Math.PI, true);
+            ctx.fill();
+
+            // Face Tone (Pale infected skin vs Healthy skin)
+            let skinColor = gender === 'M' ? '#fbcfe8' : '#fed7aa'; // female/male basic
+            if (isZombie) {
+                if (zombieType === 'NORMAL') skinColor = '#d9f99d'; // distinctly greenish pale
+                else if (zombieType === 'MUTANT') skinColor = '#fca5a5'; // angry red/purple tint
+                else if (zombieType === 'DISGUISED') skinColor = gender === 'M' ? '#fbcfe8' : '#fed7aa'; // perfectly hidden healthy skin
+                else if (zombieType === 'INTELLIGENT') skinColor = '#e2e8f0'; // slate cold gray
+            }
+            ctx.fillStyle = skinColor;
+            ctx.beginPath();
+            ctx.arc(w/2, h/2 - 5, 20, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Hair System
+            ctx.fillStyle = age > 60 ? '#f4f4f5' : (gender === 'M' ? '#18181b' : '#78350f');
+            if (gender === 'M') {
+                ctx.beginPath();
+                ctx.arc(w/2, h/2 - 12, 21, Math.PI, 0);
+                ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.arc(w/2, h/2 - 10, 21, Math.PI, 0);
+                ctx.fill();
+                ctx.fillRect(w/2 - 21, h/2 - 10, 6, 18);
+                ctx.fillRect(w/2 + 15, h/2 - 10, 6, 18);
+            }
+
+            // Eyes Drawing
+            let eyeColor = '#1d4ed8'; // Blue
+            if (isZombie) {
+                if (zombieType === 'NORMAL') eyeColor = '#dc2626'; // Pure malicious red
+                else if (zombieType === 'MUTANT') eyeColor = '#fbbf24'; // Yellow animal eyes
+                else if (zombieType === 'INTELLIGENT') eyeColor = '#4c1d95'; // Dark purple glowing
+            }
+            
+            // Sclera
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(w/2 - 7, h/2 - 6, 3.5, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(w/2 + 7, h/2 - 6, 3.5, 0, Math.PI * 2); ctx.fill();
+            
+            // Pupil
+            ctx.fillStyle = eyeColor;
+            ctx.beginPath(); ctx.arc(w/2 - 7, h/2 - 6, 1.8, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(w/2 + 7, h/2 - 6, 1.8, 0, Math.PI * 2); ctx.fill();
+
+            // Mouth
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            if (isZombie && zombieType === 'NORMAL') {
+                // distorted growl mouth
+                ctx.arc(w/2, h/2 + 6, 5, 0, Math.PI, true);
+            } else {
+                // neutral or slightly worried curve
+                ctx.arc(w/2, h/2 + 8, 4, 0, Math.PI);
+            }
+            ctx.stroke();
+
+            // Biohazard scanning line indicators
+            ctx.strokeStyle = 'rgba(16, 185, 129, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(10, h/2 - 15); ctx.lineTo(w-10, h/2 - 15);
+            ctx.moveTo(10, h/2 + 15); ctx.lineTo(w-10, h/2 + 15);
+            ctx.stroke();
+        }
+
+        // SURVIVOR OBJECT DATA GENERATOR
+        function generateSurvivor(stageConfig) {
+            let isZombie = Math.random() < 0.45; // 45% Zombie infection rate
+            let gender = Math.random() < 0.5 ? 'M' : 'F';
+            let age = Math.floor(Math.random() * 55) + 16; // 16 to 70
+            let birthYear = 2026 - age;
+            
+            // Rules mathematical parameters
+            let k = stageConfig.mathParams.mult;
+            let d = stageConfig.mathParams.offset;
+            let modulo = stageConfig.mathParams.checksumModulo;
+
+            // Calculate correct rules based code and checksum
+            // Rule 3 calculation
+            let code = age * k + d;
+            // Check gender parity rule constraint and adjust if needed for healthy, or corrupt for zombies
+            let isEvenCode = code % 2 === 0;
+            if (gender === 'M' && isEvenCode) code += 1;
+            else if (gender === 'F' && !isEvenCode) code += 1;
+
+            // Rule 4: Checksum formula (Age * 3 + Code) % modulo
+            let checksum = (age * 3 + code) % modulo;
+
+            let zombieType = 'NONE';
+            let infectionLevel = 0;
+            let temp = (36.2 + Math.random() * 1.0).toFixed(1);
+            let heartRate = Math.floor(Math.random() * 25) + 65;
+
+            // Mutate data if they are a zombie type
+            if (isZombie) {
+                let r = Math.random();
+                if (r < 0.3) {
+                    zombieType = 'NORMAL';
+                    // Violates the simple rules (Age/Birth year misalignment or basic math error)
+                    birthYear = birthYear - (Math.floor(Math.random() * 5) + 1);
+                    infectionLevel = 45;
+                    temp = (37.8 + Math.random() * 1.5).toFixed(1);
+                    heartRate = Math.floor(Math.random() * 40) + 95;
+                } else if (r < 0.6) {
+                    zombieType = 'MUTANT';
+                    // Fails checksum and gender parity simultaneously
+                    code = code + (Math.random() < 0.5 ? 2 : -2);
+                    checksum = (checksum + 3) % modulo;
+                    infectionLevel = 75;
+                    temp = (38.5 + Math.random() * 2.0).toFixed(1);
+                    heartRate = Math.floor(Math.random() * 60) + 110;
+                } else if (r < 0.8) {
+                    zombieType = 'DISGUISED';
+                    // Visually healthy, correct Temp & Heart, but subtle formula error (e.g. checksum is slightly incorrect)
+                    checksum = (checksum + 1) % modulo;
+                    infectionLevel = 15;
+                } else {
+                    zombieType = 'INTELLIGENT';
+                    // Solvable values lead to direct contradictions.
+                    // E.g., The age + birthYear equals 2026 on paper, but the Code formula calculated age does not match the printed age.
+                    code = (age + 5) * k + d; // Solves to a completely different age
+                    infectionLevel = 25;
+                    heartRate = Math.floor(Math.random() * 20) + 85;
+                }
+            }
+
+            // Name generation
+            let lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+            let firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+            let name = lastName + firstName;
+
+            // Hide some fields in standard format to make the game a math puzzle
+            // The stage specifies how many fields we should obscure
+            let fields = ['birthYear', 'age', 'code', 'checksum'];
+            // Shuffle
+            fields.sort(() => Math.random() - 0.5);
+            let hiddenFieldsList = fields.slice(0, stageConfig.hiddenFields);
+
+            return {
+                name: name,
+                gender: gender,
+                age: age,
+                birthYear: birthYear,
+                code: code,
+                checksum: checksum,
+                isZombie: isZombie,
+                zombieType: zombieType,
+                temp: temp + "°C",
+                heartRate: heartRate + " bpm",
+                infectionLevel: infectionLevel,
+                hiddenFields: hiddenFieldsList
+            };
+        }
+
+        // START WORKSTATION STAGE GAMEPLAY
+        function startGame() {
+            document.getElementById('screen-title').classList.add('hidden');
+            audio.success();
+            state.day = 1;
+            state.credits = 60;
+            state.trust = 100;
+            state.infection = 0;
+            
+            // reset upgrades
+            state.upgrades.calculator = false;
+            state.upgrades.decoder = false;
+            state.upgrades.detector = false;
+
+            loadDay(state.day);
+        }
+
+        // LOAD CURRENT DAY PROTOCOL
+        function loadDay(day) {
+            state.day = day;
+            state.currentStage = generateStageConfig(day);
+            state.correctCount = 0;
+            state.errorCount = 0;
+            state.totalProcessedThisStage = 0;
+            state.stageTarget = state.currentStage.target;
+
+            // Update UI widgets
+            document.getElementById('stat-day').innerText = day;
+            document.getElementById('stat-credits').innerText = state.credits;
+            document.getElementById('lbl-trust').innerText = state.trust + "%";
+            document.getElementById('bar-trust').style.width = state.trust + "%";
+            document.getElementById('lbl-infection').innerText = state.infection + "%";
+            document.getElementById('bar-infection').style.width = state.infection + "%";
+            document.getElementById('target-count').innerText = state.stageTarget + "명";
+            
+            // Build rules guidebook dynamically
+            buildRulesBook(state.currentStage);
+            
+            // Show / Hide Upgrade panel based on Day or game progression state
+            updateUpgradeShopUI();
+
+            // Generate first survivor
+            nextSurvivor();
+        }
+
+        function buildRulesBook(cfg) {
+            let mult = cfg.mathParams.mult;
+            let offset = cfg.mathParams.offset;
+            let mod = cfg.mathParams.checksumModulo;
+
+            let html = `
+                <div class="p-2.5 bg-zinc-950 rounded border border-zinc-800 space-y-1">
+                    <span class="text-emerald-400 font-bold block text-xxs uppercase">제1 규칙: 연령 정합성</span>
+                    <p class="font-mono-tech text-yellow-400 font-semibold text-xs sm:text-sm">나이(A) + 출생년도(Y) = 2026</p>
+                    <p class="text-[10px] text-zinc-500">지정된 나이와 출생년도를 가산한 값은 반드시 2026년이어야 유효합니다.</p>
+                </div>
+                
+                <div class="p-2.5 bg-zinc-950 rounded border border-zinc-800 space-y-1">
+                    <span class="text-emerald-400 font-bold block text-xxs uppercase">제2 규칙: 성별 코드 검증</span>
+                    <p class="text-xs text-zinc-400">
+                        성별이 <span class="text-blue-400 font-bold">M</span>인 경우: 식별코드(C)는 <strong class="text-yellow-400">홀수</strong><br>
+                        성별이 <span class="text-pink-400 font-bold">F</span>인 경우: 식별코드(C)는 <strong class="text-yellow-400">짝수</strong>
+                    </p>
+                </div>
+
+                <div class="p-2.5 bg-zinc-950 rounded border border-zinc-800 space-y-1">
+                    <span class="text-emerald-400 font-bold block text-xxs uppercase">제3 규칙: 코드 일치 공식</span>
+                    <p class="font-mono-tech text-yellow-400 font-semibold text-xs sm:text-sm">식별코드(C) = 나이(A) × ${mult} + ${offset}</p>
+                    <p class="text-[10px] text-zinc-500">식별코드는 나이에 배수를 곱한 오프셋 수치와 일치해야 합니다.</p>
+                </div>
+
+                <div class="p-2.5 bg-zinc-950 rounded border border-zinc-800 space-y-1">
+                    <span class="text-emerald-400 font-bold block text-xxs uppercase">제4 규칙: 정밀 체크섬 검증</span>
+                    <p class="font-mono-tech text-yellow-400 font-semibold text-xs sm:text-sm">체크섬(S) = (나이(A) × 3 + C) % ${mod}</p>
+                    <p class="text-[10px] text-zinc-500">나이에 3을 곱한 값과 식별코드의 합을 ${mod}으로 나눈 나머지 값이어야 합니다.</p>
+                </div>
+            `;
+            document.getElementById('manual-content').innerHTML = html;
+        }
+
+        // GENERATE NEXT SURVIVOR AT BOOTH
+        function nextSurvivor() {
+            if (state.totalProcessedThisStage >= state.stageTarget) {
+                // Stage cleared successfully
+                clearInterval(state.timerInterval);
+                showStageSummary();
+                return;
+            }
+
+            state.currentSurvivor = generateSurvivor(state.currentStage);
+            
+            // Bind Passport text fields
+            document.getElementById('survivor-name').innerText = state.currentSurvivor.name;
+            document.getElementById('survivor-temp').innerText = state.currentSurvivor.temp;
+            document.getElementById('survivor-heart').innerText = state.currentSurvivor.heartRate;
+
+            // Fever indicator colors
+            let tempVal = parseFloat(state.currentSurvivor.temp);
+            if (tempVal >= 37.5) {
+                document.getElementById('survivor-temp').className = "font-mono-tech font-bold text-red-400 text-xs sm:text-sm";
+            } else {
+                document.getElementById('survivor-temp').className = "font-mono-tech font-bold text-emerald-400 text-xs sm:text-sm";
+            }
+
+            // Heart indicator color
+            let heartVal = parseInt(state.currentSurvivor.heartRate);
+            if (heartVal >= 90) {
+                document.getElementById('survivor-heart').className = "font-mono-tech font-bold text-red-400 text-xs sm:text-sm";
+            } else {
+                document.getElementById('survivor-heart').className = "font-mono-tech font-bold text-emerald-400 text-xs sm:text-sm";
+            }
+
+            // Fill Passport fields (Handle HIDDEN fields dynamically)
+            const cardName = document.getElementById('card-name');
+            const cardGender = document.getElementById('card-gender');
+            const cardBirth = document.getElementById('card-birth');
+            const cardAge = document.getElementById('card-age');
+            const cardCode = document.getElementById('card-code');
+            const cardChecksum = document.getElementById('card-checksum');
+
+            // Reset displays and input elements
+            cardName.innerText = state.currentSurvivor.name;
+            cardGender.innerText = state.currentSurvivor.gender;
+
+            setupField('birthYear', cardBirth, 'input-birth');
+            setupField('age', cardAge, 'input-age');
+            setupField('code', cardCode, 'input-code');
+            setupField('checksum', cardChecksum, 'input-checksum');
+
+            // Draw canvas profile
+            renderPortrait('survivor-avatar', state.currentSurvivor.gender, state.currentSurvivor.age, state.currentSurvivor.isZombie, state.currentSurvivor.zombieType);
+
+            // Animate scanning lines
+            const scanner = document.getElementById('scanner-line');
+            scanner.style.opacity = '1';
+            scanner.style.top = '0%';
+            audio.scan();
+            let scanStep = 0;
+            let scanInt = setInterval(() => {
+                scanStep += 10;
+                scanner.style.top = scanStep + '%';
+                if (scanStep >= 100) {
+                    clearInterval(scanInt);
+                    scanner.style.opacity = '0';
+                }
+            }, 50);
+
+            // AUTO MONODETECTOR TRIGGER
+            if (state.upgrades.detector) {
+                // Run automatic logic checking
+                let logicContradiction = checkLogicErrors(state.currentSurvivor);
+                const tag = document.getElementById('zombie-warning-tag');
+                if (logicContradiction) {
+                    tag.classList.remove('hidden');
+                    audio.alarm();
+                } else {
+                    tag.classList.add('hidden');
+                }
+            } else {
+                document.getElementById('zombie-warning-tag').classList.add('hidden');
+            }
+
+            // Start Stage countdown timers
+            startStageCountdown();
+        }
+
+        // Subordinate helper for field inputs
+        function setupField(fieldName, labelElem, inputId) {
+            const inputElem = document.getElementById(inputId);
+            if (state.currentSurvivor.hiddenFields.includes(fieldName)) {
+                labelElem.innerText = "???";
+                inputElem.classList.remove('hidden');
+                inputElem.value = "";
+            } else {
+                labelElem.innerText = state.currentSurvivor[fieldName];
+                inputElem.classList.add('hidden');
+            }
+        }
+
+        // CHECK REAL LOGICAL AND MATHEMATICAL ERRORS (FOR AUTOMATED TOOLS)
+        function checkLogicErrors(surv) {
+            let mult = state.currentStage.mathParams.mult;
+            let offset = state.currentStage.mathParams.offset;
+            let mod = state.currentStage.mathParams.checksumModulo;
+
+            // 1. Age/Year Check
+            if (surv.age + surv.birthYear !== 2026) return true;
+
+            // 2. Gender Parity
+            if (surv.gender === 'M' && surv.code % 2 === 0) return true;
+            if (surv.gender === 'F' && surv.code % 2 !== 0) return true;
+
+            // 3. Mult formula
+            if (surv.code !== surv.age * mult + offset) {
+                // If the code is just adjusted for gender parity by 1 digit, that is allowed
+                let baseVal = surv.age * mult + offset;
+                let acceptableOddEvenShift = baseVal % 2 !== surv.code % 2;
+                if (!(acceptableOddEvenShift && Math.abs(surv.code - baseVal) === 1)) {
+                    return true;
+                }
+            }
+
+            // 4. Checksum
+            let correctChecksum = (surv.age * 3 + surv.code) % mod;
+            if (surv.checksum !== correctChecksum) return true;
+
+            return false;
+        }
+
+        // GAME TIMER ACTION COUNTDOWN
+        function startStageCountdown() {
+            clearInterval(state.timerInterval);
+            state.timer = state.currentStage.timeLimit;
+            
+            const timerBar = document.getElementById('timer-bar');
+            const timerText = document.getElementById('timer-text');
+            
+            timerText.innerText = state.timer + "s";
+            timerBar.style.width = "100%";
+            timerBar.className = "h-full bg-emerald-500 transition-all duration-100 ease-linear";
+
+            state.timerInterval = setInterval(() => {
+                state.timer--;
+                timerText.innerText = state.timer + "s";
+                
+                let percent = (state.timer / state.currentStage.timeLimit) * 100;
+                timerBar.style.width = percent + "%";
+
+                if (percent < 30) {
+                    timerBar.className = "h-full bg-red-600 transition-all duration-100 ease-linear warning-glow";
+                } else if (percent < 60) {
+                    timerBar.className = "h-full bg-yellow-500 transition-all duration-100 ease-linear";
+                }
+
+                if (state.timer <= 0) {
+                    clearInterval(state.timerInterval);
+                    // Time out counts as a critical mistake / letting danger linger
+                    triggerTimeOutMistake();
+                }
+            }, 1000);
+        }
+
+        function triggerTimeOutMistake() {
+            audio.fail();
+            // Lose System Trust and increase infection as panic spikes
+            state.trust = Math.max(0, state.trust - 15);
+            state.infection = Math.min(100, state.infection + 10);
+            state.errorCount++;
+            state.totalProcessedThisStage++;
+
+            updateDashboardWidgets();
+            checkDefeatCondition();
+            nextSurvivor();
+        }
+
+        // INTERACTIVE SCRATCHPAD / CALCULATOR IMPLEMENTATION
+        function pressCalc(char) {
+            audio.click();
+            const screen = document.getElementById('calc-screen');
+            if (char === 'C') {
+                state.calcInput = "";
+                screen.value = "";
+            } else if (char === '=') {
+                try {
+                    // Safe evaluation of simple math strings
+                    let result = Function(`"use strict"; return (${state.calcInput})`)();
+                    screen.value = result;
+                    state.calcInput = result.toString();
+                } catch (err) {
+                    screen.value = "ERROR";
+                    state.calcInput = "";
+                }
+            } else {
+                state.calcInput += char;
+                screen.value = state.calcInput;
+            }
+        }
+
+        function toggleCalc() {
+            audio.click();
+            const calc = document.getElementById('calc-widget');
+            calc.classList.toggle('hidden');
+        }
+
+        // DECRYPTER POWERUP OPERATION
+        function useDecrypter() {
+            if (!state.upgrades.decoder || state.decoderCharges <= 0) return;
+            
+            // Find one hidden field to decrypt immediately
+            let hList = state.currentSurvivor.hiddenFields;
+            if (hList.length === 0) return;
+
+            audio.success();
+            let decryptedField = hList.pop(); // Reveal one
+            
+            // Map decrypted field to document display
+            if (decryptedField === 'birthYear') {
+                document.getElementById('card-birth').innerText = state.currentSurvivor.birthYear;
+                document.getElementById('input-birth').classList.add('hidden');
+            } else if (decryptedField === 'age') {
+                document.getElementById('card-age').innerText = state.currentSurvivor.age;
+                document.getElementById('input-age').classList.add('hidden');
+            } else if (decryptedField === 'code') {
+                document.getElementById('card-code').innerText = state.currentSurvivor.code;
+                document.getElementById('input-code').classList.add('hidden');
+            } else if (decryptedField === 'checksum') {
+                document.getElementById('card-checksum').innerText = state.currentSurvivor.checksum;
+                document.getElementById('input-checksum').classList.add('hidden');
+            }
+
+            // Trigger temporary recharge system
+            state.decoderCharges = 0;
+            const btn = document.getElementById('btn-decrypter');
+            btn.innerText = "충전 중...";
+            btn.className = "bg-zinc-800 text-zinc-500 border border-zinc-700 px-3 py-1 rounded cursor-not-allowed text-xs";
+        }
+
+        // MAIN ACTION CHEROKEE RESOLVER (PASS / QUARANTINE / TERMINATE)
+        function processDecision(action) {
+            clearInterval(state.timerInterval);
+            let surv = state.currentSurvivor;
+            let actualLogicError = checkLogicErrors(surv);
+            
+            // Is actual zombie?
+            let isZombie = surv.isZombie;
+            let type = surv.zombieType;
+
+            let isCorrect = false;
+
+            if (action === 'PASS') {
+                // If healthy, must pass
+                if (!isZombie && !actualLogicError) {
+                    isCorrect = true;
+                    state.credits += 15;
+                    state.trust = Math.min(100, state.trust + 5);
+                } else {
+                    // Let zombie through - CRITICAL INCREASE INFECTION
+                    isCorrect = false;
+                    let infectionGained = 20;
+                    if (type === 'MUTANT') infectionGained = 35;
+                    state.infection = Math.min(100, state.infection + infectionGained);
+                    state.trust = Math.max(0, state.trust - 10);
+                }
+            } 
+            else if (action === 'QUARANTINE') {
+                // Safe detention for most suspicious cases
+                if (isZombie || actualLogicError) {
+                    isCorrect = true;
+                    // Standard credits for isolating threat
+                    state.credits += 10;
+                    // Small reduction in infection index
+                    state.infection = Math.max(0, state.infection - 3);
+                } else {
+                    // Unnecessary quarantine of clean survivors
+                    isCorrect = false;
+                    state.trust = Math.max(0, state.trust - 15);
+                }
+            } 
+            else if (action === 'TERMINATE') {
+                // Direct destruction
+                if (isZombie && (type === 'MUTANT' || type === 'NORMAL')) {
+                    isCorrect = true;
+                    state.credits += 25; // Bonus payload for tactical threat elimination
+                    state.infection = Math.max(0, state.infection - 10);
+                } else if (isZombie && (type === 'DISGUISED' || type === 'INTELLIGENT')) {
+                    // Mild mistake - quarantine is safer for complex smart survivors, but correct.
+                    isCorrect = true;
+                    state.credits += 10;
+                } else {
+                    // Execute healthy human - MAXIMUM PUNISHMENT
+                    isCorrect = false;
+                    state.trust = Math.max(0, state.trust - 35);
+                }
+            }
+
+            if (isCorrect) {
+                audio.success();
+                state.correctCount++;
+            } else {
+                audio.fail();
+                state.errorCount++;
+            }
+
+            state.totalProcessedThisStage++;
+            
+            // Decrypter charger tick down per survivor processed
+            if (state.upgrades.decoder && state.decoderCharges <= 0) {
+                state.decoderCharges = 1;
+                const btn = document.getElementById('btn-decrypter');
+                btn.innerText = "기밀 필드 1개 해독 (즉시 가능)";
+                btn.className = "bg-emerald-950 text-emerald-400 border border-emerald-800 hover:bg-emerald-900 px-3 py-1 rounded font-bold transition text-xs";
+            }
+
+            updateDashboardWidgets();
+            
+            if (checkDefeatCondition()) return;
+
+            nextSurvivor();
+        }
+
+        // UPDATE SCREEN METERS AND DATA COUNTERS
+        function updateDashboardWidgets() {
+            document.getElementById('lbl-trust').innerText = state.trust + "%";
+            document.getElementById('bar-trust').style.width = state.trust + "%";
+            document.getElementById('lbl-infection').innerText = state.infection + "%";
+            document.getElementById('bar-infection').style.width = state.infection + "%";
+            document.getElementById('stat-credits').innerText = state.credits;
+            
+            let rem = Math.max(0, state.stageTarget - state.totalProcessedThisStage);
+            document.getElementById('target-count').innerText = rem + "명";
+            document.getElementById('correct-count').innerText = state.correctCount + "명";
+            document.getElementById('error-count').innerText = state.errorCount + "건";
+        }
+
+        // UPGRADE SHOP MODULE
+        function updateUpgradeShopUI() {
+            // Calculator
+            const btnCalc = document.getElementById('btn-up-calc');
+            const badgeCalc = document.getElementById('badge-calc');
+            if (state.upgrades.calculator) {
+                btnCalc.innerText = "보유중";
+                btnCalc.className = "bg-zinc-800 text-zinc-500 border border-zinc-700 px-2.5 py-1.5 rounded text-xs cursor-not-allowed";
+                badgeCalc.className = "bg-emerald-900/60 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-mono-tech";
+            } else {
+                btnCalc.innerText = "35 CR";
+                btnCalc.className = "bg-yellow-600 hover:bg-yellow-500 text-zinc-950 font-bold px-2.5 py-1.5 rounded transition text-xs";
+            }
+
+            // Decoder
+            const btnDec = document.getElementById('btn-up-dec');
+            const badgeDec = document.getElementById('badge-dec');
+            const toolContainer = document.getElementById('decrypter-container');
+            if (state.upgrades.decoder) {
+                btnDec.innerText = "보유중";
+                btnDec.className = "bg-zinc-800 text-zinc-500 border border-zinc-700 px-2.5 py-1.5 rounded text-xs cursor-not-allowed";
+                badgeDec.className = "bg-emerald-900/60 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-mono-tech";
+                toolContainer.classList.remove('hidden');
+            } else {
+                btnDec.innerText = "50 CR";
+                btnDec.className = "bg-yellow-600 hover:bg-yellow-500 text-zinc-950 font-bold px-2.5 py-1.5 rounded transition text-xs";
+                toolContainer.classList.add('hidden');
+            }
+
+            // Logic Error Detector
+            const btnDet = document.getElementById('btn-up-det');
+            const badgeDet = document.getElementById('badge-det');
+            if (state.upgrades.detector) {
+                btnDet.innerText = "보유중";
+                btnDet.className = "bg-zinc-800 text-zinc-500 border border-zinc-700 px-2.5 py-1.5 rounded text-xs cursor-not-allowed";
+                badgeDet.className = "bg-emerald-900/60 text-emerald-400 px-2 py-0.5 rounded text-[10px] font-mono-tech";
+            } else {
+                btnDet.innerText = "70 CR";
+                btnDet.className = "bg-yellow-600 hover:bg-yellow-500 text-zinc-950 font-bold px-2.5 py-1.5 rounded transition text-xs";
+            }
+        }
+
+        function buyUpgrade(type, price) {
+            audio.click();
+            if (state.credits < price) {
+                audio.fail();
+                return;
+            }
+            if (state.upgrades[type]) return;
+
+            state.credits -= price;
+            state.upgrades[type] = true;
+            
+            if (type === 'calculator') {
+                document.getElementById('calc-widget').classList.remove('hidden');
+            }
+
+            audio.success();
+            updateDashboardWidgets();
+            updateUpgradeShopUI();
+        }
+
+        // EVALUATE DAY REPORT CARD
+        function showStageSummary() {
+            const overlay = document.getElementById('screen-result');
+            overlay.classList.remove('hidden');
+
+            // Grade logic
+            let accuracy = state.correctCount / state.stageTarget;
+            let grade = 'C';
+            if (accuracy === 1.0) grade = 'S';
+            else if (accuracy >= 0.8) grade = 'A';
+            else if (accuracy >= 0.6) grade = 'B';
+
+            // Base Reward payload calculation
+            let reward = state.correctCount * 15 - state.errorCount * 5;
+            if (reward < 10) reward = 10; // safety baseline
+            state.credits += reward;
+
+            document.getElementById('stage-grade').innerText = grade;
+            document.getElementById('result-total').innerText = state.stageTarget + "명";
+            document.getElementById('result-correct').innerText = state.correctCount + "명";
+            document.getElementById('result-wrong').innerText = state.errorCount + "건";
+            document.getElementById('result-reward').innerText = "+" + reward + " CR";
+        }
+
+        function startNextDay() {
+            document.getElementById('screen-result').classList.add('hidden');
+            audio.success();
+            loadDay(state.day + 1);
+        }
+
+        // CHECK DEFEAT TRIGGER CRITERIA
+        function checkDefeatCondition() {
+            let triggered = false;
+            let reason = "";
+
+            if (state.trust <= 0) {
+                triggered = true;
+                reason = "지휘본부의 지지가 소멸했습니다. 무고한 인원을 불필요하게 검증 통제선에 격리하거나 처분하여 격리 안전망에 대한 시스템 신뢰도가 완전히 상실되었습니다. 검문소는 강제 폐쇄 및 전면 전산 락다운 조치됩니다.";
+            } else if (state.infection >= 100) {
+                triggered = true;
+                reason = "검역 통제선이 완전히 함락되었습니다! 교묘하게 신원 체크리스트를 위장 통과한 좀비 군단이 핵심 방역 바리케이드를 오염시켰습니다. 구역은 붕괴했으며, 안전 부대와의 물리적 통신이 단절되었습니다.";
+            }
+
+            if (triggered) {
+                clearInterval(state.timerInterval);
+                document.getElementById('gameover-reason').innerText = reason;
+                document.getElementById('gameover-day').innerText = state.day + "일차";
+                
+                // Estimate gross scanned count
+                let grossScanned = state.totalProcessedThisStage + ((state.day - 1) * 4); // roughly estimative
+                document.getElementById('gameover-checked').innerText = grossScanned + "명";
+                
+                document.getElementById('screen-gameover').classList.remove('hidden');
+                audio.fail();
+                return true;
+            }
+            return false;
+        }
+
+        function restartGame() {
+            document.getElementById('screen-gameover').classList.add('hidden');
+            startGame();
+        }
+    </script>
+</body>
+</html>
