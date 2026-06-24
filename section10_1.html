@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정수와 유리수 슬롯머신</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #000; color: white; font-family: sans-serif; }
+        .slot-box { 
+            display: flex; justify-content: center; align-items: center; 
+            width: 25vw; height: 25vw; border: 4px solid #facc15; 
+            font-size: 3rem; font-weight: bold; background: #1a1a1a;
+            border-radius: 1rem; margin: 0 1vw;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <h1 class="text-4xl font-bold mb-8 text-yellow-400">정수와 유리수 슬롯</h1>
+    
+    <div class="mb-8 text-2xl font-mono">현재 칩: <span id="chips" class="text-yellow-300">200</span></div>
+
+    <div class="flex justify-center mb-12">
+        <div id="s1" class="slot-box">?</div>
+        <div id="s2" class="slot-box">?</div>
+        <div id="s3" class="slot-box">?</div>
+    </div>
+
+    <button id="spinBtn" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-4 px-12 rounded-full text-2xl shadow-lg transition transform hover:scale-105">
+        슬롯 돌리기!
+    </button>
+
+    <div id="result" class="mt-8 text-xl text-center h-16"></div>
+
+    <script>
+        let chips = 200;
+        const slots = ['s1', 's2', 's3'];
+        const pool = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, '1/2', '-1/2', '3/2', '-3/2', '2/3', '-2/3', '4/3', '-4/3'];
+
+        function parseVal(v) {
+            if (typeof v === 'string') {
+                const [n, d] = v.split('/').map(Number);
+                return n / d;
+            }
+            return v;
+        }
+
+        document.getElementById('spinBtn').onclick = () => {
+            if (chips <= 0) { alert('탈락입니다! 다시 도전하세요.'); chips = 200; updateUI(); return; }
+            if (chips >= 400) { alert('축하합니다! 승리하셨습니다!'); chips = 200; updateUI(); return; }
+
+            const outcome = [pool[Math.floor(Math.random()*pool.length)], pool[Math.floor(Math.random()*pool.length)], pool[Math.floor(Math.random()*pool.length)]];
+            slots.forEach((id, i) => document.getElementById(id).innerText = outcome[i]);
+
+            const vals = outcome.map(parseVal);
+            let sum = vals.reduce((a, b) => a + b, 0);
+            let isAllInt = outcome.every(v => typeof v === 'number');
+            let isAllFrac = outcome.every(v => typeof v === 'string');
+            
+            let delta = Math.round(sum);
+            if (isAllInt) delta += 10;
+            else if (isAllFrac) delta *= 2;
+
+            chips += delta;
+            
+            const resTxt = `${outcome.map(v => typeof v === 'number' ? v : v).join(' + ')} = ${sum.toFixed(2)} 👉 ${delta >= 0 ? '+' : ''}${delta}칩 ${delta > 0 ? '획득' : delta < 0 ? '손실' : '변화없음'}`;
+            document.getElementById('result').innerText = resTxt;
+            updateUI();
+        };
+
+        function updateUI() {
+            document.getElementById('chips').innerText = chips;
+            if (chips <= 0) alert("0칩이 되었습니다. 탈락!");
+        }
+    </script>
+</body>
+</html>
