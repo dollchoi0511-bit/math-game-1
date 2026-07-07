@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일차방정식 미로 탈출 RPG</title>
+    <!-- Tailwind CSS for high quality styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.js for retro sound effects without external audio assets -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Google Fonts for game aesthetics -->
+    <link href="https://fonts.googleapis.com/css2?family=DungGeunMo&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'DungGeunMo', sans-serif;
+            background-color: #0f172a;
+            user-select: none;
+        }
+        .pixel-font {
+            font-family: 'DungGeunMo', monospace;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-100 items-center justify-between p-4">
+
+    <!-- TOP STATUS BAR -->
+    <header class="w-full max-w-4xl bg-slate-800 border-4 border-indigo-500 rounded-2xl p-4 shadow-2xl mb-4 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl">🧙‍♂️</span>
+            <div>
+                <h1 class="text-xl font-extrabold text-indigo-400 tracking-wider pixel-font">수학 일차방정식 미로 탈출</h1>
+                <p class="text-xs text-slate-400">몬스터를 도구로 물리치고 탈출하세요!</p>
+            </div>
+        </div>
+        
+        <div class="flex flex-wrap gap-4 items-center bg-slate-900 px-4 py-2 rounded-xl border border-slate-700">
+            <div class="flex items-center gap-1.5">
+                <span class="text-amber-400 font-bold pixel-font">ROUND:</span>
+                <span id="ui-round" class="text-xl font-black text-amber-300 pixel-font">1</span>
+            </div>
+            <div class="h-6 w-[1px] bg-slate-700"></div>
+            <div class="flex items-center gap-1.5">
+                <span class="text-rose-400 font-bold pixel-font">HP:</span>
+                <span id="ui-hearts" class="text-lg tracking-wider text-rose-500">❤️❤️❤️❤️❤️</span>
+            </div>
+            <div class="h-6 w-[1px] bg-slate-700"></div>
+            <div class="flex items-center gap-1.5">
+                <span class="text-cyan-400 font-bold pixel-font">보석:</span>
+                <span id="ui-gems" class="text-xl font-bold text-cyan-300 pixel-font">💎 x 0</span>
+            </div>
+            <div class="h-6 w-[1px] bg-slate-700"></div>
+            <div class="flex items-center gap-1.5">
+                <span class="text-emerald-400 font-bold pixel-font">무기:</span>
+                <span id="ui-weapon" class="text-sm font-semibold text-emerald-300 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">✊ 맨손</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="w-full max-w-4xl flex flex-col md:flex-row gap-6 items-stretch justify-center flex-grow">
+        <!-- LEFT PANEL: Game Board Canvas and Mobile D-Pad -->
+        <div class="flex-grow flex flex-col items-center bg-slate-900 border-4 border-slate-700 rounded-3xl p-4 shadow-2xl relative">
+            <!-- CANVAS CONTAINER -->
+            <div class="relative w-full aspect-square max-w-[450px] bg-slate-950 rounded-xl overflow-hidden border-2 border-slate-800 flex items-center justify-center">
+                <canvas id="gameCanvas" width="440" height="440" class="block"></canvas>
+                
+                <!-- START SCREEN OVERLAY -->
+                <div id="startScreen" class="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center text-center p-6 z-10">
+                    <span class="text-6xl animate-bounce mb-4">🔑</span>
+                    <h2 class="text-2xl font-black text-indigo-400 pixel-font mb-2">일차방정식 미로 어드벤처</h2>
+                    <p class="text-sm text-slate-300 max-w-sm mb-6 leading-relaxed">
+                        보석을 모으면 무기가 자동으로 강화됩니다! 미로를 막고 있는 몬스터를 처치하고 관문의 방정식을 풀어 무사히 탈출하세요.
+                    </p>
+                    <button onclick="startGame()" class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold rounded-2xl border-b-4 border-indigo-800 transition shadow-lg active:scale-95 pixel-font text-lg">
+                        게임 시작하기 🎮
+                    </button>
+                    <p class="text-xs text-slate-500 mt-4">시작 버튼을 누르면 브라우저 사운드가 활성화됩니다.</p>
+                </div>
+            </div>
+
+            <!-- VIRTUAL CONTROLLER FOR MOBILE AND EASY INPUT -->
+            <div class="w-full max-w-[280px] mt-4 grid grid-cols-3 gap-2">
+                <div></div>
+                <button onclick="movePlayer(0, -1)" class="h-12 bg-slate-800 hover:bg-slate-700 border-b-4 border-slate-950 rounded-xl flex items-center justify-center active:scale-95 transition-all text-xl">⬆️</button>
+                <div></div>
+                <button onclick="movePlayer(-1, 0)" class="h-12 bg-slate-800 hover:bg-slate-700 border-b-4 border-slate-950 rounded-xl flex items-center justify-center active:scale-95 transition-all text-xl">⬅️</button>
+                <div class="h-12 bg-slate-950 rounded-xl flex items-center justify-center text-xs text-slate-500 pixel-font">이동</div>
+                <button onclick="movePlayer(1, 0)" class="h-12 bg-slate-800 hover:bg-slate-700 border-b-4 border-slate-950 rounded-xl flex items-center justify-center active:scale-95 transition-all text-xl">➡️</button>
+                <div></div>
+                <button onclick="movePlayer(0, 1)" class="h-12 bg-slate-800 hover:bg-slate-700 border-b-4 border-slate-950 rounded-xl flex items-center justify-center active:scale-95 transition-all text-xl">⬇️</button>
+                <div></div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Information, rules & stats -->
+        <div class="w-full md:w-80 flex flex-col justify-between bg-slate-850 border border-slate-700 rounded-3xl p-5 shadow-xl text-sm gap-4">
+            <div>
+                <h3 class="text-lg font-bold text-indigo-400 mb-3 flex items-center gap-1.5 pixel-font">
+                    🛡️ 미로 규칙 및 가이드
+                </h3>
+                <ul class="space-y-3 text-slate-300">
+                    <li class="flex gap-2">
+                        <span class="text-base shrink-0">🏃</span>
+                        <span>방향키 또는 화면 하단의 <b>D-Pad 버튼</b>으로 플레이어를 움직입니다.</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-base shrink-0">💎</span>
+                        <span>보석을 획득하면 무기가 자동으로 다음 단계로 변경되어 <b>공격력</b>이 상승합니다.</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-base shrink-0">👾</span>
+                        <span>몬스터와 마주치면 전투 모드가 활성화됩니다. 둘 다 <b>체력 5칸</b>을 가지고 전투합니다.</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-base shrink-0">🚪</span>
+                        <span>다음 라운드로 넘어가거나 탈출하기 위해 문앞에서 문제를 풀어 관문을 통과하세요.</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- WEAPON DIRECTORY -->
+            <div class="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+                <h4 class="font-bold text-emerald-400 mb-2 pixel-font">⚙️ 보석별 장비 진화 단계</h4>
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between items-center bg-slate-800 px-2 py-1.5 rounded">
+                        <span>💎 0개 : ✊ 맨손</span>
+                        <span class="text-rose-400 font-bold">공격력: 1</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800 px-2 py-1.5 rounded">
+                        <span>💎 1개 : 🪵 나무 검</span>
+                        <span class="text-rose-400 font-bold">공격력: 2</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800 px-2 py-1.5 rounded">
+                        <span>💎 2개 : ⚙️ 철검</span>
+                        <span class="text-rose-400 font-bold">공격력: 3</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-slate-800 px-2 py-1.5 rounded bg-emerald-950/40 border border-emerald-900/50">
+                        <span>💎 3개 : 🪄 마법 지팡이</span>
+                        <span class="text-emerald-400 font-bold">공격력: 5 (즉사!)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center text-xs text-slate-500">
+                일차방정식을 빠르게 마스터해 보세요!
+            </div>
+        </div>
+    </main>
+
+    <!-- COMBAT SCREEN MODAL -->
+    <div id="combatModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-40 transition-all duration-300">
+        <div class="w-full max-w-lg bg-slate-900 border-4 border-red-500 rounded-3xl p-6 shadow-2xl relative animate-scaleUp">
+            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-600 text-white font-extrabold px-6 py-1.5 rounded-full border-2 border-red-400 pixel-font tracking-widest text-sm">
+                BATTLE FIELD
+            </div>
+
+            <!-- Battle characters view -->
+            <div class="grid grid-cols-2 gap-4 my-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                <!-- Player side -->
+                <div class="text-center flex flex-col items-center border-r border-slate-800 pr-2">
+                    <div id="battlePlayerAvatar" class="text-4xl mb-2">🧑‍🌾</div>
+                    <div class="font-bold text-indigo-400 text-sm pixel-font">나 (용사)</div>
+                    <div id="battlePlayerWeapon" class="text-xs text-slate-400 mt-1 mb-2">✊ 맨손 (데미지 1)</div>
+                    <!-- Player Health inside battle -->
+                    <div class="text-xs font-bold text-slate-400 mb-1">HP</div>
+                    <div id="battlePlayerHp" class="text-sm tracking-wide text-rose-500">❤️❤️❤️❤️❤️</div>
+                </div>
+                <!-- Monster side -->
+                <div class="text-center flex flex-col items-center pl-2">
+                    <div id="battleMonsterAvatar" class="text-4xl mb-2">👾</div>
+                    <div class="font-bold text-red-400 text-sm pixel-font">심술쟁이 몬스터</div>
+                    <div class="text-xs text-slate-400 mt-1 mb-2">체력을 다 깎아 승리하세요!</div>
+                    <!-- Monster Health -->
+                    <div class="text-xs font-bold text-slate-400 mb-1">HP</div>
+                    <div id="battleMonsterHp" class="text-sm tracking-wide text-red-500">👾👾👾👾👾</div>
+                </div>
+            </div>
+
+            <!-- Math Question Area -->
+            <div class="bg-indigo-950/60 border-2 border-indigo-800 rounded-2xl p-4 text-center my-4">
+                <span class="text-xs bg-indigo-900 text-indigo-300 px-3 py-1 rounded-full font-bold uppercase tracking-wider">문제 풀고 공격!</span>
+                <p class="text-slate-300 text-sm mt-3">다음 일차방정식의 해 <strong class="text-amber-400">x</strong>의 값을 구하세요.</p>
+                <h3 id="battleEquation" class="text-3xl font-black text-amber-300 my-3 tracking-widest pixel-font">x + 5 = 12</h3>
+            </div>
+
+            <!-- Input and Action -->
+            <div class="space-y-3">
+                <input type="number" id="battleAnswerInput" placeholder="답을 입력해 주세요" class="w-full bg-slate-950 border-2 border-slate-700 focus:border-indigo-500 text-center text-2xl font-bold py-3 px-4 rounded-xl text-white outline-none focus:ring-2 focus:ring-indigo-950">
+                <button onclick="submitBattleAnswer()" class="w-full py-4 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-extrabold rounded-xl border-b-4 border-red-800 shadow-lg active:scale-95 transition-all text-lg pixel-font">
+                    ⚡ 공격하기 ⚡
+                </button>
+            </div>
+            <p class="text-[11px] text-slate-400 text-center mt-3 leading-relaxed">
+                * 공격 시 문제를 틀리면 반격을 받아 <b>하트 1칸</b>이 깎이며, 체력이 모두 소진되거나 오답 발생 시 <b>즉시 1라운드로 리셋</b>됩니다.
+            </p>
+        </div>
+    </div>
+
+    <!-- GATE MODAL SCREEN -->
+    <div id="gateModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4 z-40 transition-all duration-300">
+        <div class="w-full max-w-md bg-slate-900 border-4 border-amber-500 rounded-3xl p-6 shadow-2xl relative">
+            <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-amber-600 text-slate-950 font-extrabold px-6 py-1.5 rounded-full border-2 border-amber-400 pixel-font tracking-widest text-sm">
+                GATE UNLOCK
+            </div>
+
+            <div class="text-center my-4">
+                <span class="text-5xl">🚪</span>
+                <h3 class="text-xl font-bold text-amber-400 mt-2 pixel-font">라운드 관문의 비문</h3>
+                <p class="text-slate-300 text-xs mt-1">이 미로를 통과하기 위해서는 다음 일차방정식을 반드시 풀어야 합니다.</p>
+            </div>
+
+            <!-- Math Question Area -->
+            <div class="bg-amber-950/40 border-2 border-amber-800 rounded-2xl p-4 text-center my-4">
+                <h3 id="gateEquation" class="text-3xl font-black text-amber-300 my-2 tracking-widest pixel-font">2x + 4 = 10</h3>
+            </div>
+
+            <!-- Input and Action -->
+            <div class="space-y-3">
+                <input type="number" id="gateAnswerInput" placeholder="답을 입력해 주세요" class="w-full bg-slate-950 border-2 border-slate-700 focus:border-amber-500 text-center text-2xl font-bold py-3 px-4 rounded-xl text-white outline-none focus:ring-2 focus:ring-amber-950">
+                <button onclick="submitGateAnswer()" class="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-slate-950 font-extrabold rounded-xl border-b-4 border-amber-800 shadow-lg active:scale-95 transition-all text-lg pixel-font">
+                    🔓 자물쇠 열기
+                </button>
+            </div>
+            <p class="text-[11px] text-amber-300/80 text-center mt-3">
+                * 틀리면 관문의 마법 함정에 걸려 <b>풀이 과정 해설과 함께 첫 단계로 소환(리셋)</b>됩니다.
+            </p>
+        </div>
+    </div>
+
+    <!-- EXPLANATION / WRONG ANSWER GAME OVER OVERLAY -->
+    <div id="wrongModal" class="fixed inset-0 bg-slate-950/95 hidden flex items-center justify-center p-4 z-50">
+        <div class="w-full max-w-2xl bg-slate-900 border-4 border-rose-600 rounded-3xl p-6 shadow-2xl relative overflow-y-auto max-h-[90vh]">
+            <div class="text-center mb-6 border-b border-slate-800 pb-4">
+                <span class="text-5xl">💀</span>
+                <h2 id="wrongModalTitle" class="text-2xl font-black text-rose-500 pixel-font mt-2">안타깝게도 실패하셨습니다!</h2>
+                <p id="wrongModalSubtitle" class="text-slate-400 text-sm mt-1">문제를 틀렸거나, 몬스터의 공격에 체력을 모두 소실했습니다.</p>
+            </div>
+
+            <!-- Explanation Content -->
+            <div class="bg-slate-950 rounded-2xl p-5 border border-slate-800 space-y-4 mb-6">
+                <div>
+                    <h4 class="text-xs text-rose-400 font-bold tracking-wide uppercase">틀린 문제</h4>
+                    <p id="wrongEquationText" class="text-2xl font-black text-amber-300 tracking-wider pixel-font mt-1">2x + 4 = 10</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-900">
+                    <div>
+                        <h4 class="text-xs text-slate-500 font-bold tracking-wide uppercase">내가 작성한 답</h4>
+                        <p id="wrongPlayerAnswer" class="text-lg font-bold text-rose-400 mt-1">5</p>
+                    </div>
+                    <div>
+                        <h4 class="text-xs text-emerald-400 font-bold tracking-wide uppercase">정답</h4>
+                        <p id="wrongCorrectAnswer" class="text-lg font-bold text-emerald-400 mt-1">3</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-900">
+                    <h4 class="text-sm font-extrabold text-indigo-400 flex items-center gap-1.5 pixel-font">
+                        📚 상세한 오답 분석 & 일차방정식 풀이법
+                    </h4>
+                    <div id="wrongExplanationBody" class="text-slate-300 text-sm leading-relaxed mt-2 p-3 bg-indigo-950/30 rounded-lg border border-indigo-900/30 whitespace-pre-line font-mono">
+                        풀이 설명...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restart Button -->
+            <button onclick="handleGameResetAndRestart()" class="w-full py-4 bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-700 hover:to-indigo-700 text-white font-extrabold rounded-2xl border-b-4 border-rose-900 shadow-xl active:scale-95 transition-all text-lg pixel-font">
+                🔄 새 마음으로 다시 시작하기
+            </button>
+            <p class="text-center text-[11px] text-slate-500 mt-3">
+                * 복습 후 1라운드부터 완전히 새로운 문제 세트와 무기로 미로를 재탐색합니다.
+            </p>
+        </div>
+    </div>
+
+    <!-- VICTORY FINAL OVERLAY -->
+    <div id="victoryModal" class="fixed inset-0 bg-indigo-950/95 hidden flex items-center justify-center p-4 z-50">
+        <div class="w-full max-w-lg bg-slate-900 border-4 border-amber-500 rounded-3xl p-8 text-center shadow-2xl relative">
+            <span class="text-7xl animate-bounce block mb-4">🏆</span>
+            <h2 class="text-3xl font-black text-amber-400 pixel-font tracking-widest mb-1">수학 미로 정복 완료!</h2>
+            <p class="text-slate-300 text-sm font-semibold mb-6">축하합니다! 일차방정식 관문을 모두 돌파하고 마스터가 되셨습니다.</p>
+
+            <div class="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3 mb-6 text-left text-sm max-w-sm mx-auto">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">남은 체력 :</span>
+                    <span id="finalHp" class="text-rose-500">❤️❤️❤️❤️❤️</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">최종 보석 소지량 :</span>
+                    <span id="finalGems" class="text-cyan-400 font-bold">💎 3개</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">최종 장비 등급 :</span>
+                    <span id="finalWeapon" class="text-emerald-400 font-bold">🪄 마법 지팡이</span>
+                </div>
+            </div>
+
+            <button onclick="handleGameResetAndRestart()" class="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-slate-950 font-black rounded-2xl border-b-4 border-amber-800 shadow-xl active:scale-95 transition-all text-lg pixel-font">
+                🎉 한 번 더 플레이하기
+            </button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="w-full max-w-4xl text-center py-4 text-xs text-slate-500 border-t border-slate-800 mt-4 flex justify-between items-center px-2">
+        <span>© 2026 수학 일차방정식 미로 RPG</span>
+        <span>Keyboard: Arrow Keys / WASD</span>
+    </footer>
+
+    <script>
+        /* =========================================
+           1. GAME STATE & SETUP
+           ========================================= */
+        let state = {
+            round: 1,
+            player: { x: 1, y: 1 },
+            gemsCollected: 0,
+            hp: 5,
+            weapon: "맨손",
+            weaponDmg: 1,
+            activeCombat: null, // { monsterHp: 5, equation: {...}, gridX, gridY }
+            activeGate: null, // { equation: {...}, gridX, gridY }
+            currentProblem: null // { equationText, answer, explanation }
+        };
+
+        const GRID_SIZE = 40;
+        const CANVAS_W = 440;
+        const CANVAS_H = 440;
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Retain sound reference
+        let synth, noiseSynth;
+
+        /* =========================================
+           2. HAND-CRAFTED CONNECTED MAZES
+           ========================================= */
+        // Round 1 Map Grid (11x11)
+        // 0: Path, 1: Wall, 2: Gem, 3: Monster, 4: Gate
+        const ROUND_1_MAP = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 2, 0, 1], 
+            [1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1],
+            [1, 0, 0, 0, 3, 0, 0, 0, 0, 0, 1], 
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 4, 1], 
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        // Round 2 Map Grid (11x11, slightly tighter layout for progression)
+        const ROUND_2_MAP = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1, 2, 0, 0, 0, 0, 1], 
+            [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1],
+            [1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+            [1, 0, 0, 0, 1, 3, 1, 0, 1, 0, 1], 
+            [1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 1], 
+            [1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1],
+            [1, 0, 1, 1, 1, 0, 0, 2, 1, 0, 1], 
+            [1, 0, 0, 3, 1, 1, 1, 0, 0, 4, 1], 
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        let currentMap = JSON.parse(JSON.stringify(ROUND_1_MAP));
+
+        /* =========================================
+           3. SOUND EFFECTS SYNTHESIS (Tone.js)
+           ========================================= */
+        function initAudio() {
+            if (!synth) {
+                synth = new Tone.Synth({
+                    oscillator: { type: "square" },
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0.2, release: 0.1 }
+                }).toDestination();
+                noiseSynth = new Tone.NoiseSynth({
+                    noise: { type: "pink" },
+                    envelope: { attack: 0.005, decay: 0.08, sustain: 0 }
+                }).toDestination();
+            }
+            if (Tone.context.state !== 'running') {
+                Tone.context.resume();
+            }
+        }
+
+        function playMoveSound() {
+            initAudio();
+            if (synth) synth.triggerAttackRelease("A3", "16n", undefined, 0.05);
+        }
+
+        function playGemSound() {
+            initAudio();
+            const now = Tone.now();
+            if (synth) {
+                synth.triggerAttackRelease("E5", "16n", now);
+                synth.triggerAttackRelease("B5", "16n", now + 0.08);
+                synth.triggerAttackRelease("E6", "8n", now + 0.16);
+            }
+        }
+
+        function playHitSound() {
+            initAudio();
+            if (noiseSynth) noiseSynth.triggerAttackRelease("16n");
+        }
+
+        function playWrongSound() {
+            initAudio();
+            const now = Tone.now();
+            if (synth) {
+                synth.triggerAttackRelease("G#3", "8n", now);
+                synth.triggerAttackRelease("D3", "4n", now + 0.12);
+            }
+        }
+
+        function playVictorySound() {
+            initAudio();
+            const now = Tone.now();
+            if (synth) {
+                synth.triggerAttackRelease("C5", "16n", now);
+                synth.triggerAttackRelease("E5", "16n", now + 0.1);
+                synth.triggerAttackRelease("G5", "16n", now + 0.2);
+                synth.triggerAttackRelease("C6", "4n", now + 0.3);
+            }
+        }
+
+        /* =========================================
+           4. MATH ENGINE (EASY LINEAR EQUATIONS)
+           ========================================= */
+        function generateEquation() {
+            const types = ['add', 'sub', 'mul', 'linear_add', 'linear_sub'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            let equationText = "";
+            let answer = 0;
+            let explanation = "";
+
+            switch(type) {
+                case 'add': {
+                    // x + a = b
+                    const a = Math.floor(Math.random() * 10) + 1;
+                    const x = Math.floor(Math.random() * 10) + 1;
+                    const b = x + a;
+                    equationText = `x + ${a} = ${b}`;
+                    answer = x;
+                    explanation = `1. 우변으로 이항하여 정리합니다:\n   x = ${b} - ${a}\n2. 계산하여 답을 구합니다:\n   x = ${x}`;
+                    break;
+                }
+                case 'sub': {
+                    // x - a = b
+                    const a = Math.floor(Math.random() * 10) + 1;
+                    const x = Math.floor(Math.random() * 10) + 1;
+                    const b = x - a;
+                    equationText = `x - ${a} = ${b}`;
+                    answer = x;
+                    explanation = `1. 우변으로 이항하여 정리합니다:\n   x = ${b} + ${a}\n2. 계산하여 답을 구합니다:\n   x = ${x}`;
+                    break;
+                }
+                case 'mul': {
+                    // cx = d
+                    const c = Math.floor(Math.random() * 4) + 2; // 2 ~ 5
+                    const x = Math.floor(Math.random() * 8) + 1;  // 1 ~ 8
+                    const d = c * x;
+                    equationText = `${c}x = ${d}`;
+                    answer = x;
+                    explanation = `1. 양변을 x의 계수인 ${c}(으)로 나눕니다:\n   x = ${d} ÷ ${c}\n2. 계산하여 답을 구합니다:\n   x = ${x}`;
+                    break;
+                }
+                case 'linear_add': {
+                    // cx + a = b
+                    const c = Math.floor(Math.random() * 3) + 2; // 2 ~ 4
+                    const x = Math.floor(Math.random() * 7) + 1;  // 1 ~ 7
+                    const a = Math.floor(Math.random() * 8) + 1;
+                    const b = (c * x) + a;
+                    equationText = `${c}x + ${a} = ${b}`;
+                    answer = x;
+                    explanation = `1. 상수항 ${a}을 우변으로 이항합니다:\n   ${c}x = ${b} - ${a}\n   ${c}x = ${b - a}\n2. 양변을 x의 계수인 ${c}(으)로 나눕니다:\n   x = ${b - a} ÷ ${c}\n3. 계산하여 답을 구합니다:\n   x = ${x}`;
+                    break;
+                }
+                case 'linear_sub': {
+                    // cx - a = b
+                    const c = Math.floor(Math.random() * 3) + 2; // 2 ~ 4
+                    const x = Math.floor(Math.random() * 7) + 1;  // 1 ~ 7
+                    const a = Math.floor(Math.random() * 8) + 1;
+                    const b = (c * x) - a;
+                    equationText = `${c}x - ${a} = ${b}`;
+                    answer = x;
+                    explanation = `1. 상수항 -${a}을 우변으로 이항합니다:\n   ${c}x = ${b} + ${a}\n   ${c}x = ${b + a}\n2. 양변을 x의 계수인 ${c}(으)로 나눕니다:\n   x = ${b + a} ÷ ${c}\n3. 계산하여 답을 구합니다:\n   x = ${x}`;
+                    break;
+                }
+            }
+            return { equationText, answer, explanation };
+        }
+
+        /* =========================================
+           5. DRAWING THE CANVAS
+           ========================================= */
+        function drawMap() {
+            ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+            const mapRows = currentMap.length;
+            const mapCols = currentMap[0].length;
+
+            for (let r = 0; r < mapRows; r++) {
+                for (let c = 0; c < mapCols; c++) {
+                    const block = currentMap[r][c];
+                    const x = c * GRID_SIZE;
+                    const y = r * GRID_SIZE;
+
+                    // 1. Base Wall / Path Drawing
+                    if (block === 1) {
+                        ctx.fillStyle = "#1e293b"; // Wall
+                        ctx.fillRect(x, y, GRID_SIZE, GRID_SIZE);
+                        ctx.strokeStyle = "#334155";
+                        ctx.strokeRect(x, y, GRID_SIZE, GRID_SIZE);
+                        ctx.font = "20px Inter";
+                        ctx.fillText("🧱", x + 10, y + 28);
+                    } else {
+                        ctx.fillStyle = "#0f172a"; // Path
+                        ctx.fillRect(x, y, GRID_SIZE, GRID_SIZE);
+                        ctx.strokeStyle = "#1e293b";
+                        ctx.strokeRect(x, y, GRID_SIZE, GRID_SIZE);
+                    }
+
+                    // 2. Objects Drawing
+                    if (block === 2) {
+                        // Gem
+                        ctx.font = "24px Inter";
+                        ctx.fillText("💎", x + 8, y + 30);
+                    } else if (block === 3) {
+                        // Monster
+                        ctx.font = "24px Inter";
+                        ctx.fillText(state.round === 1 ? "👾" : "🐉", x + 8, y + 30);
+                    } else if (block === 4) {
+                        // Gate
+                        ctx.font = "24px Inter";
+                        ctx.fillText("🚪", x + 8, y + 30);
+                    }
+                }
+            }
+
+            // 3. Player Drawing
+            const px = state.player.x * GRID_SIZE;
+            const py = state.player.y * GRID_SIZE;
+            ctx.font = "24px Inter";
+            
+            // Render different avatar based on weapon
+            let playerAvatar = "🧑‍🌾";
+            if (state.weapon === "나무 검") playerAvatar = "🗡️";
+            else if (state.weapon === "철검") playerAvatar = "⚔️";
+            else if (state.weapon === "마법 지팡이") playerAvatar = "🪄";
+
+            ctx.fillText(playerAvatar, px + 8, py + 30);
+        }
+
+        /* =========================================
+           6. WEAPON EVOLUTION & STATE MANAGEMENT
+           ========================================= */
+        function updateWeapon() {
+            if (state.gemsCollected === 0) {
+                state.weapon = "맨손";
+                state.weaponDmg = 1;
+            } else if (state.gemsCollected === 1) {
+                state.weapon = "나무 검";
+                state.weaponDmg = 2;
+            } else if (state.gemsCollected === 2) {
+                state.weapon = "철검";
+                state.weaponDmg = 3;
+            } else {
+                state.weapon = "마법 지팡이";
+                state.weaponDmg = 5;
+            }
+        }
+
+        function updateUI() {
+            document.getElementById("ui-round").textContent = state.round;
+            document.getElementById("ui-gems").textContent = `💎 x ${state.gemsCollected}`;
+            
+            let weaponIcon = "✊";
+            if (state.weapon === "나무 검") weaponIcon = "🪵 🗡️";
+            else if (state.weapon === "철검") weaponIcon = "⚙️ ⚔️";
+            else if (state.weapon === "마법 지팡이") weaponIcon = "🌟 🪄";
+            document.getElementById("ui-weapon").textContent = `${weaponIcon} ${state.weapon} (Dmg: ${state.weaponDmg})`;
+
+            // Draw Hearts
+            let heartsHtml = "";
+            for (let i = 0; i < 5; i++) {
+                if (i < state.hp) {
+                    heartsHtml += "❤️";
+                } else {
+                    heartsHtml += "🖤";
+                }
+            }
+            document.getElementById("ui-hearts").innerHTML = heartsHtml;
+        }
+
+        /* =========================================
+           7. PLAYER NAVIGATION & GAMEPLAY
+           ========================================= */
+        function movePlayer(dx, dy) {
+            // Block move if modal is active
+            if (document.getElementById("combatModal").style.display === "flex" ||
+                document.getElementById("gateModal").style.display === "flex" ||
+                document.getElementById("wrongModal").style.display === "flex" ||
+                document.getElementById("victoryModal").style.display === "flex" ||
+                document.getElementById("startScreen").style.display === "flex") {
+                return;
+            }
+
+            const nextX = state.player.x + dx;
+            const nextY = state.player.y + dy;
+
+            // Check boundaries
+            if (nextY >= 0 && nextY < currentMap.length && nextX >= 0 && nextX < currentMap[0].length) {
+                const targetTile = currentMap[nextY][nextX];
+
+                // Check wall collision
+                if (targetTile !== 1) {
+                    state.player.x = nextX;
+                    state.player.y = nextY;
+                    playMoveSound();
+
+                    // Handle interactive tiles
+                    if (targetTile === 2) {
+                        // GEM COLLECTED
+                        state.gemsCollected++;
+                        currentMap[nextY][nextX] = 0; // remove gem
+                        updateWeapon();
+                        playGemSound();
+                    } else if (targetTile === 3) {
+                        // TRIGGER COMBAT
+                        initiateCombat(nextX, nextY);
+                    } else if (targetTile === 4) {
+                        // TRIGGER GATE
+                        initiateGate(nextX, nextY);
+                    }
+
+                    updateUI();
+                    drawMap();
+                }
+            }
+        }
+
+        // Keyboard handler
+        window.addEventListener("keydown", (e) => {
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) {
+                e.preventDefault(); // prevent window scrolling
+            }
+            switch (e.key) {
+                case "ArrowUp":
+                case "w":
+                case "W":
+                    movePlayer(0, -1);
+                    break;
+                case "ArrowDown":
+                case "s":
+                case "S":
+                    movePlayer(0, 1);
+                    break;
+                case "ArrowLeft":
+                case "a":
+                case "A":
+                    movePlayer(-1, 0);
+                    break;
+                case "ArrowRight":
+                case "d":
+                case "D":
+                    movePlayer(1, 0);
+                    break;
+            }
+        });
+
+        /* =========================================
+           8. COMBAT SYSTEM (INTERACTIVE BATTLE)
+           ========================================= */
+        function initiateCombat(gx, gy) {
+            const eq = generateEquation();
+            state.activeCombat = {
+                monsterHp: 5,
+                equation: eq,
+                gridX: gx,
+                gridY: gy
+            };
+
+            // Set up Avatars & Weapon description in Combat UI
+            let playerAvatar = "🧑‍🌾";
+            if (state.weapon === "나무 검") playerAvatar = "🗡️";
+            else if (state.weapon === "철검") playerAvatar = "⚔️";
+            else if (state.weapon === "마법 지팡이") playerAvatar = "🪄";
+            
+            document.getElementById("battlePlayerAvatar").textContent = playerAvatar;
+            document.getElementById("battleMonsterAvatar").textContent = state.round === 1 ? "👾" : "🐉";
+            document.getElementById("battlePlayerWeapon").textContent = `${state.weapon} (데미지: ${state.weaponDmg})`;
+            
+            // Set math equation text
+            document.getElementById("battleEquation").textContent = eq.equationText;
+            document.getElementById("battleAnswerInput").value = "";
+
+            renderBattleHps();
+
+            // Open Modal
+            document.getElementById("combatModal").style.display = "flex";
+            document.getElementById("battleAnswerInput").focus();
+        }
+
+        function renderBattleHps() {
+            // Render Player Hp
+            let playerHps = "";
+            for (let i = 0; i < 5; i++) {
+                playerHps += i < state.hp ? "❤️" : "🖤";
+            }
+            document.getElementById("battlePlayerHp").textContent = playerHps;
+
+            // Render Monster Hp
+            let monsterHps = "";
+            const icon = state.round === 1 ? "👾" : "🐉";
+            for (let i = 0; i < 5; i++) {
+                monsterHps += i < state.activeCombat.monsterHp ? icon : "🖤";
+            }
+            document.getElementById("battleMonsterHp").textContent = monsterHps;
+        }
+
+        // Support submit on Enter key
+        document.getElementById("battleAnswerInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                submitBattleAnswer();
+            }
+        });
+
+        function submitBattleAnswer() {
+            const inputVal = document.getElementById("battleAnswerInput").value.trim();
+            if (inputVal === "") return;
+
+            const playerAns = parseInt(inputVal);
+            const currentEq = state.activeCombat.equation;
+
+            if (playerAns === currentEq.answer) {
+                // CORRECT! Attack Monster
+                state.activeCombat.monsterHp -= state.weaponDmg;
+                playHitSound();
+
+                if (state.activeCombat.monsterHp <= 0) {
+                    // VICTORY OVER MONSTER
+                    currentMap[state.activeCombat.gridY][state.activeCombat.gridX] = 0; // Clear monster from map
+                    playVictorySound();
+                    
+                    // Close Battle Screen
+                    document.getElementById("combatModal").style.display = "none";
+                    state.activeCombat = null;
+                    
+                    drawMap();
+                } else {
+                    // Next Combat Round (Next Problem)
+                    const nextEq = generateEquation();
+                    state.activeCombat.equation = nextEq;
+                    document.getElementById("battleEquation").textContent = nextEq.equationText;
+                    document.getElementById("battleAnswerInput").value = "";
+                    document.getElementById("battleAnswerInput").focus();
+                    renderBattleHps();
+                }
+            } else {
+                // INCORRECT! Player takes damage and immediately fails battle (or gets reset)
+                state.hp--;
+                playWrongSound();
+                renderBattleHps();
+
+                // Store failed question details for error report
+                state.currentProblem = {
+                    equationText: currentEq.equationText,
+                    answer: currentEq.answer,
+                    explanation: currentEq.explanation,
+                    userAnswer: playerAns
+                };
+
+                // Close Combat overlay instantly to show Explanation / Game Over Modal
+                document.getElementById("combatModal").style.display = "none";
+                triggerWrongAnswerModal("❌ 전투 오답 발생! 함정에 맞아 후퇴합니다.");
+            }
+        }
+
+        /* =========================================
+           9. GATE LOCK SYSTEM
+           ========================================= */
+        function initiateGate(gx, gy) {
+            const eq = generateEquation();
+            state.activeGate = {
+                equation: eq,
+                gridX: gx,
+                gridY: gy
+            };
+
+            document.getElementById("gateEquation").textContent = eq.equationText;
+            document.getElementById("gateAnswerInput").value = "";
+
+            document.getElementById("gateModal").style.display = "flex";
+            document.getElementById("gateAnswerInput").focus();
+        }
+
+        document.getElementById("gateAnswerInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                submitGateAnswer();
+            }
+        });
+
+        function submitGateAnswer() {
+            const inputVal = document.getElementById("gateAnswerInput").value.trim();
+            if (inputVal === "") return;
+
+            const playerAns = parseInt(inputVal);
+            const currentEq = state.activeGate.equation;
+
+            if (playerAns === currentEq.answer) {
+                // CORRECT! GATE UNLOCKED
+                playVictorySound();
+                document.getElementById("gateModal").style.display = "none";
+
+                if (state.round === 1) {
+                    // Transition to Round 2
+                    alert("축하합니다! 1라운드 관문을 돌파하셨습니다.\n더 강력해진 2라운드로 진입합니다.");
+                    state.round = 2;
+                    state.player = { x: 1, y: 1 };
+                    currentMap = JSON.parse(JSON.stringify(ROUND_2_MAP));
+                    state.activeGate = null;
+                    updateUI();
+                    drawMap();
+                } else {
+                    // WIN GAME (ROUND 2 CLEAR)
+                    triggerFinalVictory();
+                }
+            } else {
+                // INCORRECT GATE ANSWER -> TRIGGER WRONG MODAL AND RESET
+                playWrongSound();
+                state.currentProblem = {
+                    equationText: currentEq.equationText,
+                    answer: currentEq.answer,
+                    explanation: currentEq.explanation,
+                    userAnswer: playerAns
+                };
+
+                document.getElementById("gateModal").style.display = "none";
+                triggerWrongAnswerModal("🚪 관문 자물쇠 해제 실패!");
+            }
+        }
+
+        /* =========================================
+           10. EXPLANATIONS & FAILURE MANAGEMENT (RESET)
+           ========================================= */
+        function triggerWrongAnswerModal(titleMsg) {
+            document.getElementById("wrongModalTitle").textContent = titleMsg;
+            
+            const prob = state.currentProblem;
+            if (prob) {
+                document.getElementById("wrongEquationText").textContent = prob.equationText;
+                document.getElementById("wrongPlayerAnswer").textContent = prob.userAnswer;
+                document.getElementById("wrongCorrectAnswer").textContent = prob.answer;
+                document.getElementById("wrongExplanationBody").textContent = prob.explanation;
+            }
+
+            document.getElementById("wrongModal").style.display = "flex";
+        }
+
+        function triggerFinalVictory() {
+            let heartsHtml = "";
+            for (let i = 0; i < 5; i++) {
+                heartsHtml += i < state.hp ? "❤️" : "🖤";
+            }
+            document.getElementById("finalHp").innerHTML = heartsHtml;
+            document.getElementById("finalGems").textContent = `💎 ${state.gemsCollected}개`;
+            
+            let weaponIcon = "✊";
+            if (state.weapon === "나무 검") weaponIcon = "🪵 🗡️";
+            else if (state.weapon === "철검") weaponIcon = "⚙️ ⚔️";
+            else if (state.weapon === "마법 지팡이") weaponIcon = "🪄";
+            document.getElementById("finalWeapon").textContent = `${weaponIcon} ${state.weapon}`;
+
+            document.getElementById("victoryModal").style.display = "flex";
+        }
+
+        function handleGameResetAndRestart() {
+            // Close all modals
+            document.getElementById("wrongModal").style.display = "none";
+            document.getElementById("victoryModal").style.display = "none";
+
+            // RESET STATE
+            state.round = 1;
+            state.player = { x: 1, y: 1 };
+            state.gemsCollected = 0;
+            state.hp = 5;
+            state.weapon = "맨손";
+            state.weaponDmg = 1;
+            state.activeCombat = null;
+            state.activeGate = null;
+            state.currentProblem = null;
+
+            // Reload original maps
+            currentMap = JSON.parse(JSON.stringify(ROUND_1_MAP));
+
+            updateUI();
+            drawMap();
+        }
+
+        /* =========================================
+           11. BOOTING THE GAME
+           ========================================= */
+        function startGame() {
+            initAudio();
+            document.getElementById("startScreen").style.display = "none";
+            updateUI();
+            drawMap();
+        }
+
+        // Initial setup on window load
+        window.onload = function() {
+            updateUI();
+            drawMap();
+        };
+    </script>
+</body>
+</html>
