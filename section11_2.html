@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정수와 유리수 보스전: 심연의 지배자</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;800;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color-1: #0f172a;
+            --bg-color-2: #020617;
+            --boss-primary: #f43f5e;
+            --boss-dark: #881337;
+            --boss-eye: #ffe4e6;
+            --aura-color: rgba(244, 63, 94, 0.2);
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-color-2);
+            background-image: radial-gradient(circle at 50% 30%, var(--bg-color-1) 0%, var(--bg-color-2) 100%);
+            overflow-x: hidden;
+            transition: background-image 2s ease-in-out;
+        }
+        
+        .digital-font { font-family: 'Orbitron', sans-serif; }
+        
+        /* Advanced Animations */
+        @keyframes float-complex {
+            0% { transform: translateY(0px) rotate(0deg) scale(1); }
+            33% { transform: translateY(-15px) rotate(2deg) scale(1.02); }
+            66% { transform: translateY(5px) rotate(-1deg) scale(0.98); }
+            100% { transform: translateY(0px) rotate(0deg) scale(1); }
+        }
+        
+        @keyframes boss-hit {
+            0% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(255,0,0,0.8)) brightness(2) hue-rotate(-20deg); }
+            20% { transform: translateX(-20px) scale(0.9) skewX(10deg); }
+            40% { transform: translateX(20px) scale(0.95) skewX(-10deg); }
+            60% { transform: translateX(-10px) scale(1.05); }
+            80% { transform: translateX(10px) scale(1); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 10px var(--aura-color)) brightness(1); }
+        }
+
+        @keyframes boss-attack-dash {
+            0% { transform: scale(1) translateY(0); filter: brightness(1); }
+            20% { transform: scale(0.8) translateY(-20px); filter: brightness(1.5); }
+            40% { transform: scale(1.5) translateY(60px); filter: blur(1px) drop-shadow(0 0 40px red); }
+            80% { transform: scale(0.9) translateY(-10px); filter: brightness(0.8); }
+            100% { transform: scale(1) translateY(0); }
+        }
+
+        @keyframes screen-shake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-5px, -5px) rotate(-1deg); }
+            20%, 40%, 60%, 80% { transform: translate(5px, 5px) rotate(1deg); }
+        }
+
+        @keyframes aura-spin {
+            0% { transform: rotate(0deg) scale(1); opacity: 0.5; }
+            50% { transform: rotate(180deg) scale(1.1); opacity: 0.8; }
+            100% { transform: rotate(360deg) scale(1); opacity: 0.5; }
+        }
+
+        @keyframes float-damage {
+            0% { opacity: 1; transform: translateY(0) scale(1.5); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1); }
+        }
+
+        /* Class assignments */
+        .boss-idle { animation: float-complex 4s ease-in-out infinite; }
+        .boss-hurt { animation: boss-hit 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+        .boss-strike { animation: boss-attack-dash 0.7s cubic-bezier(0.25, 1, 0.5, 1) both; }
+        .shake-screen { animation: screen-shake 0.4s ease-in-out; }
+        
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.5); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.8); }
+
+        .svg-transition { transition: all 1s ease-in-out; }
+    </style>
+</head>
+<body id="game-body" class="text-slate-100 min-h-screen flex flex-col justify-center items-center p-2 md:p-6 selection:bg-indigo-500 selection:text-white">
+
+    <header class="w-full max-w-6xl flex justify-between items-center mb-4 px-4">
+        <div class="flex items-center gap-3">
+            <div class="relative flex h-4 w-4">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-4 w-4 bg-gradient-to-br from-rose-500 to-red-600 border border-white/20"></span>
+            </div>
+            <h1 class="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-200 to-slate-400 tracking-tight drop-shadow-md">수학의 심연 : 정수와 유리수</h1>
+        </div>
+        <button onclick="toggleMute()" id="mute-btn" class="glass-panel p-2 px-5 rounded-full hover:bg-white/10 transition-all text-slate-300 text-xs md:text-sm font-bold flex items-center gap-2">
+            <span>🔊</span> BGM & SFX
+        </button>
+    </header>
+
+    <main id="main-board" class="w-full max-w-6xl glass-panel rounded-[2.5rem] overflow-hidden flex flex-col md:flex-row shadow-[0_0_50px_rgba(0,0,0,0.5)] border-t border-slate-700/50 relative">
+        
+        <!-- 왼쪽 패널: 보스 시각화 및 플레이어 상태 -->
+        <div class="w-full md:w-5/12 flex flex-col border-b md:border-b-0 md:border-r border-slate-700/50 bg-black/20 relative z-10">
+            
+            <!-- 페이즈 정보 -->
+            <div class="bg-gradient-to-r from-black/60 to-black/20 px-6 py-4 flex justify-between items-center border-b border-slate-700/50">
+                <span id="phase-badge" class="font-black text-sm md:text-base tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-orange-400 uppercase drop-shadow-sm">PHASE 1 : 심연의 꼬마 악마</span>
+                <span id="game-progress" class="text-xs md:text-sm font-bold text-slate-400 digital-font border border-slate-700 px-2 py-1 rounded bg-black/40">1 / 3 단계</span>
+            </div>
+
+            <!-- 보스 캔버스 -->
+            <div class="relative flex-1 min-h-[260px] md:min-h-[350px] w-full flex flex-col items-center justify-center overflow-hidden py-4">
+                
+                <!-- 동적 아우라 이펙트 -->
+                <div id="boss-aura-container" class="absolute inset-0 flex items-center justify-center opacity-70">
+                    <div id="aura-outer" class="w-64 h-64 md:w-80 md:h-80 rounded-full border-2 border-dashed border-rose-500/30" style="animation: aura-spin 20s linear infinite;"></div>
+                    <div id="aura-inner" class="absolute w-48 h-48 md:w-60 md:h-60 rounded-full border-[10px] border-double border-rose-600/20 blur-sm" style="animation: aura-spin 15s linear infinite reverse;"></div>
+                </div>
+
+                <!-- 디테일이 추가된 보스 SVG (image_6cc420.png 기반 고급화) -->
+                <div id="boss-sprite-container" class="relative z-10 boss-idle">
+                    <svg id="boss-svg" class="w-48 h-48 md:w-64 md:h-64 drop-shadow-[0_15px_25px_rgba(0,0,0,0.8)] svg-transition" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <!-- 동적 그라데이션 (JS에서 CSS 변수로 색상 변경됨) -->
+                            <radialGradient id="head-grad" cx="50%" cy="40%" r="60%">
+                                <stop offset="0%" stop-color="var(--boss-primary)" class="svg-transition"/>
+                                <stop offset="100%" stop-color="var(--boss-dark)" class="svg-transition"/>
+                            </radialGradient>
+                            <linearGradient id="horn-grad" x1="0%" y1="100%" x2="50%" y2="0%">
+                                <stop offset="0%" stop-color="var(--boss-dark)" class="svg-transition"/>
+                                <stop offset="100%" stop-color="var(--boss-primary)" class="svg-transition"/>
+                            </linearGradient>
+                            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                            </filter>
+                        </defs>
+
+                        <!-- 악마 날개 (초기 숨김) -->
+                        <g id="boss-wings" class="transition-opacity duration-1000 opacity-0 transform origin-center">
+                            <!-- 좌측 날개 -->
+                            <path d="M 50 100 Q 10 50, -20 80 T 10 160 Q 30 140, 50 110 Z" fill="#1e1b4b" stroke="#7e22ce" stroke-width="2"/>
+                            <path d="M 40 105 Q 0 60, -10 85 T 15 150 Q 30 135, 45 115 Z" fill="#3b0764"/>
+                            <!-- 우측 날개 -->
+                            <path d="M 150 100 Q 190 50, 220 80 T 190 160 Q 170 140, 150 110 Z" fill="#1e1b4b" stroke="#7e22ce" stroke-width="2"/>
+                            <path d="M 160 105 Q 200 60, 210 85 T 185 150 Q 170 135, 155 115 Z" fill="#3b0764"/>
+                        </g>
+
+                        <!-- 뿔 -->
+                        <path id="left-horn" d="M 50 65 Q 40 10, 75 40 Z" fill="url(#horn-grad)" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+                        <path id="right-horn" d="M 150 65 Q 160 10, 125 40 Z" fill="url(#horn-grad)" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+                        
+                        <!-- 둥근 얼굴 (원작 특징 반영) -->
+                        <circle id="head-base" cx="100" cy="110" r="70" fill="url(#head-grad)" stroke="#000" stroke-width="5"/>
+                        
+                        <!-- 째진 눈 -->
+                        <g id="boss-eyes">
+                            <path d="M 45 95 Q 65 75, 85 105 Q 65 115, 45 95 Z" fill="#000" stroke="#000" stroke-width="2"/>
+                            <circle cx="62" cy="98" r="6" fill="var(--boss-eye)" filter="url(#glow)" class="svg-transition"/>
+                            <path d="M 155 95 Q 135 75, 115 105 Q 135 115, 155 95 Z" fill="#000" stroke="#000" stroke-width="2"/>
+                            <circle cx="138" cy="98" r="6" fill="var(--boss-eye)" filter="url(#glow)" class="svg-transition"/>
+                        </g>
+                        
+                        <!-- 지그재그 이빨 모양 입 -->
+                        <path id="boss-mouth" d="M 60 130 L 80 145 L 100 128 L 120 145 L 140 130 Q 120 170, 100 165 Q 80 170, 60 130 Z" fill="#000" stroke="#000" stroke-width="3" stroke-linejoin="round"/>
+                        <!-- 안쪽 이빨 디테일 -->
+                        <path id="teeth-line" d="M 64 133 L 80 141 L 100 132 L 120 141 L 136 133" stroke="#fff" stroke-width="2" fill="none" opacity="0.8"/>
+                    </svg>
+                </div>
+
+                <!-- 데미지 팝업 컨테이너 -->
+                <div id="damage-container" class="absolute inset-0 pointer-events-none flex items-center justify-center z-50"></div>
+
+                <!-- 보스 체력 바 (디자인 개선) -->
+                <div class="absolute bottom-4 left-6 right-6 z-10">
+                    <div class="glass-panel p-3 rounded-2xl">
+                        <div class="flex justify-between items-end mb-1.5">
+                            <span class="text-rose-400 font-black text-xs md:text-sm tracking-widest flex items-center gap-1.5">
+                                <span class="text-lg">👿</span> BOSS HP
+                            </span>
+                            <span id="boss-hp-text" class="font-black text-white digital-font text-sm md:text-base drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">150 / 150</span>
+                        </div>
+                        <div class="w-full bg-black/60 h-3 md:h-4 rounded-full overflow-hidden border border-white/10 shadow-inner">
+                            <div id="boss-hp-fill" class="bg-gradient-to-r from-red-600 via-rose-500 to-orange-500 h-full rounded-full transition-all duration-300 relative">
+                                <div class="absolute inset-0 bg-white/20" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 플레이어 상태 패널 -->
+            <div class="bg-black/40 border-y border-slate-700/50 p-4 flex justify-between items-center gap-4 relative">
+                <!-- 아바타/직업 아이콘 -->
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-700 flex items-center justify-center text-2xl border-2 border-indigo-400/50 shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+                    🧙‍♂️
+                </div>
+                
+                <div class="flex-1 space-y-1">
+                    <div class="flex justify-between items-center text-xs md:text-sm">
+                        <span class="text-emerald-400 font-black uppercase tracking-widest">PLAYER HP</span>
+                        <span id="player-hp-text" class="font-bold text-white digital-font drop-shadow-md">100 / 100</span>
+                    </div>
+                    <div class="w-full bg-black/60 h-2.5 rounded-full overflow-hidden border border-white/10">
+                        <div id="player-hp-fill" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-300 shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
+                    </div>
+                </div>
+                
+                <!-- 방어막 상태 -->
+                <div class="flex flex-col items-center bg-black/50 px-3 py-1.5 rounded-xl border border-cyan-500/30 min-w-[70px]">
+                    <span class="text-[10px] text-cyan-500 font-bold uppercase">방어막</span>
+                    <span id="shield-count" class="text-sm md:text-base font-black text-white digital-font flex items-center gap-1">
+                        🛡️ 0
+                    </span>
+                </div>
+            </div>
+
+            <!-- 전투 로그 -->
+            <div id="battle-log" class="bg-black/20 p-4 text-xs md:text-sm text-slate-300 h-32 md:h-44 overflow-y-auto flex flex-col gap-2 font-medium">
+                <div class="text-emerald-400 pb-1 border-b border-emerald-900/30">⚔️ [시스템] 보스전이 시작되었습니다! 정수와 유리수 문제를 풀어 공격하세요.</div>
+            </div>
+        </div>
+
+        <!-- 오른쪽 패널: 대시보드 및 컨트롤 -->
+        <div class="w-full md:w-7/12 flex flex-col bg-slate-900/80 p-4 md:p-6 justify-between gap-5 relative z-20">
+            
+            <!-- 상단 타이머 -->
+            <div class="w-full glass-panel rounded-2xl overflow-hidden relative">
+                <div id="timer-bar" class="bg-gradient-to-r from-emerald-400 to-cyan-500 h-6 w-full transition-all duration-100 ease-linear"></div>
+                <div class="absolute inset-0 flex justify-between items-center px-4">
+                    <span class="text-xs font-black tracking-widest text-white uppercase drop-shadow-md">TIME LIMIT</span>
+                    <span id="timer-text" class="text-sm font-black text-white digital-font drop-shadow-md">60.0s</span>
+                </div>
+            </div>
+
+            <!-- 문제 출력 카드 -->
+            <div class="relative bg-gradient-to-b from-slate-800 to-slate-900 border border-slate-600 rounded-3xl p-6 flex flex-col items-center justify-center min-h-[120px] md:min-h-[160px] shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)] overflow-hidden group">
+                <!-- 장식용 기하학 패턴 -->
+                <div class="absolute -right-10 -top-10 text-9xl text-white opacity-5 font-black transform rotate-12 group-hover:scale-110 transition-transform duration-1000">∑</div>
+                
+                <span class="absolute top-4 left-5 text-[10px] md:text-xs text-amber-400 font-black tracking-widest uppercase">Target Problem</span>
+                
+                <div id="problem-card" class="text-3xl md:text-4xl lg:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-200 text-center tracking-wider py-2 select-none filter drop-shadow-[0_2px_2px_rgba(0,0,0,1)]">
+                    -3 + (+7) = ?
+                </div>
+            </div>
+
+            <!-- 정답 입력 및 공격 버튼 -->
+            <div class="flex gap-3">
+                <div class="relative flex-1">
+                    <input type="text" id="answer-input" readonly
+                           class="w-full text-center bg-black/50 border-2 border-slate-600 focus:border-blue-500 rounded-2xl py-4 px-4 text-2xl md:text-3xl font-black tracking-widest text-white shadow-inner focus:outline-none transition-colors"
+                           placeholder="정답">
+                    <button onclick="clearAnswer()" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-slate-700 hover:bg-rose-600 text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors">
+                        ✕
+                    </button>
+                </div>
+                <button id="attack-btn" onclick="checkAnswer()" class="px-6 md:px-10 bg-gradient-to-br from-indigo-500 via-blue-600 to-indigo-700 hover:from-indigo-400 hover:to-blue-500 text-white font-black rounded-2xl tracking-widest shadow-[0_0_20px_rgba(79,70,229,0.5)] transition-all active:scale-95 border border-indigo-400/50 flex flex-col items-center justify-center text-sm md:text-base">
+                    <span class="text-xl mb-0.5">⚔️</span>
+                    <span>ATTACK</span>
+                </button>
+            </div>
+
+            <!-- 터치 최적화 키패드 -->
+            <div class="grid grid-cols-4 gap-2 md:gap-3 glass-panel p-3 md:p-4 rounded-3xl">
+                <!-- Numbers -->
+                <button onclick="pressKey('1')" class="py-3 md:py-4 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-xl md:text-2xl font-bold transition-all shadow border border-slate-600/50">1</button>
+                <button onclick="pressKey('2')" class="py-3 md:py-4 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-xl md:text-2xl font-bold transition-all shadow border border-slate-600/50">2</button>
+                <button onclick="pressKey('3')" class="py-3 md:py-4 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-xl md:text-2xl font-bold transition-all shadow border border-slate-600/50">3</button>
+                <!-- 마이너스 (음수) -->
+                <button onclick="pressKey('-')" class="py-3 md:py-4 bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 rounded-xl text-2xl md:text-3xl font-black transition-all shadow border border-rose-500/30">-</button>
+                
+                <button onclick="pressKey('4')" class="py-3 md:py-4 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-xl md:text-2xl font-bold transition-all shadow border border-slate-600/50">4</button>
+                <button onclick="pressKey('5')" class="py-3 md:py-4 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-xl md:text-2xl font-bold transition-all shadow border border-slate-600/50">5</button>
+                <button onclick="pressKey('6')" class="py-3 md:py-4 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-xl md:text-2xl font-bold transition-all shadow border border-slate-600/50">6</button>
+                <!-- 분수(나누기) -->
+                <button onclick="pressKey('/')" class="py-3 md:py-4 bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-400 rounded-xl text-xl md:text-2xl font-black transition-all shadow border border-cyan-500/30" title="분수 기호">/</button>
+                
+                <button onclick="pressKey('7')" class="py-3 md:py-4 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-xl md:text-2xl font-bold transition-all shadow border border-slate-600/50">7</button>
+                <button onclick="pressKey('8')" class="py-3 md:py-4 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-xl md:text-2xl font-bold transition-all shadow border border-slate-600/50">8</button>
+                <button onclick="pressKey('9')" class="py-3 md:py-4 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-xl md:text-2xl font-bold transition-all shadow border border-slate-600/50">9</button>
+                <!-- 소수점 -->
+                <button onclick="pressKey('.')" class="py-3 md:py-4 bg-yellow-950/40 hover:bg-yellow-900/60 text-yellow-400 rounded-xl text-2xl md:text-3xl font-black transition-all shadow border border-yellow-500/30">.</button>
+                
+                <button onclick="pressKey('0')" class="col-span-2 py-3 md:py-4 bg-slate-800/80 hover:bg-slate-700 rounded-xl text-xl md:text-2xl font-bold transition-all shadow border border-slate-600/50">0</button>
+                <button onclick="pressKey('back')" class="col-span-2 py-3 md:py-4 bg-slate-700/80 hover:bg-slate-600 text-slate-300 rounded-xl text-sm md:text-base font-bold transition-all shadow border border-slate-500/50 flex items-center justify-center gap-2">
+                    ◀ BACKSPACE
+                </button>
+            </div>
+
+            <!-- 장착된 마법(스킬) 슬롯 -->
+            <div class="border-t border-slate-700/50 pt-3">
+                <div class="flex justify-between items-end mb-2">
+                    <h3 class="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-widest">장착된 마법 (클릭하여 교체)</h3>
+                    <span class="text-[9px] text-slate-500">최대 3개 슬롯</span>
+                </div>
+                <div id="active-skills-container" class="grid grid-cols-3 gap-3">
+                    <!-- JS로 동적 렌더링 됨 -->
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 1. Intro Modal -->
+    <div id="intro-modal" class="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-xl">
+        <div class="glass-panel border-2 border-indigo-500/50 rounded-[2rem] p-8 max-w-md w-full text-center shadow-[0_0_100px_rgba(79,70,229,0.3)]">
+            <div class="inline-block p-4 bg-indigo-500/10 rounded-full mb-4">
+                <span class="text-6xl filter drop-shadow-[0_0_15px_rgba(167,139,250,0.8)]">🔮</span>
+            </div>
+            <h2 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 mb-2">정수와 유리수 보스전</h2>
+            <p class="text-sm text-slate-400 mb-6 font-bold">RPG 프리미엄 에디션</p>
+            
+            <div class="text-left bg-black/40 p-5 rounded-2xl border border-slate-700 text-sm space-y-3 text-slate-300 leading-relaxed mb-6">
+                <p class="flex gap-2"><span>🎯</span> <span>1분 안에 수학 문제를 풀어 몬스터를 타격하세요.</span></p>
+                <p class="flex gap-2"><span>⏫</span> <span>페이즈 클리어 시 <strong>무작위 마법 3개 중 하나를 선택</strong>해 강해집니다. (로그라이크)</span></p>
+                <p class="flex gap-2"><span>⌨️</span> <span>화면의 키패드를 이용해 음수( - )와 분수( / )를 입력하세요.</span></p>
+            </div>
+
+            <button onclick="startGame()" class="w-full py-4 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black rounded-2xl tracking-widest text-lg shadow-lg shadow-indigo-900/50 transform hover:-translate-y-1 transition-all">
+                포탈 열기 (GAME START)
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. Roguelike Skill Selection Modal (레벨업 보상) -->
+    <div id="skill-modal" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-4 backdrop-blur-xl">
+        <div class="w-full max-w-4xl text-center space-y-8 relative">
+            
+            <!-- Confetti/Light effect behind title -->
+            <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-amber-500/20 rounded-full blur-[80px]"></div>
+            
+            <h2 class="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-500 drop-shadow-lg relative z-10">
+                LEVEL UP!
+            </h2>
+            <p class="text-slate-300 font-bold text-sm md:text-base">페이즈를 클리어했습니다. 새로운 힘을 선택하세요.</p>
+            
+            <div id="skill-choices" class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 relative z-10">
+                <!-- JS 동적 생성 영역 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Final Victory Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-4 backdrop-blur-xl">
+        <div class="glass-panel border-2 border-emerald-500/50 rounded-3xl p-8 max-w-sm w-full text-center shadow-[0_0_80px_rgba(16,185,129,0.4)]">
+            <div class="text-6xl mb-4 animate-bounce">🏆</div>
+            <h2 class="text-3xl font-black text-emerald-400 mb-2">영광의 승리!</h2>
+            <p class="text-sm text-slate-300 mb-6">수학의 심연을 완벽히 정복했습니다.</p>
+            <button onclick="location.reload()" class="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-black rounded-xl tracking-widest transition-all hover:scale-105">
+                새로운 도전장 (재시작)
+            </button>
+        </div>
+    </div>
+
+    <!-- 4. Game Over Modal -->
+    <div id="gameover-modal" class="fixed inset-0 bg-black/95 z-50 hidden flex items-center justify-center p-4 backdrop-blur-xl">
+        <div class="glass-panel border-2 border-rose-600/50 rounded-3xl p-8 max-w-sm w-full text-center shadow-[0_0_80px_rgba(225,29,72,0.4)]">
+            <div class="text-6xl mb-4">💀</div>
+            <h2 class="text-3xl font-black text-rose-500 mb-2">YOU DIED</h2>
+            <p class="text-sm text-slate-400 mb-6">조금 더 연습이 필요합니다.</p>
+            <button onclick="location.reload()" class="w-full py-4 bg-gradient-to-r from-rose-700 to-red-600 text-white font-black rounded-xl tracking-widest transition-all hover:scale-105">
+                부활하여 재도전
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Audio System (Web Audio API) ---
+        const SoundFX = {
+            ctx: null, muted: false,
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            play(type) {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                const t = this.ctx.currentTime;
+                
+                if (type === 'hit') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, t);
+                    osc.frequency.exponentialRampToValueAtTime(50, t + 0.2);
+                    gain.gain.setValueAtTime(0.3, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+                    osc.start(t); osc.stop(t + 0.2);
+                } else if (type === 'cast') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, t);
+                    osc.frequency.linearRampToValueAtTime(800, t + 0.1);
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.1);
+                    osc.start(t); osc.stop(t + 0.1);
+                } else if (type === 'magic') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(800, t);
+                    osc.frequency.exponentialRampToValueAtTime(100, t + 0.4);
+                    gain.gain.setValueAtTime(0.15, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+                    osc.start(t); osc.stop(t + 0.4);
+                } else if (type === 'heal') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, t);
+                    osc.frequency.setValueAtTime(600, t + 0.1);
+                    osc.frequency.setValueAtTime(800, t + 0.2);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+                    osc.start(t); osc.stop(t + 0.3);
+                } else if (type === 'levelup') {
+                    osc.type = 'sine';
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                        osc.frequency.setValueAtTime(freq, t + i * 0.1);
+                    });
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
+                    osc.start(t); osc.stop(t + 0.6);
+                } else if (type === 'bossAttack') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100, t);
+                    osc.frequency.exponentialRampToValueAtTime(20, t + 0.5);
+                    gain.gain.setValueAtTime(0.4, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+                    osc.start(t); osc.stop(t + 0.5);
+                }
+            }
+        };
+
+        function toggleMute() {
+            SoundFX.muted = !SoundFX.muted;
+            document.getElementById('mute-btn').innerHTML = SoundFX.muted ? "🔇 사운드 OFF" : "🔊 BGM & SFX";
+            SoundFX.init();
+        }
+
+        // --- 2. Game Data & State ---
+        let phase = 1;
+        let bossHp = 200, maxBossHp = 200;
+        let playerHp = 100, maxPlayerHp = 100;
+        let shieldCount = 0;
+        let timer = 60;
+        let timerInterval = null;
+        let currentProblem = null;
+        
+        // Active Skills the player has equipped (Max 3)
+        let mySkills = [];
+        let selectedSkillIndex = 0;
+
+        // Master Skill Pool (Roguelike choices)
+        const MasterSkillPool = [
+            { id: 'fire', name: '홍염의 폭발', icon: '🔥', dmg: 35, effect: 'none', desc: '강력한 불꽃으로 35의 고정 피해를 입힙니다.', color: 'from-orange-500 to-red-600', border: 'border-orange-500/50' },
+            { id: 'ice', name: '서리 방패', icon: '❄️', dmg: 15, effect: 'shield', desc: '15 피해를 주고 보스의 공격을 1회 막는 방어막 생성.', color: 'from-cyan-400 to-blue-500', border: 'border-cyan-400/50' },
+            { id: 'vampire', name: '흡혈 박쥐', icon: '🦇', dmg: 25, effect: 'heal', desc: '25 피해를 주고 플레이어 체력을 15 회복합니다.', color: 'from-purple-500 to-pink-600', border: 'border-purple-400/50' },
+            { id: 'poison', name: '맹독 투척', icon: '🧪', dmg: 40, effect: 'none', desc: '치명적인 독을 던져 40의 큰 피해를 입힙니다.', color: 'from-green-500 to-emerald-700', border: 'border-green-400/50' },
+            { id: 'thunder', name: '천둥 강타', icon: '⚡', dmg: 55, effect: 'none', desc: '강력한 벼락으로 55의 치명적 피해를 입힙니다.', color: 'from-yellow-400 to-amber-600', border: 'border-yellow-400/50' },
+            { id: 'holy', name: '빛의 심판', icon: '✨', dmg: 70, effect: 'none', desc: '최종 병기. 70의 절대적인 피해를 입힙니다.', color: 'from-slate-100 to-slate-400', border: 'border-white/50' }
+        ];
+
+        // Give basic skill initially
+        const StarterSkills = [
+            { id: 'basic', name: '기본 타격', icon: '✊', dmg: 15, effect: 'none', desc: '15 피해', color: 'from-slate-600 to-slate-700', border: 'border-slate-500/50' },
+            { id: 'basic_heal', name: '초급 회복', icon: '🌿', dmg: 5, effect: 'heal_small', desc: '5 피해, 체력 10 회복', color: 'from-emerald-600 to-green-700', border: 'border-green-500/50' },
+            { id: 'basic_shield', name: '초급 방어', icon: '💧', dmg: 5, effect: 'shield', desc: '5 피해, 방어막 1개', color: 'from-blue-400 to-cyan-600', border: 'border-blue-400/50' }
+        ];
+
+        // --- 3. Math Engine ---
+        function getGCD(a, b) { return b ? getGCD(b, a % b) : Math.abs(a); }
+        function simplifyFraction(num, den) {
+            if (den === 0) return { num: 0, den: 1, str: "0" };
+            const gcd = getGCD(num, den);
+            let n = num / gcd; let d = den / gcd;
+            if (d < 0) { n = -n; d = -d; }
+            return { num: n, den: d, str: d === 1 ? `${n}` : `${n}/${d}`, val: n/d };
+        }
+
+        function generateMathProblem() {
+            let pText = "", sVal = 0, sStr = "";
+
+            if (phase === 1) {
+                // 1페이즈: 정수 덧셈/뺄셈 위주 + 동분모 분수
+                const mode = Math.random();
+                if (mode < 0.6) { // 60% Integer
+                    const a = Math.floor(Math.random() * 20) - 10;
+                    const b = Math.floor(Math.random() * 20) - 10;
+                    const op = Math.random() > 0.5 ? '+' : '-';
+                    pText = `(${a}) ${op} (${b >= 0 ? `+${b}` : b})`;
+                    sVal = op === '+' ? (a + b) : (a - b);
+                    sStr = `${sVal}`;
+                } else { // 40% Fraction (same denominator)
+                    const den = Math.random() > 0.5 ? 3 : 5;
+                    const nA = Math.floor(Math.random() * 8) - 4;
+                    let nB = Math.floor(Math.random() * 8) - 4;
+                    if(nB === 0) nB = 1;
+                    const op = Math.random() > 0.5 ? '+' : '-';
+                    pText = `(${nA}/${den}) ${op} (${nB}/${den})`;
+                    const rNum = op === '+' ? (nA + nB) : (nA - nB);
+                    const simp = simplifyFraction(rNum, den);
+                    sVal = simp.val; sStr = simp.str;
+                }
+            } else if (phase === 2) {
+                // 2페이즈: 정수 곱셈/나눗셈 + 이분모 분수 곱/나눗셈
+                const mode = Math.random();
+                if (mode < 0.5) {
+                    const a = Math.floor(Math.random() * 12) - 6;
+                    let b = Math.floor(Math.random() * 10) - 5; if(b===0) b=2;
+                    const op = Math.random() > 0.5 ? '×' : '÷';
+                    if (op === '×') {
+                        pText = `(${a}) × (${b >= 0 ? `+${b}` : b})`;
+                        sVal = a * b; sStr = `${sVal}`;
+                    } else { // 깔끔하게 나누어떨어지는 식 생성
+                        const mult = a * b;
+                        pText = `(${mult}) ÷ (${a === 0 ? 1 : a >= 0 ? `+${a}` : a})`;
+                        sVal = b; sStr = `${sVal}`;
+                    }
+                } else { // Rational Multiplication
+                    const denA = 2, denB = 3;
+                    const nA = Math.floor(Math.random() * 5) - 2;
+                    let nB = Math.floor(Math.random() * 5) - 2; if(nB===0) nB=1;
+                    pText = `(${nA}/${denA}) × (${nB}/${denB})`;
+                    const simp = simplifyFraction(nA * nB, denA * denB);
+                    sVal = simp.val; sStr = simp.str;
+                }
+            } else {
+                // 3페이즈: 거듭제곱 및 혼합 계산
+                const mode = Math.random();
+                if (mode < 0.5) {
+                    const base = Math.floor(Math.random() * 5) - 2;
+                    const exp = 2;
+                    const offset = Math.floor(Math.random() * 10) - 5;
+                    pText = `(${base})^${exp} + (${offset >= 0 ? `+${offset}` : offset})`;
+                    sVal = Math.pow(base, exp) + offset;
+                    sStr = `${sVal}`;
+                } else {
+                    const a = Math.floor(Math.random() * 4) - 2;
+                    const b = Math.floor(Math.random() * 4) - 1;
+                    const c = Math.floor(Math.random() * 3) + 1;
+                    pText = `(${a}) + (${b}) × (${c})`;
+                    sVal = a + (b * c);
+                    sStr = `${sVal}`;
+                }
+            }
+
+            currentProblem = { text: pText, decimal: sVal, str: sStr };
+            document.getElementById('problem-card').innerText = currentProblem.text + " = ?";
+        }
+
+        // --- 4. Input & Combat UI ---
+        function pressKey(val) {
+            SoundFX.play('cast');
+            const input = document.getElementById('answer-input');
+            if (val === 'back') input.value = input.value.slice(0, -1);
+            else input.value += val;
+        }
+
+        function clearAnswer() {
+            SoundFX.play('cast');
+            document.getElementById('answer-input').value = "";
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timer = 60.0;
+            updateTimerUI();
+            
+            timerInterval = setInterval(() => {
+                timer -= 0.1;
+                updateTimerUI();
+                if (timer <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 100);
+        }
+
+        function updateTimerUI() {
+            const bar = document.getElementById('timer-bar');
+            const percent = Math.max(0, (timer / 60) * 100);
+            bar.style.width = percent + "%";
+            document.getElementById('timer-text').innerText = timer.toFixed(1) + "s";
+            
+            if (timer > 30) bar.className = "bg-gradient-to-r from-emerald-400 to-cyan-500 h-6 w-full transition-all ease-linear shadow-[0_0_10px_#34d399]";
+            else if (timer > 10) bar.className = "bg-gradient-to-r from-yellow-400 to-amber-500 h-6 w-full transition-all ease-linear shadow-[0_0_10px_#fbbf24]";
+            else bar.className = "bg-gradient-to-r from-red-500 to-rose-600 h-6 w-full transition-all ease-linear shadow-[0_0_15px_#f43f5e]";
+        }
+
+        function appendBattleLog(msg, type = "info") {
+            const logBox = document.getElementById('battle-log');
+            let colors = "text-slate-300";
+            if (type === "player") colors = "text-cyan-300 font-bold drop-shadow-md";
+            if (type === "boss") colors = "text-rose-400 font-bold drop-shadow-md";
+            if (type === "system") colors = "text-amber-300 font-black";
+            if (type === "heal") colors = "text-emerald-400 font-bold";
+            
+            const newLog = document.createElement('div');
+            newLog.className = `${colors} opacity-0 transform translate-y-2 transition-all duration-300`;
+            newLog.innerHTML = msg;
+            logBox.appendChild(newLog);
+            
+            // Trigger animation
+            setTimeout(() => { newLog.classList.remove('opacity-0', 'translate-y-2'); }, 50);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function validateAnswer(inputStr, targetObj) {
+            const trimmed = inputStr.trim().replace(/\s+/g, '');
+            if (!trimmed) return false;
+            if (trimmed === targetObj.str) return true;
+            if (trimmed.includes('/')) {
+                const parts = trimmed.split('/');
+                if (parts.length === 2) {
+                    const userVal = parseFloat(parts[0]) / parseFloat(parts[1]);
+                    return Math.abs(userVal - targetObj.decimal) < 0.001;
+                }
+            }
+            return Math.abs(parseFloat(trimmed) - targetObj.decimal) < 0.001;
+        }
+
+        function checkAnswer() {
+            const inputField = document.getElementById('answer-input');
+            const userAnswer = inputField.value;
+            if (userAnswer.trim() === "") return;
+
+            clearInterval(timerInterval);
+            if (validateAnswer(userAnswer, currentProblem)) {
+                playerAttackBoss();
+            } else {
+                appendBattleLog(`❌ 오답입니다! 정답은 [${currentProblem.str}] 였습니다.`, "system");
+                bossAttackPlayer();
+            }
+            inputField.value = "";
+        }
+
+        function showDamagePopup(dmg, isPlayerTarget = false, isHeal = false) {
+            const container = document.getElementById('damage-container');
+            const el = document.createElement('div');
+            
+            let colorClass = "text-rose-500 drop-shadow-[0_0_10px_rgba(244,63,94,0.8)]";
+            let text = `-${dmg}`;
+            
+            if (isHeal) {
+                colorClass = "text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]";
+                text = `+${dmg}`;
+            }
+
+            el.className = `absolute font-black text-5xl md:text-6xl ${colorClass} digital-font z-50 pointer-events-none`;
+            el.innerText = text;
+            
+            // Random scatter position
+            const offsetX = (Math.random() - 0.5) * 60;
+            const offsetY = (Math.random() - 0.5) * 40;
+            el.style.left = `calc(50% + ${offsetX}px)`;
+            el.style.top = `calc(50% + ${offsetY}px)`;
+            
+            // Apply animation
+            el.style.animation = 'float-damage 1s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            container.appendChild(el);
+            setTimeout(() => el.remove(), 1000);
+        }
+
+        function playerAttackBoss() {
+            const currentSkill = mySkills[selectedSkillIndex];
+            const dmg = currentSkill.dmg;
+            
+            bossHp -= dmg;
+            if (bossHp < 0) bossHp = 0;
+
+            SoundFX.play('magic');
+            
+            // Skill Effects
+            if (currentSkill.effect === 'shield') {
+                shieldCount++;
+                SoundFX.play('heal');
+                appendBattleLog(`🛡️ [${currentSkill.name}] 방어막이 생성되었습니다!`, "player");
+            } else if (currentSkill.effect === 'heal') {
+                playerHp = Math.min(maxPlayerHp, playerHp + 15);
+                SoundFX.play('heal');
+                showDamagePopup(15, true, true);
+                appendBattleLog(`🦇 [${currentSkill.name}] 체력을 15 회복했습니다.`, "heal");
+            } else if (currentSkill.effect === 'heal_small') {
+                playerHp = Math.min(maxPlayerHp, playerHp + 10);
+                SoundFX.play('heal');
+                showDamagePopup(10, true, true);
+                appendBattleLog(`🌿 [${currentSkill.name}] 체력을 10 회복했습니다.`, "heal");
+            }
+
+            showDamagePopup(dmg);
+            appendBattleLog(`✨ 플레이어의 [${currentSkill.name}] 명중! 보스에게 ${dmg} 피해.`, "player");
+
+            // Boss Visual React
+            const sprite = document.getElementById('boss-sprite-container');
+            sprite.classList.remove('boss-idle');
+            sprite.classList.add('boss-hurt');
+            setTimeout(() => {
+                sprite.classList.remove('boss-hurt');
+                sprite.classList.add('boss-idle');
+            }, 500);
+
+            updateBars();
+            
+            if (bossHp <= 0) setTimeout(handlePhaseTransition, 800);
+            else nextTurn();
+        }
+
+        function bossAttackPlayer() {
+            SoundFX.play('bossAttack');
+            document.getElementById('main-board').classList.add('shake-screen');
+            setTimeout(() => document.getElementById('main-board').classList.remove('shake-screen'), 400);
+
+            const sprite = document.getElementById('boss-sprite-container');
+            sprite.classList.remove('boss-idle');
+            sprite.classList.add('boss-strike');
+            setTimeout(() => {
+                sprite.classList.remove('boss-strike');
+                sprite.classList.add('boss-idle');
+            }, 700);
+
+            const baseDmg = phase * 20; // 20, 40, 60
+            
+            setTimeout(() => {
+                if (shieldCount > 0) {
+                    shieldCount--;
+                    SoundFX.play('heal');
+                    appendBattleLog(`🛡️ 방어막이 보스의 치명적인 일격을 막아냈습니다!`, "system");
+                } else {
+                    playerHp -= baseDmg;
+                    if (playerHp < 0) playerHp = 0;
+                    SoundFX.play('hit');
+                    document.getElementById('game-body').style.backgroundColor = 'rgba(153, 27, 27, 0.4)';
+                    setTimeout(() => document.getElementById('game-body').style.backgroundColor = '', 200);
+                    appendBattleLog(`👿 보스의 맹공격! 플레이어는 ${baseDmg}의 피해를 입었습니다.`, "boss");
+                }
+                
+                updateBars();
+                if (playerHp <= 0) setTimeout(() => document.getElementById('gameover-modal').classList.remove('hidden'), 500);
+                else nextTurn();
+            }, 300);
+        }
+
+        function handleTimeout() {
+            appendBattleLog("⌛ 시간 초과! 보스가 기습합니다.", "system");
+            bossAttackPlayer();
+        }
+
+        function nextTurn() {
+            generateMathProblem();
+            startTimer();
+        }
+
+        // --- 5. Skill System & Phase Management ---
+        function renderSkills() {
+            const container = document.getElementById('active-skills-container');
+            container.innerHTML = '';
+            
+            mySkills.forEach((skill, idx) => {
+                const isSelected = idx === selectedSkillIndex;
+                const borderClass = isSelected ? `border-2 ${skill.border} shadow-[0_0_15px_rgba(255,255,255,0.2)]` : 'border border-slate-700 opacity-60 hover:opacity-100';
+                const bgClass = isSelected ? `bg-gradient-to-br ${skill.color}` : 'bg-slate-800';
+                
+                container.innerHTML += `
+                    <button onclick="selectSkill(${idx})" class="p-2 rounded-xl transition-all flex flex-col items-center justify-center gap-1 ${borderClass} ${bgClass} h-20 md:h-24 relative overflow-hidden group">
+                        <span class="text-xl md:text-3xl filter drop-shadow-md z-10">${skill.icon}</span>
+                        <span class="text-[9px] md:text-[10px] font-black text-white drop-shadow-md z-10">${skill.name}</span>
+                        ${isSelected ? '<div class="absolute inset-0 bg-white/10 animate-pulse"></div>' : ''}
+                    </button>
+                `;
+            });
+            
+            // Empty slots
+            for (let i = mySkills.length; i < 3; i++) {
+                container.innerHTML += `
+                    <div class="p-2 rounded-xl border border-dashed border-slate-700 bg-black/20 flex items-center justify-center h-20 md:h-24">
+                        <span class="text-slate-600 text-xs font-bold">SLOT</span>
+                    </div>
+                `;
+            }
+        }
+
+        function selectSkill(idx) {
+            selectedSkillIndex = idx;
+            SoundFX.play('cast');
+            renderSkills();
+            appendBattleLog(`✨ 마법 교체: [${mySkills[idx].name}] 장착 완료.`, "system");
+        }
+
+        function handlePhaseTransition() {
+            clearInterval(timerInterval);
+            SoundFX.play('levelup');
+            
+            if (phase === 1) {
+                phase = 2;
+                maxBossHp = 300; bossHp = maxBossHp;
+                updateBossAesthetics(2);
+                showSkillChoiceModal();
+            } else if (phase === 2) {
+                phase = 3;
+                maxBossHp = 500; bossHp = maxBossHp;
+                updateBossAesthetics(3);
+                showSkillChoiceModal();
+            } else {
+                document.getElementById('victory-modal').classList.remove('hidden');
+                appendBattleLog("🏆 짝짝짝! 보스를 완전히 소멸시켰습니다!", "system");
+            }
+            playerHp = maxPlayerHp; // Heal on phase clear
+            updateBars();
+        }
+
+        function updateBossAesthetics(newPhase) {
+            const root = document.documentElement;
+            if (newPhase === 2) {
+                document.getElementById('phase-badge').innerText = "PHASE 2 : 진홍의 학살자";
+                document.getElementById('phase-badge').className = "font-black text-sm md:text-base tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 uppercase drop-shadow-sm";
+                document.getElementById('game-progress').innerText = "2 / 3 단계";
+                
+                // SVG Colors morphing
+                root.style.setProperty('--boss-primary', '#c084fc');
+                root.style.setProperty('--boss-dark', '#581c87');
+                root.style.setProperty('--boss-eye', '#fbcfe8');
+                root.style.setProperty('--aura-color', 'rgba(192, 132, 252, 0.4)');
+                
+                document.getElementById('boss-wings').classList.remove('opacity-0');
+                document.getElementById('boss-wings').classList.add('opacity-100');
+                
+                document.getElementById('aura-outer').className = "w-64 h-64 md:w-80 md:h-80 rounded-full border-2 border-dashed border-purple-500/50";
+                document.getElementById('aura-inner').className = "absolute w-48 h-48 md:w-60 md:h-60 rounded-full border-[10px] border-double border-pink-600/30 blur-sm";
+                
+                root.style.setProperty('--bg-color-1', '#1e1b4b');
+                root.style.setProperty('--bg-color-2', '#0f0a1f');
+
+            } else if (newPhase === 3) {
+                document.getElementById('phase-badge').innerText = "FINAL PHASE : 종말의 심연";
+                document.getElementById('phase-badge').className = "font-black text-sm md:text-base tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-800 uppercase drop-shadow-sm";
+                document.getElementById('game-progress').innerText = "3 / 3 단계";
+                
+                // Final Boss SVG morph
+                root.style.setProperty('--boss-primary', '#111827'); // Black face
+                root.style.setProperty('--boss-dark', '#000000');
+                root.style.setProperty('--boss-eye', '#ff0000'); // Pure red eyes
+                root.style.setProperty('--aura-color', 'rgba(255, 0, 0, 0.6)');
+                
+                document.getElementById('boss-mouth').setAttribute('stroke', '#ff0000');
+                document.getElementById('boss-mouth').setAttribute('fill', '#450a0a');
+                
+                document.getElementById('aura-outer').className = "w-72 h-72 md:w-96 md:h-96 rounded-full border-4 border-solid border-red-600/40 blur-sm";
+                document.getElementById('aura-inner').className = "absolute w-56 h-56 md:w-72 md:h-72 rounded-full border-[15px] border-double border-red-700/60 blur-md";
+                
+                root.style.setProperty('--bg-color-1', '#2a0a0a');
+                root.style.setProperty('--bg-color-2', '#000000');
+            }
+        }
+
+        function showSkillChoiceModal() {
+            const modal = document.getElementById('skill-modal');
+            const container = document.getElementById('skill-choices');
+            container.innerHTML = '';
+            
+            // Pick 3 random skills (avoid duplicates)
+            const shuffled = [...MasterSkillPool].sort(() => 0.5 - Math.random());
+            let choices = shuffled.slice(0, 3);
+            
+            // Phase 3 exception: Force 'Holy' to appear if possible
+            if(phase === 3 && !choices.find(c => c.id === 'holy')) {
+                choices[0] = MasterSkillPool.find(c => c.id === 'holy');
+            }
+
+            choices.forEach((skill, idx) => {
+                container.innerHTML += `
+                    <div onclick="chooseNewSkill('${skill.id}')" class="glass-panel p-6 rounded-3xl cursor-pointer transform transition-all hover:scale-105 hover:-translate-y-2 border border-${skill.color.split('-')[1]}/50 group relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br ${skill.color} opacity-10 group-hover:opacity-30 transition-opacity"></div>
+                        <div class="text-6xl mb-4 relative z-10 drop-shadow-lg">${skill.icon}</div>
+                        <h3 class="text-xl font-black text-white mb-2 relative z-10 drop-shadow-md">${skill.name}</h3>
+                        <p class="text-xs text-slate-300 font-bold relative z-10">${skill.desc}</p>
+                        <div class="mt-4 inline-block px-3 py-1 bg-black/50 rounded-full text-[10px] text-amber-300 border border-amber-500/30 font-bold">선택하기</div>
+                    </div>
+                `;
+            });
+            
+            modal.classList.remove('hidden');
+        }
+
+        function chooseNewSkill(skillId) {
+            const skill = MasterSkillPool.find(s => s.id === skillId);
+            
+            if (mySkills.length < 3) {
+                mySkills.push(skill);
+                selectedSkillIndex = mySkills.length - 1;
+            } else {
+                // Replace currently selected if full
+                mySkills[selectedSkillIndex] = skill;
+            }
+            
+            document.getElementById('skill-modal').classList.add('hidden');
+            renderSkills();
+            appendBattleLog(`🌟 찬란한 빛과 함께 [${skill.name}] 마법을 체득했습니다!`, "system");
+            
+            nextTurn();
+        }
+
+        function updateBars() {
+            document.getElementById('boss-hp-text').innerText = `${bossHp} / ${maxBossHp}`;
+            document.getElementById('boss-hp-fill').style.width = (bossHp / maxBossHp * 100) + "%";
+            
+            document.getElementById('player-hp-text').innerText = `${playerHp} / ${maxPlayerHp}`;
+            document.getElementById('player-hp-fill').style.width = (playerHp / maxPlayerHp * 100) + "%";
+            
+            document.getElementById('shield-count').innerHTML = `🛡️ ${shieldCount}`;
+        }
+
+        // --- 6. Init ---
+        function startGame() {
+            document.getElementById('intro-modal').classList.add('hidden');
+            SoundFX.init();
+            SoundFX.play('heal');
+            
+            mySkills = [...StarterSkills];
+            selectedSkillIndex = 0;
+            renderSkills();
+            
+            generateMathProblem();
+            startTimer();
+            updateBars();
+        }
+    </script>
+</body>
+</html>
