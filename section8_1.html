@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>제로섬(Zero-Sum) 던전 탈출 - 정수와 유리수 배틀</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Jua for friendly education style -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Jua&display=swap" rel="stylesheet">
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Tone.js for retro game sounds -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0b0f19;
+    }
+    .fancy-title {
+      font-family: 'Jua', sans-serif;
+    }
+    /* Custom Scrollbar for game logs */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e293b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 3px;
+    }
+    /* Glow Effects */
+    .glow-green {
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+    .glow-red {
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    }
+    .glow-gold {
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
+    }
+    .glow-purple {
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-amber-500 selection:text-slate-900">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-slate-900/80 border-b border-slate-800 backdrop-blur px-6 py-4 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="bg-gradient-to-tr from-amber-500 to-rose-500 p-2.5 rounded-xl shadow-lg">
+          <i class="fa-solid fa-dungeon text-slate-950 text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl md:text-2xl font-extrabold tracking-tight fancy-title text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-400">
+            제로섬(Zero-Sum) 던전 탈출
+          </h1>
+          <p class="text-xs text-slate-400 font-medium">중1 수학: 정수와 유리수 마스터 보드게임</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button onclick="openRuleModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all border border-slate-700 flex items-center gap-1.5 shadow-md">
+          <i class="fa-solid fa-book-open text-amber-400"></i>
+          <span>게임 룰북</span>
+        </button>
+        <button id="soundToggleBtn" onclick="toggleSound()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl text-sm transition-all border border-slate-700 shadow-md">
+          <i class="fa-solid fa-volume-high text-amber-400" id="soundIcon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Game Arena -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6 items-stretch">
+    
+    <!-- Left Panel: Battle Arena & Card Interactions -->
+    <div class="flex-grow flex flex-col justify-between space-y-6 lg:w-2/3">
+      
+      <!-- Battlefield: Monster (AI) and Hero (Player) states -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <!-- Opponent: Dark Math Wizard (AI) -->
+        <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 flex flex-col justify-between shadow-2xl relative overflow-hidden" id="aiCard">
+          <div class="absolute -top-10 -right-10 w-24 h-24 bg-rose-500/10 rounded-full blur-2xl"></div>
+          
+          <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-12 h-12 rounded-full bg-slate-800 border-2 border-rose-500 flex items-center justify-center text-rose-400 text-2xl relative">
+                <i class="fa-solid fa-ghost"></i>
+                <div class="absolute -bottom-1 -right-1 bg-rose-600 text-white text-[9px] px-1 rounded-full font-bold">AI</div>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-200 flex items-center gap-1">
+                  어둠의 수학 마왕
+                  <span class="text-xs text-rose-400 bg-rose-950 px-2 py-0.5 rounded-full border border-rose-800/50">LEVEL 1</span>
+                </h3>
+                <div class="text-xs text-slate-400">보유 카드: <span id="aiHandCount" class="font-bold text-rose-400">4</span>장</div>
+              </div>
+            </div>
+            
+            <!-- Exact Match Progress Gauge -->
+            <div class="text-right">
+              <span class="text-xs text-slate-400 block mb-0.5">탈출 목표 수: <b class="text-amber-400 font-extrabold">+10</b></span>
+            </div>
+          </div>
+
+          <!-- AI Score Display -->
+          <div class="bg-slate-950/60 rounded-xl p-4 text-center border border-slate-800 relative">
+            <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold">현재 마왕의 수</div>
+            <div class="text-4xl font-extrabold font-mono transition-all duration-300" id="aiScoreText">0</div>
+            <div class="w-full bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
+              <div class="bg-rose-500 h-full rounded-full transition-all duration-500" id="aiProgress" style="width: 50%"></div>
+            </div>
+            <!-- Progress marker hints -->
+            <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-semibold">
+              <span>음수 영역</span>
+              <span class="text-slate-400">시작점 (0)</span>
+              <span>목표 (+10)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Player: Brave Scholar -->
+        <div class="bg-slate-900/90 rounded-2xl p-5 border border-amber-500/50 flex flex-col justify-between shadow-2xl relative overflow-hidden" id="playerCard">
+          <div class="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl"></div>
+          
+          <div class="flex justify-between items-center mb-4">
+            <div class="flex items-center space-x-3">
+              <div class="w-12 h-12 rounded-full bg-slate-800 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 text-2xl">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-200 flex items-center gap-1">
+                  수학 탐험가 (나)
+                  <span class="text-xs text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-800/50">ME</span>
+                </h3>
+                <div class="text-xs text-slate-400">목표까지 필요한 수: <span id="neededScore" class="font-bold text-emerald-400">+10</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Player Score Display -->
+          <div class="bg-slate-950/60 rounded-xl p-4 text-center border border-slate-800 relative">
+            <div class="text-xs text-slate-500 uppercase tracking-wider font-semibold">현재 나의 수</div>
+            <div class="text-4xl font-extrabold font-mono transition-all duration-300" id="playerScoreText">0</div>
+            <div class="w-full bg-slate-800 rounded-full h-2 mt-3 overflow-hidden">
+              <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" id="playerProgress" style="width: 50%"></div>
+            </div>
+            <!-- Progress marker hints -->
+            <div class="flex justify-between text-[10px] text-slate-500 mt-1 font-semibold">
+              <span>음수 영역</span>
+              <span class="text-slate-400">시작점 (0)</span>
+              <span>목표 (+10)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Middle Status & Target Selection Banner -->
+      <div class="bg-slate-950/80 rounded-2xl p-4 border border-slate-800 min-h-[90px] flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-3 text-center md:text-left">
+          <span class="flex h-3 w-3 relative">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+          </span>
+          <div>
+            <span class="text-xs text-slate-400 block font-semibold">게임 가이드 메시지</span>
+            <p id="systemMessage" class="text-sm font-semibold text-slate-200">
+              카드를 한 장 선택한 뒤 대상을 지정해 전투를 개시하세요!
+            </p>
+          </div>
+        </div>
+
+        <!-- Target Action Buttons (Show dynamically when card selected) -->
+        <div id="targetActionGroup" class="hidden flex items-center space-x-2 w-full md:w-auto">
+          <button id="applySelfBtn" onclick="playSelectedCard('self')" class="flex-1 md:flex-initial bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-lg flex items-center justify-center gap-1.5 border border-emerald-500/30">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>나에게 적용</span>
+          </button>
+          <button id="applyOpponentBtn" onclick="playSelectedCard('opponent')" class="flex-1 md:flex-initial bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition-all shadow-lg flex items-center justify-center gap-1.5 border border-rose-500/30">
+            <i class="fa-solid fa-bolt"></i>
+            <span>상대에게 공격</span>
+          </button>
+          <button onclick="deselectCard()" class="bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white p-2.5 rounded-xl text-xs transition-all border border-slate-700">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Player Hand UI (Cards) -->
+      <div>
+        <div class="flex justify-between items-center mb-3 px-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-hand text-amber-500"></i>
+            내가 가진 수/연산 카드 (클릭하여 선택)
+          </h4>
+          <span class="text-xs text-slate-500" id="cardHint">최대 5장 보유 가능</span>
+        </div>
+        
+        <!-- Cards Flex Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="playerHandContainer">
+          <!-- Dynamically populated cards will go here -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Panel: Game Log & Dungeon Math Lab -->
+    <div class="lg:w-1/3 flex flex-col justify-between space-y-6">
+      
+      <!-- Dungeon Math Lab (수학 해설판) -->
+      <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-2xl flex flex-col justify-between flex-grow h-[320px] lg:h-1/2 overflow-hidden">
+        <div class="flex items-center space-x-2 border-b border-slate-800 pb-3 mb-3">
+          <div class="bg-violet-500/10 p-1.5 rounded-lg border border-violet-500/30 text-violet-400">
+            <i class="fa-solid fa-flask text-sm"></i>
+          </div>
+          <h3 class="font-bold text-slate-200 fancy-title text-sm">던전 수학 연구실 (개념 매칭)</h3>
+        </div>
+
+        <div class="flex-grow flex flex-col justify-center text-center px-2 py-4" id="mathLabContent">
+          <div class="text-slate-500 text-sm">
+            <i class="fa-solid fa-wand-magic-sparkles text-4xl mb-3 text-violet-500/50 block animate-pulse"></i>
+            배틀 카드를 내면 마법같은<br><strong>정수와 유리수 개념 해설</strong>이 등장합니다!
+          </div>
+        </div>
+
+        <!-- Static Math Quick Reference -->
+        <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-800/80 mt-2">
+          <h4 class="text-xs font-bold text-amber-500 mb-1 flex items-center gap-1">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            음수 x 음수 = 양수 대역전 원리
+          </h4>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            점수가 마이너스 일 때 <span class="text-indigo-400 font-semibold">곱하기 음수(×-2)</span>를 가하면 0을 넘어 순식간에 양수 전력으로 바뀝니다!
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Logs (전투 기록) -->
+      <div class="bg-slate-900/90 rounded-2xl p-5 border border-slate-800 shadow-2xl h-[220px] lg:h-1/2 flex flex-col justify-between overflow-hidden">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-2">
+          <div class="flex items-center space-x-2">
+            <div class="bg-amber-500/10 p-1.5 rounded-lg border border-amber-500/30 text-amber-500">
+              <i class="fa-solid fa-scroll text-sm"></i>
+            </div>
+            <h3 class="font-bold text-slate-200 fancy-title text-sm">던전 전투 연대기</h3>
+          </div>
+          <button onclick="clearLogs()" class="text-[10px] text-slate-500 hover:text-slate-300">비우기</button>
+        </div>
+
+        <!-- Log List Scroll Container -->
+        <div class="flex-grow overflow-y-auto space-y-2 pr-1 text-xs" id="gameLogs">
+          <div class="text-slate-500 italic">모험을 시작했습니다. 0의 구덩이에서 정수와 유리수의 힘으로 10을 향해 올라가세요!</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-950/80 border-t border-slate-900 px-6 py-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+      <p>&copy; 2026 제로섬 던전 탈출. 중학교 1학년 수학 교육용 보드게임 프로젝트.</p>
+      <div class="flex space-x-4">
+        <a href="#" onclick="openRuleModal(); return false;" class="hover:text-amber-500 transition-colors">게임 규칙 다시보기</a>
+        <a href="#" onclick="openConceptCheatSheet(); return false;" class="hover:text-amber-500 transition-colors">정수와 유리수 개념 총정리</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MODAL: Instructions & Rules -->
+  <div id="ruleModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-amber-600 to-rose-600 p-5 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-dungeon text-2xl"></i>
+          <h2 class="text-xl font-bold fancy-title tracking-wide">제로섬 던전 탈출 대모험!</h2>
+        </div>
+        <button onclick="closeRuleModal()" class="text-white hover:text-slate-200 transition-colors">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <!-- Content -->
+      <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-300 leading-relaxed">
+        <div>
+          <h3 class="font-bold text-amber-400 text-base mb-2"><i class="fa-solid fa-star mr-1"></i> 게임 시놉시스</h3>
+          <p>
+            당신은 수학 던전의 깊숙한 곳 <b>'0'의 구덩이(Zero-Sum)</b>에 갇혔습니다.<br>
+            이 마법 던전을 탈출할 수 있는 유일한 열쇠는 정수와 유리수의 카드를 올바르게 조합하여 자신의 숫자를 <b>정확히 '+10'</b>으로 만드는 것입니다! 10을 초과해도 안 되며, 정확히 10이어야 탈출구의 차원문이 열립니다.
+          </p>
+        </div>
+
+        <hr class="border-slate-800">
+
+        <div>
+          <h3 class="font-bold text-amber-400 text-base mb-2"><i class="fa-solid fa-layer-group mr-1"></i> 카드 마법의 원리</h3>
+          <ul class="space-y-3 list-disc list-inside">
+            <li>
+              <strong class="text-emerald-400">양수 카드 (+1, +3, +5, +0.5 등)</strong>: 나에게 쓰면 점수가 더해지고, 마왕에게 던져 마왕이 10을 맞추지 못하게 초과시키는 데 유용합니다.
+            </li>
+            <li>
+              <strong class="text-rose-400">음수 카드 (-2, -5, -1.5 등)</strong>: 상대의 점수를 깎아 방해하거나, 내가 가지고 있다가 '음수 곱하기'로 대역전을 노릴 수 있습니다.
+            </li>
+            <li>
+              <strong class="text-indigo-400">곱하기 카드 (× 2, × -2, × -1)</strong>: 현재 점수에 해당 숫자를 곱합니다. 특히 내 점수가 <span class="bg-rose-950 px-1 rounded text-rose-400">-5</span>일 때 <span class="bg-indigo-950 px-1 rounded text-indigo-400">× -2</span>를 사용하면 바로 <strong class="text-emerald-400">+10</strong>이 되어 게임에서 승리합니다! (음수 x 음수 = 양수!)
+            </li>
+            <li>
+              <strong class="text-violet-400">절댓값 보호막 (|x|)</strong>: 현재 자신의 점수에 절댓값을 씌웁니다. 음수가 매우 큰 상태에서 사용하면 즉시 동일한 양수로 변신합니다! (예: <span class="text-rose-400">-9</span> &rarr; <span class="text-emerald-400">+9</span>)
+            </li>
+          </ul>
+        </div>
+
+        <hr class="border-slate-800">
+
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <h4 class="font-bold text-amber-500 mb-1 flex items-center gap-1">
+            <i class="fa-solid fa-compass"></i>
+            필승 플레이 전략
+          </h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            매 턴 카드는 무조건 1장 써야 하며, 손에는 최대 5장까지 자동으로 보충됩니다. 마왕이 10에 가까워지면 음수 카드로 어택하고, 나는 곱셈 연산과 절댓값 보호막을 설계하며 정확히 +10을 향해 전진하세요!
+          </p>
+        </div>
+      </div>
+      <!-- Footer Button -->
+      <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-end">
+        <button onclick="closeRuleModal(); playSound('gameStart');" class="bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-extrabold px-6 py-3 rounded-xl shadow-lg hover:shadow-amber-500/20 transition-all flex items-center gap-2">
+          <span>던전으로 들어가기!</span>
+          <i class="fa-solid fa-circle-play text-lg"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Math Concept Cheat Sheet -->
+  <div id="cheatSheetModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+      <div class="bg-gradient-to-r from-violet-600 to-indigo-600 p-5 text-white flex justify-between items-center">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-graduation-cap text-2xl"></i>
+          <h2 class="text-xl font-bold fancy-title">중1 정수와 유리수 개념 마스터 시트</h2>
+        </div>
+        <button onclick="closeConceptCheatSheet()" class="text-white hover:text-slate-200">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+      <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-300 leading-relaxed">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <h4 class="font-bold text-amber-400 mb-2">1. 양수와 음수의 성질</h4>
+            <p class="text-xs text-slate-400">
+              기준 0을 중심으로 큰 수를 양의 부호(+), 작은 수를 음의 부호(-)를 사용하여 나타냅니다.<br>
+              음수끼리의 계산이나 양수와 음수의 혼합 연산에서 부호의 결정 규칙을 익히는 것이 핵심입니다.
+            </p>
+          </div>
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <h4 class="font-bold text-teal-400 mb-2">2. 유리수의 분류</h4>
+            <p class="text-xs text-slate-400">
+              분수 형태 $a/b$ ($a, b$는 정수, $b \ne 0$)로 나타낼 수 있는 수입니다. <br>
+              게임에 쓰이는 $+0.5, -1.5$ 등 소수 카드는 수직선 위에서 정수 사이에 정밀하게 자리하는 유리수입니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <h4 class="font-bold text-violet-400 mb-2">3. 곱셈의 부호 규칙</h4>
+          <table class="w-full text-xs text-slate-400 text-center border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800">
+                <th class="py-2 text-slate-200">첫 번째 수</th>
+                <th class="py-2 text-slate-200">연산</th>
+                <th class="py-2 text-slate-200">두 번째 수</th>
+                <th class="py-2 text-slate-200">결과 부호</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-slate-900">
+                <td class="py-2 text-emerald-400 font-bold">양수 (+)</td>
+                <td class="py-2">&times;</td>
+                <td class="py-2 text-emerald-400 font-bold">양수 (+)</td>
+                <td class="py-2 text-emerald-400 font-bold">양수 (+)</td>
+              </tr>
+              <tr class="border-b border-slate-900">
+                <td class="py-2 text-rose-400 font-bold">음수 (-)</td>
+                <td class="py-2">&times;</td>
+                <td class="py-2 text-emerald-400 font-bold">양수 (+)</td>
+                <td class="py-2 text-rose-400 font-bold">음수 (-)</td>
+              </tr>
+              <tr>
+                <td class="py-2 text-rose-400 font-bold">음수 (-)</td>
+                <td class="py-2">&times;</td>
+                <td class="py-2 text-rose-400 font-bold">음수 (-)</td>
+                <td class="py-2 text-emerald-400 font-bold text-lg">양수 (+) &starf;</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+          <h4 class="font-bold text-emerald-400 mb-1">4. 절댓값(Absolute Value)이란?</h4>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            수직선 위에서 <strong>기준점(0)에서 어떤 수까지의 거리</strong>입니다.<br>
+            거리는 방향이 없으므로 항상 0 또는 양수의 값을 가집니다. 기호로는 $|a|$와 같이 나타냅니다.<br>
+            예: $|-3| = 3$, $|+5| = 5$, $|0| = 0$
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Victory / Defeat Overlay (Popup message) -->
+  <div id="gameResultModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-md px-4 hidden">
+    <div class="bg-slate-900 border-2 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl p-6 text-center" id="resultBorder">
+      <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto text-4xl mb-4" id="resultIconBg">
+        <i class="fa-solid fa-trophy" id="resultIcon"></i>
+      </div>
+      <h2 class="text-2xl font-extrabold fancy-title mb-2 text-transparent bg-clip-text" id="resultTitle">탈출 성공!</h2>
+      <p class="text-slate-300 text-sm mb-6" id="resultDesc">정확히 +10을 조율하여 탈출구의 주파수를 맞췄습니다!</p>
+      
+      <!-- Math Achievements Recap -->
+      <div class="bg-slate-950 rounded-xl p-4 border border-slate-800 mb-6 text-left">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 text-center">나의 최종 맹활약 스코어</h4>
+        <div class="flex justify-around items-center py-2">
+          <div>
+            <span class="text-[10px] text-slate-500 block">내 최종수</span>
+            <span class="text-xl font-bold font-mono text-emerald-400" id="finalPlayerScore">+10</span>
+          </div>
+          <div class="h-8 w-[1px] bg-slate-800"></div>
+          <div>
+            <span class="text-[10px] text-slate-500 block">마왕 최종수</span>
+            <span class="text-xl font-bold font-mono text-rose-400" id="finalAiScore">?</span>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="restartGame()" class="w-full bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-bold py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span>던전 재도전하기</span>
+      </button>
+    </div>
+  </div>
+
+
+  <script>
+    // Sound controller state
+    let soundEnabled = true;
+    let synth, synthPoly;
+
+    // Initialize synthesizers for cool sound effects
+    function initSynth() {
+      if (!synth) {
+        synth = new Tone.Synth().toDestination();
+        synthPoly = new Tone.PolySynth().toDestination();
+        
+        // Lower default volume
+        synth.volume.value = -12;
+        synthPoly.volume.value = -12;
+      }
+    }
+
+    // Toggle Sound system
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const icon = document.getElementById('soundIcon');
+      const btn = document.getElementById('soundToggleBtn');
+      if (soundEnabled) {
+        icon.className = "fa-solid fa-volume-high text-amber-400";
+        btn.classList.remove('opacity-60');
+      } else {
+        icon.className = "fa-solid fa-volume-xmark text-slate-500";
+        btn.classList.add('opacity-60');
+      }
+    }
+
+    // Custom retro sound effects triggered by actions
+    function playSound(type) {
+      if (!soundEnabled) return;
+      initSynth();
+      try {
+        const now = Tone.now();
+        if (type === 'cardSelect') {
+          synth.triggerAttackRelease("E5", "16n");
+        } else if (type === 'playPositive') {
+          synthPoly.triggerAttackRelease(["C4", "E4", "G4", "C5"], "8n");
+        } else if (type === 'playNegative') {
+          synthPoly.triggerAttackRelease(["C4", "Eb4", "F#4"], "4n");
+        } else if (type === 'absSpecial') {
+          synth.triggerAttackRelease("F4", "8n", now);
+          synth.triggerAttackRelease("C5", "8n", now + 0.1);
+          synth.triggerAttackRelease("F5", "4n", now + 0.2);
+        } else if (type === 'multiplySpecial') {
+          synthPoly.triggerAttackRelease(["G3", "C4", "G4"], "8n", now);
+          synthPoly.triggerAttackRelease(["C4", "E4", "C5"], "4n", now + 0.15);
+        } else if (type === 'victory') {
+          synthPoly.triggerAttackRelease(["C4", "E4", "G4"], "8n", now);
+          synthPoly.triggerAttackRelease(["E4", "G4", "B4"], "8n", now + 0.2);
+          synthPoly.triggerAttackRelease(["G4", "B4", "D5"], "8n", now + 0.4);
+          synthPoly.triggerAttackRelease(["C5", "E5", "G5", "C6"], "2n", now + 0.6);
+        } else if (type === 'defeat') {
+          synth.triggerAttackRelease("G3", "4n", now);
+          synth.triggerAttackRelease("Eb3", "4n", now + 0.3);
+          synth.triggerAttackRelease("C3", "2n", now + 0.6);
+        } else if (type === 'gameStart') {
+          synthPoly.triggerAttackRelease(["C4", "G4", "C5"], "8n");
+        }
+      } catch (error) {
+        console.warn("Audio Context isn't fully ready yet.", error);
+      }
+    }
+
+    // Master Card Pool Generator
+    const CARD_POOL = [
+      // Integers (Positive)
+      { id: 1, type: 'number', value: 1, label: '+1', color: 'bg-emerald-600 border-emerald-500 hover:shadow-emerald-500/20' },
+      { id: 2, type: 'number', value: 2, label: '+2', color: 'bg-emerald-600 border-emerald-500 hover:shadow-emerald-500/20' },
+      { id: 3, type: 'number', value: 3, label: '+3', color: 'bg-emerald-600 border-emerald-500 hover:shadow-emerald-500/20' },
+      { id: 4, type: 'number', value: 4, label: '+4', color: 'bg-emerald-600 border-emerald-500 hover:shadow-emerald-500/20' },
+      { id: 5, type: 'number', value: 5, label: '+5', color: 'bg-emerald-600 border-emerald-500 hover:shadow-emerald-500/20' },
+      // Integers (Negative)
+      { id: 6, type: 'number', value: -1, label: '-1', color: 'bg-rose-600 border-rose-500 hover:shadow-rose-500/20' },
+      { id: 7, type: 'number', value: -2, label: '-2', color: 'bg-rose-600 border-rose-500 hover:shadow-rose-500/20' },
+      { id: 8, type: 'number', value: -3, label: '-3', color: 'bg-rose-600 border-rose-500 hover:shadow-rose-500/20' },
+      { id: 9, type: 'number', value: -4, label: '-4', color: 'bg-rose-600 border-rose-500 hover:shadow-rose-500/20' },
+      { id: 10, type: 'number', value: -5, label: '-5', color: 'bg-rose-600 border-rose-500 hover:shadow-rose-500/20' },
+      // Rational Numbers (Fractions/Decimals for fine-tuning)
+      { id: 11, type: 'rational', value: 0.5, label: '+0.5', color: 'bg-teal-600 border-teal-500 hover:shadow-teal-500/20' },
+      { id: 12, type: 'rational', value: -0.5, label: '-0.5', color: 'bg-orange-600 border-orange-500 hover:shadow-orange-500/20' },
+      { id: 13, type: 'rational', value: 1.5, label: '+1.5', color: 'bg-teal-600 border-teal-500 hover:shadow-teal-500/20' },
+      { id: 14, type: 'rational', value: -1.5, label: '-1.5', color: 'bg-orange-600 border-orange-500 hover:shadow-orange-500/20' },
+      // Multiplication Cards (High Risk, High Reward)
+      { id: 15, type: 'multiply', value: -1, label: '× (-1)', color: 'bg-indigo-600 border-indigo-500 hover:shadow-indigo-500/20' },
+      { id: 16, type: 'multiply', value: -2, label: '× (-2)', color: 'bg-indigo-700 border-indigo-600 hover:shadow-indigo-600/20' },
+      { id: 17, type: 'multiply', value: 2, label: '× 2', color: 'bg-violet-600 border-violet-500 hover:shadow-violet-500/20' },
+      // Absolute Value Cards
+      { id: 18, type: 'abs', value: 'abs', label: '|절댓값|', color: 'bg-amber-600 border-amber-500 hover:shadow-amber-500/20' },
+      { id: 19, type: 'abs', value: 'abs', label: '|절댓값|', color: 'bg-amber-600 border-amber-500 hover:shadow-amber-500/20' },
+    ];
+
+    // Game Core State variables
+    let playerScore = 0;
+    let aiScore = 0;
+    const targetScore = 10;
+    let playerHand = [];
+    let aiHand = [];
+    let drawDeck = [];
+    let selectedHandIndex = null;
+    let turnCount = 1;
+
+    // Shuffle Algorithm (Fisher-Yates)
+    function shuffleArray(array) {
+      let shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    // Refill and Shuffle Deck
+    function initDeck() {
+      // Repeat the base pool 3 times to get a decent sized deck (~57 cards)
+      drawDeck = shuffleArray([...CARD_POOL, ...CARD_POOL, ...CARD_POOL]);
+    }
+
+    // Draw card from deck
+    function drawCard() {
+      if (drawDeck.length === 0) {
+        initDeck();
+        addLog("덱이 소진되어 무덤에서 카드를 수거해 새로 섞었습니다!");
+      }
+      return drawDeck.pop();
+    }
+
+    // Start game elements
+    window.onload = function() {
+      // Initialize with instructions open
+      document.getElementById('ruleModal').classList.remove('hidden');
+      initGame();
+    };
+
+    // Initialize Game State
+    function initGame() {
+      playerScore = 0;
+      aiScore = 0;
+      turnCount = 1;
+      selectedHandIndex = null;
+      
+      initDeck();
+      
+      // Draw initial hands
+      playerHand = [];
+      aiHand = [];
+      for (let i = 0; i < 4; i++) {
+        playerHand.push(drawCard());
+        aiHand.push(drawCard());
+      }
+      
+      updateUI();
+      hideTargetButtons();
+    }
+
+    // Render detailed explanation in "Dungeon Math Lab"
+    function updateMathLab(actor, card, oldScore, newScore) {
+      const container = document.getElementById('mathLabContent');
+      let html = '';
+
+      let actorName = actor === 'self' ? '수학 탐험가(나)' : '어둠의 수학 마왕';
+      let scoreStr = oldScore < 0 ? `(${oldScore})` : `${oldScore}`;
+
+      if (card.type === 'number' || card.type === 'rational') {
+        let opSign = card.value >= 0 ? '+' : '-';
+        let cardValAbs = Math.abs(card.value);
+        let valStr = card.value < 0 ? `(${card.value})` : `(+${card.value})`;
+        
+        html = `
+          <div class="space-y-3 text-left">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="bg-teal-500 text-slate-950 font-bold text-xs px-2 py-0.5 rounded-full">정수와 유리수의 덧셈</span>
+              <span class="text-xs text-slate-500">턴 ${turnCount}</span>
+            </div>
+            <div class="text-xl font-bold font-mono text-center py-2 bg-slate-950 rounded-xl border border-slate-800 text-teal-400">
+              ${scoreStr} + ${valStr} = ${newScore}
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              <strong>${actorName}</strong>의 수식: 기존 수 <strong>${oldScore}</strong>에 <strong>${card.label}</strong> 카드(을)를 더했습니다.
+            </p>
+            <p class="text-xs text-slate-400">
+              <i class="fa-regular fa-lightbulb text-amber-400"></i>
+              ${card.value < 0 
+                ? '음수를 더하는 것은 결국 수직선 상에서 왼쪽 방향으로 움직여 값을 빼는 것과 같습니다!' 
+                : '양수를 더하는 것은 수직선 상에서 오른쪽 방향으로 이동하여 수의 크기를 늘립니다.'}
+            </p>
+          </div>
+        `;
+      } else if (card.type === 'multiply') {
+        let factorStr = card.value < 0 ? `(${card.value})` : `${card.value}`;
+        let ruleOfSign = "";
+        
+        if (oldScore < 0 && card.value < 0) {
+          ruleOfSign = "<strong>음수(&minus;) &times; 음수(&minus;) = 양수(+)</strong>의 우주적 법칙이 성립되어 수식이 대역전의 양수로 변경되었습니다!";
+        } else if (oldScore > 0 && card.value < 0) {
+          ruleOfSign = "<strong>양수(+) &times; 음수(&minus;) = 음수(&minus;)</strong> 법칙으로 점수가 마이너스로 급강하했습니다.";
+        } else if (oldScore === 0) {
+          ruleOfSign = "0에 어떤 수나 부호를 곱해도 결과는 무조건 0입니다.";
+        } else {
+          ruleOfSign = "기존의 수에 양의 비율을 곱하여 방향은 그대로인 상태에서 값의 절대적 거리만 늘어납니다.";
+        }
+
+        html = `
+          <div class="space-y-3 text-left">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="bg-indigo-500 text-slate-950 font-bold text-xs px-2 py-0.5 rounded-full">곱셈의 부호 법칙</span>
+              <span class="text-xs text-slate-500">턴 ${turnCount}</span>
+            </div>
+            <div class="text-xl font-bold font-mono text-center py-2 bg-slate-950 rounded-xl border border-slate-800 text-indigo-400">
+              ${scoreStr} &times; ${factorStr} = ${newScore}
+            </div>
+            <p class="text-xs text-slate-300">
+              <strong>${actorName}</strong>의 곱하기 연산 결과, 부호가 규칙에 의해 변화했습니다.
+            </p>
+            <p class="text-xs text-slate-400 bg-slate-950 p-2.5 rounded border border-slate-800">
+              <i class="fa-solid fa-calculator text-indigo-400"></i> ${ruleOfSign}
+            </p>
+          </div>
+        `;
+      } else if (card.type === 'abs') {
+        html = `
+          <div class="space-y-3 text-left">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="bg-amber-500 text-slate-950 font-bold text-xs px-2 py-0.5 rounded-full">절댓값 마법 보호막 (|x|)</span>
+              <span class="text-xs text-slate-500">턴 ${turnCount}</span>
+            </div>
+            <div class="text-xl font-bold font-mono text-center py-2 bg-slate-950 rounded-xl border border-slate-800 text-amber-400">
+              | ${oldScore} | = ${newScore}
+            </div>
+            <p class="text-xs text-slate-300">
+              <strong>${actorName}</strong>에게 <strong>절댓값 보호막</strong>이 씌워졌습니다!
+            </p>
+            <p class="text-xs text-slate-400">
+              <i class="fa-solid fa-arrows-left-right text-amber-400"></i>
+              절댓값은 <strong>'0과의 거리'</strong>를 뜻합니다. 방향이 없으므로 항상 음수부호가 파괴되어 <strong>0 또는 순수 양수</strong>로 정화됩니다! 
+              마이너스 나락에 머물 때 유일한 최고의 세이브 수단입니다.
+            </p>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    // Refresh GUI representation of game state
+    function updateUI() {
+      // Score Texts
+      document.getElementById('playerScoreText').innerText = formatScore(playerScore);
+      document.getElementById('aiScoreText').innerText = formatScore(aiScore);
+
+      // Needed score to reach exactly +10
+      let gap = 10 - playerScore;
+      if (gap === 0) {
+        document.getElementById('neededScore').innerHTML = "<span class='text-emerald-400 font-extrabold'>정확히 탈출 지점!</span>";
+      } else {
+        document.getElementById('neededScore').innerText = gap > 0 ? `+${gap}` : `${gap}`;
+      }
+
+      // Progress bars
+      // Mapping scores from -15 to +15 as percentage (0% to 100%)
+      document.getElementById('playerProgress').style.width = getPercent(playerScore) + '%';
+      document.getElementById('aiProgress').style.width = getPercent(aiScore) + '%';
+
+      // Hand counts
+      document.getElementById('aiHandCount').innerText = aiHand.length;
+
+      // Render Player Cards
+      const handContainer = document.getElementById('playerHandContainer');
+      handContainer.innerHTML = '';
+      
+      playerHand.forEach((card, index) => {
+        const isSelected = selectedHandIndex === index;
+        const cardBtn = document.createElement('button');
+        cardBtn.onclick = () => selectCard(index);
+        
+        // Dynamic card border/bg depending on selection
+        let selectClass = isSelected 
+          ? 'scale-105 border-2 border-amber-400 ring-4 ring-amber-500/30' 
+          : 'border border-slate-700/80';
+          
+        cardBtn.className = `relative h-32 flex flex-col justify-between p-3 rounded-2xl ${card.color} text-left transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg ${selectClass}`;
+        
+        // Card content layout
+        cardBtn.innerHTML = `
+          <div class="flex justify-between items-start w-full">
+            <span class="text-[10px] font-bold uppercase tracking-widest text-white/70">${getCardTypeLabel(card.type)}</span>
+            <span class="text-xs text-white/40"><i class="fa-solid fa-clover"></i></span>
+          </div>
+          <div class="text-2xl font-black font-mono tracking-tighter text-white self-center my-1 fancy-title">
+            ${card.label}
+          </div>
+          <div class="flex justify-between items-end w-full text-[9px] text-white/80">
+            <span>Z-SUM CARD</span>
+            <i class="${getCardIcon(card.type)}"></i>
+          </div>
+        `;
+        
+        handContainer.appendChild(cardBtn);
+      });
+    }
+
+    // Helper: Formatter for human-friendly signed representation
+    function formatScore(num) {
+      if (num > 0) return `+${num}`;
+      return `${num}`;
+    }
+
+    // Helper: translate score to progress percentage (-15 to +15 scale)
+    function getPercent(score) {
+      let minVal = -15;
+      let maxVal = 15;
+      // clamping score
+      let clamped = Math.min(Math.max(score, minVal), maxVal);
+      return ((clamped - minVal) / (maxVal - minVal)) * 100;
+    }
+
+    // Helper labels
+    function getCardTypeLabel(type) {
+      if (type === 'number') return '정수';
+      if (type === 'rational') return '유리수';
+      if (type === 'multiply') return '연산';
+      if (type === 'abs') return '절댓값';
+      return '';
+    }
+
+    function getCardIcon(type) {
+      if (type === 'number') return 'fa-solid fa-hashtag';
+      if (type === 'rational') return 'fa-solid fa-divide';
+      if (type === 'multiply') return 'fa-solid fa-xmark';
+      if (type === 'abs') return 'fa-solid fa-shield-halved';
+      return 'fa-solid fa-scroll';
+    }
+
+    // Event: Click a card from player hand
+    function selectCard(index) {
+      playSound('cardSelect');
+      selectedHandIndex = index;
+      updateUI();
+      
+      const card = playerHand[index];
+      const targetGroup = document.getElementById('targetActionGroup');
+      targetGroup.classList.remove('hidden');
+      
+      document.getElementById('systemMessage').innerHTML = `
+        <span class="text-amber-400 font-extrabold">[${card.label}]</span> 마법 카드가 준비되었습니다. 대상을 선택하세요!
+      `;
+    }
+
+    // Deselect Card
+    function deselectCard() {
+      selectedHandIndex = null;
+      updateUI();
+      hideTargetButtons();
+      document.getElementById('systemMessage').innerText = "카드를 한 장 선택한 뒤 대상을 지정해 전투를 개시하세요!";
+    }
+
+    function hideTargetButtons() {
+      document.getElementById('targetActionGroup').classList.add('hidden');
+    }
+
+    // Apply core mathematical card rules
+    function calculateNewScore(currentScore, card) {
+      if (card.type === 'number' || card.type === 'rational') {
+        // Floating point precision fix
+        return parseFloat((currentScore + card.value).toFixed(2));
+      } else if (card.type === 'multiply') {
+        return parseFloat((currentScore * card.value).toFixed(2));
+      } else if (card.type === 'abs') {
+        return Math.abs(currentScore);
+      }
+      return currentScore;
+    }
+
+    // Play selected card on chosen target
+    function playSelectedCard(target) {
+      if (selectedHandIndex === null) return;
+      
+      const card = playerHand[selectedHandIndex];
+      let oldScore;
+      
+      if (target === 'self') {
+        oldScore = playerScore;
+        playerScore = calculateNewScore(playerScore, card);
+        addLog(`나에게 <b class="text-emerald-400 font-extrabold">[${card.label}]</b> 적용: ${formatScore(oldScore)} &rarr; ${formatScore(playerScore)}`);
+        updateMathLab('self', card, oldScore, playerScore);
+        triggerActionFeedback('playerCard', card.type);
+      } else {
+        oldScore = aiScore;
+        aiScore = calculateNewScore(aiScore, card);
+        addLog(`마왕에게 <b class="text-rose-400 font-extrabold">[${card.label}]</b> 어택 공격: ${formatScore(oldScore)} &rarr; ${formatScore(aiScore)}`);
+        updateMathLab('opponent', card, oldScore, aiScore);
+        triggerActionFeedback('aiCard', card.type);
+      }
+
+      // Play Sound depending on type
+      if (card.type === 'abs') playSound('absSpecial');
+      else if (card.type === 'multiply') playSound('multiplySpecial');
+      else if (card.value >= 0) playSound('playPositive');
+      else playSound('playNegative');
+
+      // Consume card from hand
+      playerHand.splice(selectedHandIndex, 1);
+      
+      // Auto-replenish to max 5 (actually 4 in standard hand, let's keep it max 5 cards)
+      if (playerHand.length < 5) {
+        playerHand.push(drawCard());
+      }
+
+      selectedHandIndex = null;
+      hideTargetButtons();
+      updateUI();
+
+      // Check win condition instantly after player action
+      if (checkWinConditions()) return;
+
+      // Enemy AI's Turn delay
+      document.getElementById('systemMessage').innerHTML = `<i class="fa-solid fa-spinner animate-spin text-rose-500"></i> 마왕이 정수와 유리수의 방정식을 계산하고 있습니다...`;
+      setTimeout(aiTurn, 1500);
+    }
+
+    // Add glowing blink effects during application
+    function triggerActionFeedback(elementId, cardType) {
+      const cardEl = document.getElementById(elementId);
+      let glowClass = "glow-green";
+      if (cardType === 'abs') glowClass = "glow-gold";
+      else if (cardType === 'multiply') glowClass = "glow-purple";
+      else if (elementId === 'aiCard') glowClass = "glow-red";
+
+      cardEl.classList.add(glowClass);
+      setTimeout(() => {
+        cardEl.classList.remove(glowClass);
+      }, 1000);
+    }
+
+    // Smart heuristic math logic for Boss Wizard
+    function aiTurn() {
+      if (aiHand.length === 0) return;
+
+      let bestCardIndex = 0;
+      let bestTarget = 'self'; // 'self' or 'opponent' (player)
+      let maximumTacticalValue = -9999;
+
+      // Smart decision maker logic
+      for (let i = 0; i < aiHand.length; i++) {
+        const card = aiHand[i];
+
+        // 1. Check if applying on self can hit exact victory (+10)
+        let potentialAiScore = calculateNewScore(aiScore, card);
+        if (potentialAiScore === 10) {
+          bestCardIndex = i;
+          bestTarget = 'self';
+          break;
+        }
+
+        // 2. Check if sabotage on player can pull them away from winning
+        let potentialPlayerScore = calculateNewScore(playerScore, card);
+        // If player is super close to +10, prioritize sabotaging player
+        if (Math.abs(playerScore - 10) <= 3 && Math.abs(potentialPlayerScore - 10) > Math.abs(playerScore - 10)) {
+          bestCardIndex = i;
+          bestTarget = 'opponent';
+          break;
+        }
+
+        // 3. Evaluate optimal path towards +10 or recovery
+        let scoreGainOnSelf = Math.abs(aiScore - 10) - Math.abs(potentialAiScore - 10);
+        if (scoreGainOnSelf > maximumTacticalValue) {
+          maximumTacticalValue = scoreGainOnSelf;
+          bestCardIndex = i;
+          bestTarget = 'self';
+        }
+      }
+
+      const cardToPlay = aiHand[bestCardIndex];
+      let oldScore;
+
+      if (bestTarget === 'self') {
+        oldScore = aiScore;
+        aiScore = calculateNewScore(aiScore, cardToPlay);
+        addLog(`마왕이 스스로에게 <b class="text-indigo-400">[${cardToPlay.label}]</b> 사용: ${formatScore(oldScore)} &rarr; ${formatScore(aiScore)}`);
+        updateMathLab('opponent', cardToPlay, oldScore, aiScore);
+        triggerActionFeedback('aiCard', cardToPlay.type);
+      } else {
+        oldScore = playerScore;
+        playerScore = calculateNewScore(playerScore, cardToPlay);
+        addLog(`마왕이 내게 <b class="text-rose-500 font-extrabold">[${cardToPlay.label}]</b> 어택 공격! ${formatScore(oldScore)} &rarr; ${formatScore(playerScore)}`);
+        updateMathLab('self', cardToPlay, oldScore, playerScore);
+        triggerActionFeedback('playerCard', cardToPlay.type);
+      }
+
+      // Audio effects for AI card play
+      if (cardToPlay.type === 'abs') playSound('absSpecial');
+      else if (cardToPlay.type === 'multiply') playSound('multiplySpecial');
+      else if (cardToPlay.value >= 0) playSound('playPositive');
+      else playSound('playNegative');
+
+      // Recycle AI cards
+      aiHand.splice(bestCardIndex, 1);
+      if (aiHand.length < 4) {
+        aiHand.push(drawCard());
+      }
+
+      turnCount++;
+      updateUI();
+
+      // Check win condition after opponent action
+      if (checkWinConditions()) return;
+
+      document.getElementById('systemMessage').innerText = "내 차례입니다! 지능적으로 카드를 활용하세요.";
+    }
+
+    // Evaluate if anyone hit exactly 10
+    function checkWinConditions() {
+      // Priority Check: Player victory
+      if (playerScore === 10) {
+        triggerEndGame('victory');
+        return true;
+      }
+      
+      // Boss victory
+      if (aiScore === 10) {
+        triggerEndGame('defeat');
+        return true;
+      }
+      return false;
+    }
+
+    // End Game modal trigger
+    function triggerEndGame(result) {
+      const modal = document.getElementById('gameResultModal');
+      const border = document.getElementById('resultBorder');
+      const title = document.getElementById('resultTitle');
+      const desc = document.getElementById('resultDesc');
+      const icon = document.getElementById('resultIcon');
+      const iconBg = document.getElementById('resultIconBg');
+      
+      document.getElementById('finalPlayerScore').innerText = formatScore(playerScore);
+      document.getElementById('finalAiScore').innerText = formatScore(aiScore);
+
+      if (result === 'victory') {
+        playSound('victory');
+        title.innerText = "던전 탈출 대성공!";
+        title.className = "text-2xl font-extrabold fancy-title mb-2 text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400";
+        desc.innerText = "축하합니다! 정수와 유리수의 수학 법칙을 지배해 정확히 +10을 달성하여 탈출했습니다!";
+        border.className = "bg-slate-900 border-2 border-emerald-500 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl p-6 text-center";
+        icon.className = "fa-solid fa-trophy text-slate-950";
+        iconBg.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto text-4xl mb-4 bg-gradient-to-r from-emerald-400 to-teal-400 animate-bounce";
+      } else {
+        playSound('defeat');
+        title.innerText = "탈출 실패! 던전 미궁 잔류";
+        title.className = "text-2xl font-extrabold fancy-title mb-2 text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-orange-400";
+        desc.innerText = "어둠의 수학 마왕이 먼저 정확히 +10을 달성해 탈출 주파수를 선점했습니다!";
+        border.className = "bg-slate-900 border-2 border-rose-500 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl p-6 text-center";
+        icon.className = "fa-solid fa-skull-crossbones text-white";
+        iconBg.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto text-4xl mb-4 bg-rose-600/30 border-2 border-rose-500 animate-pulse";
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    // Restart game cycle
+    function restartGame() {
+      document.getElementById('gameResultModal').classList.add('hidden');
+      initGame();
+      addLog("<span class='text-amber-400 font-bold'>던전 수련이 리셋되어 모험을 다시 시작합니다!</span>");
+    }
+
+    // Add logs to chronic panel
+    function addLog(msg) {
+      const logs = document.getElementById('gameLogs');
+      const time = new Date().toLocaleTimeString('ko-KR', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+      const newLog = document.createElement('div');
+      newLog.className = "border-b border-slate-800/50 pb-1.5 leading-relaxed text-slate-300 flex justify-between gap-2";
+      newLog.innerHTML = `
+        <span>${msg}</span>
+        <span class="text-slate-600 font-mono text-[10px] whitespace-nowrap">${time}</span>
+      `;
+      
+      logs.appendChild(newLog);
+      logs.scrollTop = logs.scrollHeight;
+    }
+
+    // Clear entire logs list
+    function clearLogs() {
+      document.getElementById('gameLogs').innerHTML = '<div class="text-slate-500 italic">연대기가 초기화되었습니다.</div>';
+    }
+
+    // Modal state controllers
+    function openRuleModal() {
+      document.getElementById('ruleModal').classList.remove('hidden');
+    }
+    function closeRuleModal() {
+      document.getElementById('ruleModal').classList.add('hidden');
+    }
+    function openConceptCheatSheet() {
+      document.getElementById('cheatSheetModal').classList.remove('hidden');
+    }
+    function closeConceptCheatSheet() {
+      document.getElementById('cheatSheetModal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
