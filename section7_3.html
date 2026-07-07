@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일차방정식 대결! AI를 이겨라! (Guess the Math)</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter & Do Hyeon 로드 -->
+    <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome 아이콘 로드 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Do Hyeon', sans-serif;
+            background: radial-gradient(circle, #1e1b4b 0%, #0f172a 100%);
+        }
+        .math-font {
+            font-family: 'Cambria', 'Georgia', serif;
+        }
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.8);
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex items-center justify-center p-2 sm:p-4 overflow-x-hidden">
+
+<div id="app" class="w-full max-w-4xl bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/50 overflow-hidden flex flex-col h-[94vh] max-h-[820px]">
+    
+    <!-- [화면 1] 로비 스크린 -->
+    <div id="lobby-screen" class="flex-1 flex flex-col justify-between p-6 sm:p-10 overflow-y-auto">
+        <div class="text-center space-y-4 my-auto">
+            <div class="inline-flex p-4 bg-indigo-500/10 rounded-full text-indigo-400 border border-indigo-500/20 mb-2 animate-bounce">
+                <i class="fa-solid fa-gamepad text-5xl"></i>
+            </div>
+            <h1 class="text-4xl sm:text-5xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 font-[Do Hyeon]">
+                일차방정식 대결! AI를 이겨라!
+            </h1>
+            <p class="text-slate-400 text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
+                중학교 1학년 1학기 일차방정식 배틀에 참여하세요! <br>
+                4가지 개성 넘치는 난이도의 AI 라이벌들과 채팅 스피드퀴즈 대결을 펼칩니다.
+            </p>
+        </div>
+
+        <div class="max-w-md mx-auto w-full space-y-4 bg-slate-800/40 p-6 rounded-xl border border-slate-700/50 my-6">
+            <div>
+                <label class="block text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-2">내 닉네임</label>
+                <input type="text" id="player-nickname" value="수학천재지훈" maxlength="8" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-purple-400 uppercase tracking-wider mb-2">대결할 AI 라이벌 난이도 선택</label>
+                <div class="grid grid-cols-2 gap-2.5" id="ai-selector">
+                    <!-- JS로 난이도 리스트 동적 렌더링 -->
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center max-w-md mx-auto w-full">
+            <button onclick="startGame()" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-4 px-6 rounded-xl shadow-lg shadow-indigo-500/20 transition-all transform hover:-translate-y-0.5 active:translate-y-0 text-lg font-[Do Hyeon]">
+                대결 시작하기 <i class="fa-solid fa-play ml-2"></i>
+            </button>
+            <button onclick="openRulesModal()" class="text-xs text-slate-500 hover:text-slate-400 underline mt-4 inline-block transition">
+                자세한 게임 규칙 및 가이드 보기
+            </button>
+        </div>
+    </div>
+
+    <!-- [화면 2] 인게임 스크린 (기본값 숨김) -->
+    <div id="game-screen" class="hidden flex-grow flex flex-col h-full overflow-hidden">
+        <!-- 인게임 상단 헤더 -->
+        <div class="bg-slate-950/90 p-4 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2 shrink-0">
+            <!-- 라운드 정보 -->
+            <div class="flex items-center gap-2.5">
+                <div class="bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 px-3 py-1 rounded-full text-xs font-bold" id="hud-round">
+                    ROUND 1
+                </div>
+                <div class="text-xs text-slate-400 font-semibold" id="hud-subround">
+                    문제 1 / 3
+                </div>
+                <div id="hud-event-tag" class="hidden bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">
+                    ⚡ 1.5배 피버 보너스!
+                </div>
+            </div>
+
+            <!-- 실시간 스코어보드 -->
+            <div class="flex items-center gap-4">
+                <!-- 플레이어 -->
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                    <span class="text-xs font-bold text-slate-300" id="hud-player-name">Player</span>
+                    <span class="text-sm font-black text-blue-400" id="hud-player-score">0점</span>
+                </div>
+                <span class="text-slate-700 text-xs font-bold">VS</span>
+                <!-- AI -->
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                    <span class="text-xs font-bold text-slate-300" id="hud-ai-name">AI</span>
+                    <span class="text-sm font-black text-rose-400" id="hud-ai-score">0점</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 타이머 게이지 바 (50초 기준 작동) -->
+        <div class="w-full bg-slate-950 h-1.5 shrink-0">
+            <div id="timer-bar" class="bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 h-full w-full transition-all duration-1000"></div>
+        </div>
+
+        <!-- 메인 배틀 스페이스 분할 -->
+        <div class="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+            
+            <!-- 왼쪽: 문제 보드 영역 -->
+            <div class="w-full md:w-5/12 bg-slate-900 p-4 sm:p-6 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col justify-between shrink-0 md:shrink overflow-y-auto">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2 text-slate-400 text-xs">
+                        <i class="fa-regular fa-clock text-amber-500"></i>
+                        <span>제한시간 50초</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-[10px] uppercase text-slate-400 font-bold tracking-wider">현재 최대 획득 점수</div>
+                        <div class="text-xl font-black text-amber-400" id="current-possible-score">300점</div>
+                    </div>
+                </div>
+
+                <div class="my-auto py-6 text-center">
+                    <div class="text-xs text-indigo-400 font-bold tracking-wide uppercase mb-3">다음 일차방정식의 해(x)를 구하세요.</div>
+                    <div class="bg-slate-950/80 rounded-xl p-6 border border-slate-800 shadow-inner">
+                        <div id="question-text" class="text-3xl sm:text-4xl font-black math-font tracking-wide text-white drop-shadow-md select-none leading-relaxed">
+                            2x + 5 = 11
+                        </div>
+                    </div>
+                    <div class="mt-4 text-[11px] text-slate-500 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                        <span>채팅창에 미지수의 <strong class="text-indigo-400 font-bold">숫자 해(정수)만</strong> 입력하세요.</span>
+                    </div>
+                </div>
+
+                <!-- 팁 카드 및 라이벌 요약 정보 -->
+                <div class="space-y-2">
+                    <div class="bg-slate-950/40 border border-slate-800 rounded-lg p-2.5 text-xs text-slate-400 flex items-center gap-2.5">
+                        <div class="text-lg" id="panel-rival-avatar">🤖</div>
+                        <div>
+                            <div class="font-bold text-slate-300" id="panel-rival-name">상대방 AI</div>
+                            <div class="text-[10px]" id="panel-rival-desc">난이도: 보통</div>
+                        </div>
+                    </div>
+                    <div class="bg-indigo-950/20 border border-indigo-900/40 rounded-lg p-3 text-xs text-indigo-300">
+                        <span class="font-bold"><i class="fa-regular fa-lightbulb"></i> 팁:</span> 빨리 맞출수록 점수가 높고, 오답 입력 시 무려 <span class="text-rose-400 font-semibold">-100점 페널티</span>가 주어집니다!
+                    </div>
+                </div>
+            </div>
+
+            <!-- 오른쪽: 실시간 채팅 영역 -->
+            <div class="flex-grow bg-slate-950/40 flex flex-col justify-between overflow-hidden">
+                <!-- 채팅 로그 -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <!-- JS로 동적 삽입 -->
+                </div>
+
+                <!-- AI 타이핑 지시 상태 표시 -->
+                <div id="ai-typing-indicator" class="px-4 py-1.5 bg-slate-950/80 text-xs text-slate-400 italic hidden flex items-center gap-2 shrink-0 border-t border-slate-900">
+                    <span class="flex h-2.5 w-2.5 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                    </span>
+                    <span id="ai-typing-text">AI가 문제를 보고 계산하는 중...</span>
+                </div>
+
+                <!-- 채팅 입력 영역 -->
+                <div class="p-4 bg-slate-900/90 border-t border-slate-800 shrink-0">
+                    <form id="chat-form" onsubmit="handleSendChat(event)" class="flex gap-2">
+                        <input type="text" id="chat-input" placeholder="정답 입력 (예: 3 또는 -2)" autocomplete="off" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-indigo-600/20 active:scale-95 transition-all text-sm shrink-0">
+                            전송 <i class="fa-regular fa-paper-plane ml-1"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- [화면 3] 게임 오버 / 최종 성적 스크린 (기본값 숨김) -->
+    <div id="gameover-screen" class="hidden flex-1 flex flex-col justify-between p-6 sm:p-10 text-center overflow-y-auto">
+        <div class="my-auto space-y-6">
+            <div class="inline-flex p-5 bg-amber-500/10 rounded-full text-amber-400 border border-amber-500/20 mb-2" id="trophy-container">
+                <i class="fa-solid fa-trophy text-6xl"></i>
+            </div>
+            
+            <h2 id="final-announcement" class="text-3xl sm:text-4xl font-extrabold font-[Do Hyeon] text-slate-100">
+                대결 종료!
+            </h2>
+            
+            <p id="final-subtext" class="text-slate-400 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
+                치열한 일차방정식 대수 대결이 막을 내렸습니다. 최종 스코어를 공개합니다.
+            </p>
+
+            <!-- 결과 스코어보드 -->
+            <div class="max-w-md mx-auto grid grid-cols-2 gap-4 bg-slate-800/40 p-6 rounded-xl border border-slate-700/50 mt-4">
+                <div class="text-center border-r border-slate-700/50">
+                    <div class="text-xs text-slate-400 uppercase tracking-wide">내 최종 점수</div>
+                    <div class="text-lg font-bold text-blue-400 mt-1 truncate" id="final-player-name">Player</div>
+                    <div class="text-3xl font-black text-white mt-1" id="final-player-score">0점</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-xs text-slate-400 uppercase tracking-wide">AI 라이벌 최종 점수</div>
+                    <div class="text-lg font-bold text-rose-400 mt-1 truncate" id="final-ai-name">AI</div>
+                    <div class="text-3xl font-black text-white mt-1" id="final-ai-score">0점</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 flex flex-col sm:flex-row gap-3 max-w-md mx-auto w-full">
+            <button onclick="resetGame()" class="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg transition-all text-sm font-[Do Hyeon]">
+                다시 도전하기
+            </button>
+            <button onclick="goToLobby()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3.5 px-6 rounded-xl shadow transition-all text-sm font-[Do Hyeon]">
+                로비로 이동
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- [공용 모달 1] 풀이 과정 모달 -->
+<div id="explanation-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+        <!-- 모달 헤더 -->
+        <div class="bg-indigo-950/40 px-6 py-4 border-b border-indigo-900/50 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-indigo-400 flex items-center gap-2">
+                <i class="fa-solid fa-graduation-cap"></i> <span>방정식 해설 및 정답</span>
+            </h3>
+            <span class="text-xs font-bold px-2.5 py-1 bg-slate-800 text-slate-400 rounded-full" id="explanation-badge">라운드 결과</span>
+        </div>
+        <!-- 모달 바디 -->
+        <div class="p-6 overflow-y-auto space-y-4">
+            <div class="text-center py-4 bg-slate-950/50 rounded-xl border border-slate-800/80">
+                <div class="text-xs text-slate-500 mb-1">정답 해(x)</div>
+                <div class="text-4xl font-black text-emerald-400 math-font" id="modal-answer">x = 0</div>
+            </div>
+
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide">이해하기 쉬운 풀이 과정</h4>
+                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/60 math-font text-slate-300 leading-relaxed space-y-2 whitespace-pre-line text-sm sm:text-base" id="modal-steps">
+                    <!-- 풀이 내용 JS 주입 -->
+                </div>
+            </div>
+
+            <!-- 미지수 풀이 핵심 요약 정보 -->
+            <div class="grid grid-cols-2 gap-3 mt-4 text-xs">
+                <div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700/30">
+                    <span class="block text-slate-500">내 획득 점수</span>
+                    <span class="text-sm font-extrabold text-blue-400" id="modal-player-add">0점</span>
+                </div>
+                <div class="bg-slate-800/40 p-3 rounded-lg border border-slate-700/30">
+                    <span class="block text-slate-500">AI 획득 점수</span>
+                    <span class="text-sm font-extrabold text-rose-400" id="modal-ai-add">0점</span>
+                </div>
+            </div>
+        </div>
+        <!-- 모달 푸터 -->
+        <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-end">
+            <button onclick="closeExplanationModal()" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-6 rounded-xl transition text-sm">
+                다음 문제로 넘어가기 <i class="fa-solid fa-arrow-right ml-1"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- [공용 모달 2] 게임 규칙 안내 모달 -->
+<div id="rules-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+        <div class="bg-indigo-950/40 px-6 py-4 border-b border-indigo-900/50 flex justify-between items-center">
+            <h3 class="text-lg font-bold text-indigo-400 flex items-center gap-2">
+                <i class="fa-solid fa-circle-question"></i> <span>수학 대결 규칙</span>
+            </h3>
+            <button onclick="closeRulesModal()" class="text-slate-500 hover:text-slate-300 transition text-lg"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-6 space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p><strong>1. 라운드 구성 안내:</strong></p>
+            <ul class="list-disc pl-5 space-y-1 text-slate-400">
+                <li><strong>1라운드:</strong> 일차방정식 기본 (총 3문제)</li>
+                <li><strong>2라운드:</strong> 계수가 소수/분수 또는 괄호 포함 (총 3문제)</li>
+                <li><strong>3라운드:</strong> 고난도 연립성 복합 일차방정식 <strong class="text-rose-400">(총 2문제, 획득 점수 1.5배 피버 이벤트)</strong></li>
+            </ul>
+            <p><strong>2. 점수 및 타이머:</strong> 한 문제당 제한 시간은 <strong class="text-amber-400">50초</strong>이며, 빠르게 정답을 입력할수록 최대 <strong class="text-amber-400">300점</strong>을 얻습니다. 오답 시 <strong class="text-rose-500">-100점 페널티</strong>가 즉시 부여됩니다.</p>
+            <p><strong>3. AI 라이벌 특징:</strong> AI의 난이도(쉬움, 보통, 어려움, 매우 어려움)에 따라 속도가 3초씩 빨라지고 정확도가 급격히 올라갑니다. 단, 공정성을 위해 3초에서 47초 사이에 답변을 외칩니다.</p>
+            <p><strong>4. 입력 유의사항:</strong> 오직 미지수 x의 정수 해(예: <code class="bg-slate-950 px-1 py-0.5 rounded text-indigo-300">4</code>, <code class="bg-slate-950 px-1 py-0.5 rounded text-indigo-300">-3</code>)만 채팅창에 작성해서 입력할 수 있습니다.</p>
+        </div>
+        <div class="p-4 bg-slate-950 border-t border-slate-800 flex justify-end">
+            <button onclick="closeRulesModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-4 rounded-xl transition text-xs">
+                확인 완료
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* =========================================
+       일차방정식 문제 데이터셋 (중1-1 맞춤형 24종 탑재)
+       *와 / 를 사용하지 않고 ×, ÷, (분수) 기호로 명시
+       ========================================= */
+    const QUESTION_POOL_SOURCE = {
+        // 1라운드: 기본 일차방정식 (정수 계수, 비교적 평이한 이항)
+        round1: [
+            {
+                equation: "2x + 5 = 11",
+                answer: 3,
+                steps: [
+                    "① x가 포함된 항은 좌변, 상수항은 우변으로 이항합니다.\n   2x = 11 - 5",
+                    "② 동류항을 모아 간편하게 계산합니다.\n   2x = 6",
+                    "③ 양변을 x의 계수인 2로 나누어 해를 구합니다.\n   x = 3"
+                ]
+            },
+            {
+                equation: "3x - 4 = 8",
+                answer: 4,
+                steps: [
+                    "① 상수항 -4를 우변으로 부호를 바꾸어 이항합니다.\n   3x = 8 + 4",
+                    "② 우변의 수치를 정리합니다.\n   3x = 12",
+                    "③ 양변을 x의 계수인 3으로 나누어 해를 구합니다.\n   x = 4"
+                ]
+            },
+            {
+                equation: "5x + 3 = 2x + 12",
+                answer: 3,
+                steps: [
+                    "① 이항 규칙에 맞추어 좌변에는 x항, 우변에는 상수항을 모읍니다.\n   5x - 2x = 12 - 3",
+                    "② 양변의 동류항 계산을 수행합니다.\n   3x = 9",
+                    "③ 양변을 x의 계수인 3으로 나눕니다.\n   x = 3"
+                ]
+            },
+            {
+                equation: "4x - 7 = x + 5",
+                answer: 4,
+                steps: [
+                    "① 우변의 x와 좌변의 -7을 각각 반대편으로 정교하게 이항합니다.\n   4x - x = 5 + 7",
+                    "② 계산하여 양변을 정리합니다.\n   3x = 12",
+                    "③ 양변을 3으로 나눕니다.\n   x = 4"
+                ]
+            },
+            {
+                equation: "7x + 2 = 5x + 8",
+                answer: 3,
+                steps: [
+                    "① 우변의 5x는 좌변으로, 좌변의 2는 우변으로 이항합니다.\n   7x - 5x = 8 - 2",
+                    "② 동류항끼리 계산을 처리합니다.\n   2x = 6",
+                    "③ 양변을 x의 계수인 2로 나누어 x의 값을 확정합니다.\n   x = 3"
+                ]
+            },
+            {
+                equation: "3x - 5 = x + 7",
+                answer: 6,
+                steps: [
+                    "① x가 들어있는 항은 좌변으로, 숫자는 우변으로 이동시킵니다.\n   3x - x = 7 + 5",
+                    "② 정렬된 수식을 단순하게 다듬습니다.\n   2x = 12",
+                    "③ 양변을 2로 고르게 나눕니다.\n   x = 6"
+                ]
+            },
+            {
+                equation: "6x - 2 = 3x + 10",
+                answer: 4,
+                steps: [
+                    "① 우변의 3x를 이항하고 좌변의 -2를 이항합니다.\n   6x - 3x = 10 + 2",
+                    "② 동류항을 명쾌하게 더하고 뺍니다.\n   3x = 12",
+                    "③ 양변을 3으로 나누어 해를 구출합니다.\n   x = 4"
+                ]
+            },
+            {
+                equation: "8x + 4 = 3x + 19",
+                answer: 3,
+                steps: [
+                    "① 이항 공식에 근거하여 정리합니다.\n   8x - 3x = 19 - 4",
+                    "② 정리한 후의 단순 수식입니다.\n   5x = 15",
+                    "③ 양변을 x의 계수인 5로 나누어 계산합니다.\n   x = 3"
+                ]
+            }
+        ],
+        // 2라운드: 소수, 분수, 단순 괄호 포함 (수식 기호 곱하기 '×', 나누기 '÷'만 사용)
+        round2: [
+            {
+                equation: "2 × (x - 3) = 4",
+                answer: 5,
+                steps: [
+                    "① 분배법칙을 이용해 좌변의 괄호를 열어 전개합니다.\n   2x - 6 = 4",
+                    "② 우변으로 상수항 -6을 반대 부호로 이항시킵니다.\n   2x = 4 + 6\n   2x = 10",
+                    "③ 양변을 x의 계수인 2로 나누어 완성합니다.\n   x = 5"
+                ]
+            },
+            {
+                equation: "3 × (2x + 1) = 15",
+                answer: 2,
+                steps: [
+                    "① 분배법칙을 전개하여 괄호를 완벽하게 해체합니다.\n   6x + 3 = 15",
+                    "② 상수항 +3을 우변으로 이항하여 계산합니다.\n   6x = 15 - 3\n   6x = 12",
+                    "③ 양변을 6으로 확실히 나누어 해를 구합니다.\n   x = 2"
+                ]
+            },
+            {
+                equation: "0.3x - 1 = 0.5",
+                answer: 5,
+                steps: [
+                    "① 소수 계수를 정수로 만들기 위해 양변의 모든 항에 10을 똑같이 곱합니다.\n   3x - 10 = 5",
+                    "② 상수항 -10을 우변으로 깔끔하게 이항합니다.\n   3x = 5 + 10\n   3x = 15",
+                    "③ 양변을 3으로 나누어 최종 정답을 도출합니다.\n   x = 5"
+                ]
+            },
+            {
+                equation: "1.2x + 0.4 = 2.8",
+                answer: 2,
+                steps: [
+                    "① 모든 항의 계수를 정수화하기 위해 양변에 10을 먼저 분배하여 곱합니다.\n   12x + 4 = 28",
+                    "② 상수항 4를 우변으로 안전하게 보냅니다.\n   12x = 28 - 4\n   12x = 24",
+                    "③ 양변을 12로 정밀하게 나눕니다.\n   x = 2"
+                ]
+            },
+            {
+                equation: "(1/2) × x + 2 = 5",
+                answer: 6,
+                steps: [
+                    "① 분모인 2를 제거하기 위해 모든 항에 2를 고르게 곱합니다.\n   x + 4 = 10",
+                    "② 상수항 +4를 우변으로 넘겨 정리합니다.\n   x = 10 - 4",
+                    "③ 계산하여 알맞은 x 값을 정리합니다.\n   x = 6"
+                ]
+            },
+            {
+                equation: "4 × (x - 1) = 2x + 6",
+                answer: 5,
+                steps: [
+                    "① 분배법칙을 적용하여 좌변의 괄호를 열어줍니다.\n   4x - 4 = 2x + 6",
+                    "② x항은 좌변으로, 상수는 우변으로 동시에 이항합니다.\n   4x - 2x = 6 + 4",
+                    "③ 동류항 계산을 완수합니다.\n   2x = 10",
+                    "④ 양변을 2로 나누어 답을 구합니다.\n   x = 5"
+                ]
+            },
+            {
+                equation: "0.6x + 0.2 = 1.4",
+                answer: 2,
+                steps: [
+                    "① 소수를 정리하기 위해 식 전체에 10을 곱해줍니다.\n   6x + 2 = 14",
+                    "② 상수항 2를 우변으로 이항하여 뺄셈을 합니다.\n   6x = 14 - 2\n   6x = 12",
+                    "③ 양변을 6으로 나눕니다.\n   x = 2"
+                ]
+            },
+            {
+                equation: "(2/3) × x - 1 = 3",
+                answer: 6,
+                steps: [
+                    "① 분수의 분모인 3을 일괄 정리하기 위해 모든 항에 3을 곱합니다.\n   2x - 3 = 9",
+                    "② 상수 -3을 우변으로 부호를 반대로 넘겨 이항시킵니다.\n   2x = 9 + 3\n   2x = 12",
+                    "③ 양변을 2로 나누어 미지수를 알아냅니다.\n   x = 6"
+                ]
+            }
+        ],
+        // 3라운드: 복잡한 일차방정식 (점수 1.5배 이벤트 적용 라운드)
+        round3: [
+            {
+                equation: "(1/2) × (x - 1) = (1/3) × (x + 2)",
+                answer: 7,
+                steps: [
+                    "① 분모의 최소공배수인 6을 양변에 골고루 곱하여 분수를 없앱니다.\n   3 × (x - 1) = 2 × (x + 2)",
+                    "② 좌우변의 분배법칙을 순서대로 해결합니다.\n   3x - 3 = 2x + 4",
+                    "③ x항을 좌변, 상수를 우변으로 엇갈려 보냅니다.\n   3x - 2x = 4 + 3",
+                    "④ 계산을 마무리하여 근을 찾습니다.\n   x = 7"
+                ]
+            },
+            {
+                equation: "0.2 × (x + 5) = 0.4x - 2",
+                answer: 15,
+                steps: [
+                    "① 소수 자릿수를 제거하기 위하여 양변 전체에 10을 조화롭게 곱해 줍니다.\n   2 × (x + 5) = 4x - 20",
+                    "② 좌변에 속한 괄호를 분배하여 명확히 정리합니다.\n   2x + 10 = 4x - 20",
+                    "③ x는 좌측, 숫자는 우측으로 전격 교차 이동합니다.\n   2x - 4x = -20 - 10\n   -2x = -30",
+                    "④ 양변을 x의 계수인 -2로 공평히 나눕니다.\n   x = 15"
+                ]
+            },
+            {
+                equation: "(1/5) × (2x + 3) = (1/2) × (x + 1)",
+                answer: 1,
+                steps: [
+                    "① 두 분배 계수의 분모인 5와 2의 최소공배수 10을 양변에 일괄적으로 곱해줍니다.\n   2 × (2x + 3) = 5 × (x + 1)",
+                    "② 각각 괄호를 열어 식을 팽창시킵니다.\n   4x + 6 = 5x + 5",
+                    "③ x항을 좌변, 상수항을 우변으로 신중하게 교환 이항합니다.\n   4x - 5x = 5 - 6\n   -x = -1",
+                    "④ 양변에 -1을 곱해주어 최종 정수를 정답화합니다.\n   x = 1"
+                ]
+            },
+            {
+                equation: "4 × (x - 2) - 3 × (x - 1) = 2",
+                answer: 7,
+                steps: [
+                    "① 각 식의 분배법칙을 전개하여 마이너스 기호에 유의하며 괄호를 풉니다.\n   4x - 8 - 3x + 3 = 2",
+                    "② 동류항끼리 묶어서 먼저 결합합니다.\n   (4x - 3x) + (-8 + 3) = 2\n   x - 5 = 2",
+                    "③ 우변으로 -5를 이항시켜 x 값을 완전 분석합니다.\n   x = 2 + 5\n   x = 7"
+                ]
+            },
+            {
+                equation: "0.5x - (1/3) = (1/6) × x + 1",
+                answer: 4,
+                steps: [
+                    "① 0.5를 분수인 (1/2) 형태로 치환하여 한 눈에 수식을 구조화합니다.\n   (1/2) × x - (1/3) = (1/6) × x + 1",
+                    "② 모든 분모인 2, 3, 6의 최소공배수 6을 각 항에 남김없이 곱해줍니다.\n   3x - 2 = x + 6",
+                    "③ 이항에 의거하여 알맞게 옮겨 정돈합니다.\n   3x - x = 6 + 2\n   2x = 8",
+                    "④ 양변을 2로 나누어 해를 확실히 결정합니다.\n   x = 4"
+                ]
+            },
+            {
+                equation: "2 × (x - 2) - 5 = 3 × (x - 4)",
+                answer: 3,
+                steps: [
+                    "① 양변의 모든 괄호를 깔끔하게 정리해 줍니다.\n   2x - 4 - 5 = 3x - 12",
+                    "② 좌변의 상수항들을 병합 처리합니다.\n   2x - 9 = 3x - 12",
+                    "③ 이항 법칙에 따라 전개합니다.\n   2x - 3x = -12 + 9\n   -x = -3",
+                    "④ 양변에 -1을 정밀하게 곱해줍니다.\n   x = 3"
+                ]
+            },
+            {
+                equation: "(1/4) × (x + 3) = (1/2) × (x - 1)",
+                answer: 5,
+                steps: [
+                    "① 분모를 모두 없애기 위해 양변에 최소공배수 4를 안전하게 분배 곱하기 처리합니다.\n   x + 3 = 2 × (x - 1)",
+                    "② 우변의 분배 규칙 전개를 실천합니다.\n   x + 3 = 2x - 2",
+                    "③ 변수 이항을 시행합니다.\n   x - 2x = -2 - 3\n   -x = -5",
+                    "④ 깔끔하게 부호를 조율합니다.\n   x = 5"
+                ]
+            },
+            {
+                equation: "0.4 × (2x - 1) = 0.2x + 0.8",
+                answer: 2,
+                steps: [
+                    "① 소수를 통일화하기 위해 모든 식의 항에 대칭적으로 10을 전격 곱해줍니다.\n   4 × (2x - 1) = 2x + 8",
+                    "② 좌변 괄호의 전개 속성을 부여합니다.\n   8x - 4 = 2x + 8",
+                    "③ 변수 이항을 통해 미지수가 있는 항과 상수를 분류합니다.\n   8x - 2x = 8 + 4\n   6x = 12",
+                    "④ 양변을 6으로 곱하기의 역산인 나눗셈을 합니다.\n   x = 2"
+                ]
+            }
+        ]
+    };
+
+    // AI 난이도 4단계 스펙 데이터
+    const AI_DIFFICULTIES = [
+        {
+            id: "easy",
+            name: "방정식 꿈나무 민우",
+            levelText: "쉬움",
+            colorClass: "border-green-500 text-green-400",
+            avatar: "🌱",
+            desc: "일차방정식을 이제 막 배우기 시작해 느긋하게 문제를 푸는 귀여운 친구입니다.",
+            accuracy: 0.50, // 정답률 50%
+            timeOffset: 0    // 기본 베이스 시간 계산
+        },
+        {
+            id: "normal",
+            name: "이항 마스터 서연",
+            levelText: "보통",
+            colorClass: "border-blue-500 text-blue-400",
+            avatar: "🎒",
+            desc: "중간 정도의 계산 속도와 보편적인 중학생 수준의 방정식 수식을 다루는 라이벌입니다.",
+            accuracy: 0.65, // 정답률 65%
+            timeOffset: 3000 // 쉬움보다 3초 빠르게 처리 가능
+        },
+        {
+            id: "hard",
+            name: "대수 대장 하준",
+            levelText: "어려움",
+            colorClass: "border-purple-500 text-purple-400",
+            avatar: "🧠",
+            desc: "상당히 타이트하게 압박해 오는 수학 우등생 친구입니다. 실수도 적은 편입니다.",
+            accuracy: 0.80, // 정답률 80%
+            timeOffset: 6000 // 쉬움보다 6초 빠르게 처리 가능
+        },
+        {
+            id: "expert",
+            name: "알고리즘 혜원",
+            levelText: "매우 어려움",
+            colorClass: "border-rose-500 text-rose-400",
+            avatar: "⚡",
+            desc: "초고속 계산을 탑재하여 완벽에 가까운 실력으로 매섭게 플레이어를 몰아세웁니다.",
+            accuracy: 0.93, // 정답률 93%
+            timeOffset: 9000 // 쉬움보다 9초 빠르게 처리 가능
+        }
+    ];
+
+    let playerNickname = "수학천재지훈";
+    let selectedAI = AI_DIFFICULTIES[1]; // 기본 '보통'
+
+    let currentRoundNum = 1; // 1, 2, 3
+    let currentQuestionSubIndex = 0; // 라운드별 서브 문제 인덱스
+    let totalQuestionsInRound = 3; // 기본 라운드당 3문제 (3라운드는 2문제로 유동적 변경)
+
+    let playerScore = 0;
+    let aiScore = 0;
+
+    // 실시간 문제 누출 방지용 셔플된 문제 보관소
+    let roundQuestions = [];
+
+    let currentQuestionObj = null;
+    let secondsLeft = 50; // 제한시간 50초
+    let currentPossibleScore = 300;
+    let timerInterval = null;
+    let isQuestionActive = false;
+
+    // AI 스케줄링 타이머 변수
+    let aiActionTimeout = null;
+
+    // 오디오 시스템 컨텍스트
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'tap') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } else if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.08); // E5
+                osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.16); // G5
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.35);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(130, audioCtx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'gameover') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(392, audioCtx.currentTime); // G4
+                osc.frequency.setValueAtTime(523, audioCtx.currentTime + 0.25); // C5
+                osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.5); // E5
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.8);
+            }
+        } catch (e) {
+            console.log("Audio play error bypass", e);
+        }
+    }
+
+    window.onload = function() {
+        renderAISelector();
+    };
+
+    function renderAISelector() {
+        const selector = document.getElementById('ai-selector');
+        selector.innerHTML = '';
+
+        AI_DIFFICULTIES.forEach((ai) => {
+            const card = document.createElement('div');
+            // 선택에 따른 조건 클래스 할당
+            const isSelected = ai.id === selectedAI.id;
+            card.className = `cursor-pointer p-3 bg-slate-900 rounded-xl border-2 transition duration-200 text-left hover:bg-slate-800 ${isSelected ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-transparent'}`;
+            card.id = `ai-card-${ai.id}`;
+            card.onclick = () => selectAILevel(ai.id);
+            card.innerHTML = `
+                <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-lg">${ai.avatar}</span>
+                        <span class="font-bold text-xs text-slate-100">${ai.name}</span>
+                    </div>
+                    <span class="text-[9px] font-black uppercase px-1.5 py-0.5 bg-slate-800 rounded ${ai.colorClass.split(' ')[1]} border ${ai.colorClass.split(' ')[0]}">
+                        ${ai.levelText}
+                    </span>
+                </div>
+                <p class="text-[10px] text-slate-400 line-clamp-2 leading-relaxed">${ai.desc}</p>
+            `;
+            selector.appendChild(card);
+        });
+    }
+
+    function selectAILevel(aiId) {
+        initAudio();
+        playSound('tap');
+        const found = AI_DIFFICULTIES.find(x => x.id === aiId);
+        if (found) {
+            selectedAI = found;
+            renderAISelector();
+        }
+    }
+
+    function startGame() {
+        initAudio();
+        playSound('tap');
+
+        const nicknameInput = document.getElementById('player-nickname').value.trim();
+        playerNickname = nicknameInput !== "" ? nicknameInput : "수학천재지훈";
+
+        // HUD 및 패널 바인딩
+        document.getElementById('hud-player-name').innerText = playerNickname;
+        document.getElementById('hud-ai-name').innerText = selectedAI.name;
+        document.getElementById('hud-player-score').innerText = "0점";
+        document.getElementById('hud-ai-score').innerText = "0점";
+
+        document.getElementById('panel-rival-avatar').innerText = selectedAI.avatar;
+        document.getElementById('panel-rival-name').innerText = selectedAI.name;
+        document.getElementById('panel-rival-desc').innerText = `난이도: ${selectedAI.levelText}`;
+
+        // 화면 전환 처리
+        document.getElementById('lobby-screen').classList.add('hidden');
+        document.getElementById('gameover-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+
+        // 스코어 및 세션 변수 초기화
+        playerScore = 0;
+        aiScore = 0;
+        currentRoundNum = 1;
+        currentQuestionSubIndex = 0;
+
+        initRoundQuestions();
+        startQuestionSession();
+    }
+
+    // 각 라운드 문제 풀에서 중복 없이 문제를 선별하여 배열을 섞어 준비
+    function initRoundQuestions() {
+        const poolName = `round${currentRoundNum}`;
+        const originalPool = QUESTION_POOL_SOURCE[poolName];
+        
+        // 깊은 복사 진행
+        const poolCopy = JSON.parse(JSON.stringify(originalPool));
+        
+        // 피셔-예이츠 셔플로 순서 완전히 섞기
+        for (let i = poolCopy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [poolCopy[i], poolCopy[j]] = [poolCopy[j], poolCopy[i]];
+        }
+
+        // 라운드별 출제 개수 확정 (1,2라운드는 3문제 / 3라운드는 2문제)
+        totalQuestionsInRound = (currentRoundNum === 3) ? 2 : 3;
+
+        // 필요한 문항 수만큼 슬라이싱하여 추출
+        roundQuestions = poolCopy.slice(0, totalQuestionsInRound);
+    }
+
+    function startQuestionSession() {
+        isQuestionActive = true;
+        secondsLeft = 50; // 제한시간 50초 세팅
+        currentPossibleScore = 300;
+
+        let bonusMultiplier = 1.0;
+        if (currentRoundNum === 3) {
+            bonusMultiplier = 1.5;
+            document.getElementById('hud-event-tag').classList.remove('hidden');
+        } else {
+            document.getElementById('hud-event-tag').classList.add('hidden');
+        }
+
+        // HUD 갱신
+        document.getElementById('hud-round').innerText = `ROUND ${currentRoundNum}`;
+        document.getElementById('hud-subround').innerText = `문제 ${currentQuestionSubIndex + 1} / ${totalQuestionsInRound}`;
+
+        // 라운드 문제 리스트에서 중복 없는 다음 문제 로드
+        currentQuestionObj = roundQuestions[currentQuestionSubIndex];
+
+        // 수식 렌더링
+        document.getElementById('question-text').innerText = currentQuestionObj.equation;
+
+        // 채팅 콘솔 비우기 및 오프닝 연출
+        const chatContainer = document.getElementById('chat-messages');
+        chatContainer.innerHTML = '';
+
+        addSystemMessage(`📢 <strong>ROUND ${currentRoundNum} - 문제 ${currentQuestionSubIndex + 1}</strong> 시작! <br>${currentRoundNum === 3 ? '🔥 <span class="text-rose-400 font-bold">1.5배 피버 보너스 이벤트가 적용 중입니다!</span>' : '정수 해를 구하세요.'}`);
+        addSystemMessage(`🤖 상대 <strong>${selectedAI.name}</strong>가 식을 노려보기 시작했습니다.`);
+
+        // 타이머 바 초기 배치
+        const bar = document.getElementById('timer-bar');
+        bar.style.width = "100%";
+        bar.className = "bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 h-full w-full transition-all duration-1000";
+
+        updateScoreHUD(bonusMultiplier);
+
+        // 타이머 루프 기동
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if (!isQuestionActive) return;
+            secondsLeft--;
+
+            // 점수 감쇄 (최대 300점에서 시간에 따라 50점까지 비례 하향)
+            let rawScore = Math.max(50, Math.round(300 * (secondsLeft / 50)));
+            currentPossibleScore = Math.round(rawScore * bonusMultiplier);
+            document.getElementById('current-possible-score').innerText = `${currentPossibleScore}점`;
+
+            // 바 너비 비율 계산
+            const pct = (secondsLeft / 50) * 100;
+            bar.style.width = `${pct}%`;
+
+            if (secondsLeft <= 0) {
+                handleRoundEnd(null, 'timeout');
+            }
+        }, 1000);
+
+        // AI 행동 예측 및 시간 배정 가동
+        scheduleAILogic();
+    }
+
+    function scheduleAILogic() {
+        if (aiActionTimeout) clearTimeout(aiActionTimeout);
+        document.getElementById('ai-typing-indicator').classList.add('hidden');
+
+        // AI 속도 계산: 3초에서 47초 범위
+        const minBound = 3000;
+        const maxBound = 47000;
+
+        // 난이도에 따른 이득 시간 공제 (매우 어려움으로 갈수록 3초씩 빨리 생각)
+        let thoughtPeriod = Math.floor(Math.random() * 15000) + 18000; // 기본 18~33초 무작위
+        thoughtPeriod = thoughtPeriod - selectedAI.timeOffset; // 난이도 오프셋 제외
+        thoughtPeriod = Math.max(minBound, Math.min(thoughtPeriod, maxBound)); // 클램핑
+
+        // 틀릴 수도 맞출 수도 있게 판단 확률 처리
+        const roll = Math.random();
+        const isGoingToCorrect = roll < selectedAI.accuracy; // 정확도 확률에 의거함
+
+        if (isGoingToCorrect) {
+            // 바로 정답 제출 예약
+            aiActionTimeout = setTimeout(() => {
+                if (!isQuestionActive) return;
+                aiActionProcess(true);
+            }, thoughtPeriod);
+        } else {
+            // 오답을 외친 후에 뒤늦게 다시 풀도록 2스텝 시뮬레이션 예약
+            const mistakePeriod = Math.max(3000, thoughtPeriod - 4000); // 정답 시간보다 조금 빠르게 설계
+            aiActionTimeout = setTimeout(() => {
+                if (!isQuestionActive) return;
+                aiActionProcess(false); // 오답 표출
+            }, mistakePeriod);
+        }
+    }
+
+    function aiActionProcess(isRight) {
+        document.getElementById('ai-typing-indicator').classList.remove('hidden');
+        document.getElementById('ai-typing-text').innerText = `${selectedAI.name}가 식을 분석하고 계산 중...`;
+
+        setTimeout(() => {
+            if (!isQuestionActive) return;
+            document.getElementById('ai-typing-indicator').classList.add('hidden');
+
+            if (isRight) {
+                // 정확한 답 표출
+                const rightAns = currentQuestionObj.answer;
+                addChatMessage(selectedAI.name, rightAns, 'ai');
+                handleRoundEnd('ai', 'correct');
+            } else {
+                // 부정확한 근사 오답 생성
+                const deviation = Math.floor(Math.random() * 3) + 1;
+                const sign = Math.random() > 0.5 ? 1 : -1;
+                const wrongAns = currentQuestionObj.answer + (sign * deviation);
+
+                addChatMessage(selectedAI.name, wrongAns, 'ai');
+                addSystemMessage(`❌ <strong>${selectedAI.name}</strong>의 대답은 틀렸습니다! (-100점 페널티)`);
+                aiScore = Math.max(0, aiScore - 100);
+                updateScoresHUD();
+                playSound('wrong');
+
+                // 한 번 틀린 후 다시 정답 기회를 갖도록 추격 시간 예약
+                const recoveryPeriod = Math.floor(Math.random() * 8000) + 4000;
+                aiActionTimeout = setTimeout(() => {
+                    if (!isQuestionActive) return;
+                    // 패자부활 정답 시도
+                    aiActionProcess(true);
+                }, recoveryPeriod);
+            }
+        }, 1100);
+    }
+
+    function handleSendChat(event) {
+        event.preventDefault();
+        if (!isQuestionActive) return;
+
+        const inputEl = document.getElementById('chat-input');
+        const raw = inputEl.value.trim();
+        if (raw === "") return;
+
+        inputEl.value = "";
+
+        // 해 유효성 검증 정규식 (음수 가능 정수만 허용)
+        const checkPattern = /^-?\d+$/;
+        if (!checkPattern.test(raw)) {
+            addChatMessage(playerNickname, raw, 'player');
+            addSystemMessage(`⚠️ [입력 오류] 채팅창에는 미지수의 해(예: <strong class='text-indigo-400'>3</strong> 또는 <strong class='text-indigo-400'>-2</strong>)인 숫자 정수만 입력할 수 있습니다!`);
+            playSound('wrong');
+            return;
+        }
+
+        const playerVal = parseInt(raw, 10);
+        addChatMessage(playerNickname, playerVal, 'player');
+
+        // 맞는지 판별
+        if (playerVal === currentQuestionObj.answer) {
+            handleRoundEnd('player', 'correct');
+        } else {
+            addSystemMessage(`❌ <strong>${playerNickname}</strong>님의 대답은 오답입니다! (-100점 페널티)`);
+            playerScore = Math.max(0, playerScore - 100);
+            updateScoresHUD();
+            playSound('wrong');
+        }
+    }
+
+    function handleRoundEnd(winner, reason) {
+        isQuestionActive = false;
+        if (timerInterval) clearInterval(timerInterval);
+        if (aiActionTimeout) clearTimeout(aiActionTimeout);
+        document.getElementById('ai-typing-indicator').classList.add('hidden');
+
+        let playerEarned = 0;
+        let aiEarned = 0;
+
+        if (reason === 'correct') {
+            if (winner === 'player') {
+                playerEarned = currentPossibleScore;
+                playerScore += playerEarned;
+                addSystemMessage(`🎉 <strong>축하합니다!</strong> ${playerNickname}님이 먼저 정답 "${currentQuestionObj.answer}"을(를) 맞췄습니다! (+${playerEarned}점)`);
+                playSound('correct');
+                updateScoresHUD();
+
+                // 플레이어가 맞춘 경우는 바로 해설 모달 표출
+                setTimeout(() => {
+                    showExplanationModal(playerEarned, aiEarned);
+                }, 1300);
+
+            } else if (winner === 'ai') {
+                aiEarned = currentPossibleScore;
+                aiScore += aiEarned;
+                addSystemMessage(`😢 아쉬워라! AI <strong>${selectedAI.name}</strong>가 정답 "${currentQuestionObj.answer}"을(를) 먼저 맞췄습니다... (+${aiEarned}점)`);
+                playSound('wrong');
+                updateScoresHUD();
+
+                // 요구 조건: AI가 맞추면 정답 채팅 상황을 1초간 선명히 보여주고 다음(해설 모달)으로 전환
+                setTimeout(() => {
+                    showExplanationModal(playerEarned, aiEarned);
+                }, 1000); // 정확히 1초 대기 연출 적용
+            }
+        } else if (reason === 'timeout') {
+            addSystemMessage(`⏰ <strong>시간 초과!</strong> 제한시간 50초 동안 정답을 맞춘 사람이 없습니다.`);
+            playSound('wrong');
+            
+            setTimeout(() => {
+                showExplanationModal(playerEarned, aiEarned);
+            }, 1300);
+        }
+    }
+
+    function showExplanationModal(pEarn, aEarn) {
+        document.getElementById('modal-answer').innerText = `x = ${currentQuestionObj.answer}`;
+        document.getElementById('modal-steps').innerText = currentQuestionObj.steps.join("\n\n");
+
+        document.getElementById('modal-player-add').innerText = `+${pEarn}점`;
+        document.getElementById('modal-ai-add').innerText = `+${aEarn}점`;
+
+        document.getElementById('explanation-badge').innerText = `ROUND ${currentRoundNum} - 문제 ${currentQuestionSubIndex + 1}`;
+        document.getElementById('explanation-modal').classList.remove('hidden');
+    }
+
+    function closeExplanationModal() {
+        document.getElementById('explanation-modal').classList.add('hidden');
+        transitionNextStep();
+    }
+
+    // 다음 문항이나 다음 라운드로 기동 분기
+    function transitionNextStep() {
+        if (currentQuestionSubIndex < totalQuestionsInRound - 1) {
+            // 이번 라운드에 안 푼 남은 문제가 있으면 인덱스 올려서 계속 진행 (중복 방지 셔플된 리스트 내)
+            currentQuestionSubIndex++;
+            startQuestionSession();
+        } else {
+            // 라운드 종료 상황
+            if (currentRoundNum < 3) {
+                // 다음 라운드로 전환
+                currentRoundNum++;
+                currentQuestionSubIndex = 0;
+                initRoundQuestions(); // 라운드 바뀔 때 중복 배제 문제들 새롭게 셔플 로딩
+                startQuestionSession();
+            } else {
+                // 3라운드까지 최종 완료 -> 전격 게임오버
+                endEntireGameSession();
+            }
+        }
+    }
+
+    function endEntireGameSession() {
+        playSound('gameover');
+        
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('gameover-screen').classList.remove('hidden');
+
+        document.getElementById('final-player-name').innerText = playerNickname;
+        document.getElementById('final-ai-name').innerText = selectedAI.name;
+        document.getElementById('final-player-score').innerText = `${playerScore}점`;
+        document.getElementById('final-ai-score').innerText = `${aiScore}점`;
+
+        const titleBox = document.getElementById('final-announcement');
+        const descBox = document.getElementById('final-subtext');
+        const trophy = document.getElementById('trophy-container');
+
+        if (playerScore > aiScore) {
+            titleBox.innerHTML = `<span class="text-emerald-400">당신의 압도적인 승리! 🏆</span>`;
+            descBox.innerHTML = `대단합니다! <strong class="text-indigo-400">${selectedAI.name}</strong>를 영리한 대수 연산력으로 물리쳤습니다. <br>일차방정식을 완벽하게 마스터한 중학교 1학년 일인자로 추대합니다!`;
+            trophy.className = "inline-flex p-5 bg-emerald-500/10 rounded-full text-emerald-400 border border-emerald-500/20 mb-2 animate-pulse";
+        } else if (playerScore < aiScore) {
+            titleBox.innerHTML = `<span class="text-rose-400">AI 라이벌 승리 👾</span>`;
+            descBox.innerHTML = `<strong class="text-indigo-400">${selectedAI.name}</strong>의 맹렬한 계산 속도를 이겨내기 버거웠습니다. <br>방정식 기본 이항과 괄호 분배를 복습한 뒤 다시 진지한 도전을 해보세요!`;
+            trophy.className = "inline-flex p-5 bg-rose-500/10 rounded-full text-rose-400 border border-rose-500/20 mb-2";
+        } else {
+            titleBox.innerHTML = `<span class="text-amber-400 font-extrabold">기막힌 무승부! 🤝</span>`;
+            descBox.innerHTML = `서로 한 치의 계산 오차도 양보하지 않은 역대급 대결이었습니다! <br>두 수학 천재들의 치열한 승부에 찬사를 보냅니다.`;
+            trophy.className = "inline-flex p-5 bg-amber-500/10 rounded-full text-amber-400 border border-amber-500/20 mb-2";
+        }
+    }
+
+    function updateScoreHUD(mult) {
+        let rawScore = Math.max(50, Math.round(300 * (secondsLeft / 50)));
+        currentPossibleScore = Math.round(rawScore * mult);
+        document.getElementById('current-possible-score').innerText = `${currentPossibleScore}점`;
+    }
+
+    function updateScoresHUD() {
+        document.getElementById('hud-player-score').innerText = `${playerScore}점`;
+        document.getElementById('hud-ai-score').innerText = `${aiScore}점`;
+    }
+
+    function addChatMessage(sender, text, type) {
+        const chatContainer = document.getElementById('chat-messages');
+        const isPlayer = type === 'player';
+        const wrapper = document.createElement('div');
+        wrapper.className = `flex ${isPlayer ? 'justify-end' : 'justify-start'} items-end gap-2`;
+
+        const avatar = !isPlayer ? `
+            <div class="w-8 h-8 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-sm shrink-0 shadow-sm">
+                ${selectedAI.avatar}
+            </div>
+        ` : '';
+
+        const nameLabel = !isPlayer ? `
+            <div class="text-[10px] text-slate-500 mb-0.5">${sender}</div>
+        ` : '';
+
+        wrapper.innerHTML = `
+            ${avatar}
+            <div class="max-w-[75%]">
+                ${nameLabel}
+                <div class="p-3 text-sm rounded-2xl ${
+                    isPlayer 
+                    ? 'bg-indigo-600 text-white rounded-br-none shadow-md shadow-indigo-600/10' 
+                    : 'bg-slate-800 text-slate-100 rounded-bl-none border border-slate-700/50 shadow'
+                }">
+                    ${text}
+                </div>
+            </div>
+        `;
+
+        chatContainer.appendChild(wrapper);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function addSystemMessage(msg) {
+        const chatContainer = document.getElementById('chat-messages');
+        const alertDiv = document.createElement('div');
+        alertDiv.className = "w-full text-center py-2 px-4 bg-slate-900/60 border border-slate-800/80 rounded-lg text-xs text-slate-400 select-none max-w-md mx-auto leading-relaxed";
+        alertDiv.innerHTML = msg;
+        chatContainer.appendChild(alertDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function resetGame() {
+        initAudio();
+        playSound('tap');
+        startGame();
+    }
+
+    function goToLobby() {
+        initAudio();
+        playSound('tap');
+        document.getElementById('gameover-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('lobby-screen').classList.remove('hidden');
+    }
+
+    function openRulesModal() {
+        initAudio();
+        playSound('tap');
+        document.getElementById('rules-modal').classList.remove('hidden');
+    }
+
+    function closeRulesModal() {
+        initAudio();
+        playSound('tap');
+        document.getElementById('rules-modal').classList.add('hidden');
+    }
+</script>
+</body>
+</html>
