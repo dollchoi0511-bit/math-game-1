@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유리수 감옥 탈출 (Escape from Room 0)</title>
+    <!-- Tailwind CSS CDN 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 구글 폰트 Inter 로드 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* 알림 메시지 슬라이드 애니메이션 */
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-white min-h-screen flex flex-col justify-between select-none overflow-x-hidden">
+
+    <!-- 플로팅 알림 창 컨테이너 -->
+    <div id="alert-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-full px-4 sm:px-0"></div>
+
+    <!-- 메인 게임 컨테이너 -->
+    <main class="flex-1 flex flex-col justify-center items-center w-full p-2 sm:p-6">
+        
+        <!-- ================= INTRO SCREEN ================= -->
+        <section id="screen-intro" class="max-w-4xl w-full flex flex-col items-center py-8 px-4 text-center">
+            <div class="space-y-4 mb-8">
+                <div class="inline-block px-3 py-1 bg-purple-900/60 border border-purple-500/50 rounded-full text-purple-300 text-xs font-semibold uppercase tracking-widest mb-2 animate-pulse">
+                    Middle School Math Adventure
+                </div>
+                <h1 class="text-4xl sm:text-6xl font-black tracking-tight leading-none bg-gradient-to-r from-cyan-400 via-purple-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-lg">
+                    유리수 감옥 탈출
+                </h1>
+                <p class="text-gray-400 text-base sm:text-xl font-medium tracking-wide">
+                    Escape from Room 0
+                </p>
+            </div>
+
+            <div class="bg-gray-900/80 border border-purple-900/50 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md mb-8 space-y-6 w-full text-left">
+                <h3 class="text-lg sm:text-xl font-bold text-cyan-400 border-b border-cyan-900/50 pb-2">📜 세계관 및 스토리</h3>
+                <p class="text-gray-300 leading-relaxed text-sm sm:text-base">
+                    "정신을 차려보니 사방이 숫자로 가득 찬 감옥이다. 벽에 적힌 기괴한 목소리:<br />
+                    <span class="text-purple-300 font-bold">'정수와 유리수의 규칙을 깨닫는 자만이 이 방을 나갈 수 있다. 네 모든 행동은 네 몸의 부호와 크기를 바꿀 것이다!'</span>"
+                </p>
+                <p class="text-gray-400 text-xs sm:text-sm">
+                    🔑 감옥의 중앙 <span class="text-cyan-400 font-bold">0의 방</span>에서 출발하여 음수, 분수, 소수, 절댓값의 시련을 이겨내고 최종 보스를 처치하십시오!
+                </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 w-full justify-center">
+                <button onclick="startGame()" class="px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 rounded-xl font-extrabold text-lg transition duration-200 transform hover:-translate-y-1 active:translate-y-0 shadow-lg shadow-purple-500/20 w-full sm:w-auto">
+                    🎮 모험 시작하기
+                </button>
+                <button onclick="showManual()" class="px-8 py-4 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-xl font-bold text-lg transition duration-200 transform hover:-translate-y-1 active:translate-y-0 w-full sm:w-auto">
+                    👥 협동 매뉴얼
+                </button>
+            </div>
+        </section>
+
+        <!-- 공통 상단 상태 헤더 (게임 진행 중 전면 표시됨) -->
+        <header id="game-hud" class="hidden w-full max-w-4xl flex flex-col md:flex-row justify-between items-center bg-gray-900 border-b border-purple-900 p-4 rounded-t-2xl gap-4">
+            <div>
+                <h2 id="hud-title" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 tracking-wider">
+                    게임 시작
+                </h2>
+                <p id="hud-subtitle" class="text-gray-400 text-xs mt-1">서브타이틀</p>
+            </div>
+            <div class="flex items-center gap-6">
+                <!-- HP Bar -->
+                <div class="flex items-center gap-2">
+                    <span class="text-red-500 font-bold text-sm">HP</span>
+                    <div class="w-32 bg-gray-800 h-4 rounded-full overflow-hidden border border-red-500/30">
+                        <div id="hud-hp-bar" class="bg-gradient-to-r from-red-500 to-orange-500 h-full transition-all duration-300" style="width: 100%;"></div>
+                    </div>
+                    <span id="hud-hp-text" class="text-white text-xs font-mono">100/100</span>
+                </div>
+                <!-- Combo -->
+                <div id="hud-combo-badge" class="hidden animate-bounce bg-purple-600/80 border border-purple-400 px-3 py-1 rounded-full flex items-center gap-1 text-white font-black text-xs">
+                    🔥 <span id="hud-combo-val">0</span> COMBO
+                </div>
+            </div>
+        </header>
+
+        <!-- ================= STAGE 1 SCREEN ================= -->
+        <section id="screen-stage1" class="hidden w-full max-w-4xl bg-gray-950 p-4 rounded-b-2xl border border-t-0 border-purple-900/40">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+                <!-- 왼쪽 상태 지표 -->
+                <div class="bg-gray-900/50 p-6 rounded-2xl border border-blue-900/40 flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-blue-400 font-bold text-sm uppercase tracking-wider mb-2">현재 나의 상태 값</h4>
+                        <div id="s1-sum" class="text-5xl font-black text-white font-mono tracking-tight drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">
+                            0
+                        </div>
+                        <div class="mt-4 space-y-2 text-xs text-gray-400">
+                          <p>🎯 목표 수치: <span class="text-red-400 font-bold text-lg">-7</span></p>
+                          <p>🕸️ 활성화된 덫: <span id="s1-trap-status" class="text-gray-500">아니오</span></p>
+                        </div>
+                    </div>
+                    <button onclick="resetStage1()" class="mt-6 w-full py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold text-xs rounded-lg transition">
+                        🔄 보드 초기화
+                    </button>
+                </div>
+                <!-- 중앙 4x4 타일 맵 -->
+                <div class="md:col-span-2 bg-gray-900 p-6 rounded-2xl border border-purple-900/40">
+                    <div id="s1-grid" class="grid grid-cols-4 gap-3">
+                        <!-- JS가 타일을 동적 렌더링 -->
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 p-4 bg-gray-900/30 border border-gray-800 rounded-xl text-center text-xs sm:text-sm text-gray-400">
+                💡 <strong>퍼즐 풀이 가이드:</strong> 처음 값은 0입니다. 숫자를 차례대로 클릭해 나가면서 정확히 <span class="text-red-400 font-bold">-7</span>이 되도록 발판 경로를 추리해 보십시오! "뺄셈의 덫"을 밟으면 다음 음수 기호가 양수로 뒤집히는 반전이 일어납니다.
+            </div>
+        </section>
+
+        <!-- ================= STAGE 2 SCREEN ================= -->
+        <section id="screen-stage2" class="hidden w-full max-w-4xl bg-gray-950 p-4 rounded-b-2xl border border-t-0 border-purple-900/40">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
+                <!-- 왼쪽: 통분 패널 -->
+                <div class="bg-gray-900 p-6 rounded-2xl border border-cyan-900/40 space-y-6">
+                    <div>
+                        <h4 class="text-cyan-400 font-bold text-sm mb-3">🛠️ 통분 제어 패널</h4>
+                        <p class="text-gray-400 text-xs mb-4">
+                            왼쪽 절벽 슬롯: <span class="text-white font-bold font-mono">-1/2</span> &nbsp;|&nbsp; 
+                            오른쪽 절벽 슬롯: <span class="text-white font-bold font-mono">-2/3</span>
+                        </p>
+                        <!-- 분모 선택 -->
+                        <div class="space-y-2">
+                            <label class="text-xs text-gray-400 block">1. 기계 분모 설정 (최소공배수 선택)</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <button onclick="setS2Denom(3)" id="btn-denom-3" class="py-2 rounded-lg font-bold font-mono text-sm bg-gray-800 text-gray-400 hover:bg-gray-700">분모 3</button>
+                                <button onclick="setS2Denom(4)" id="btn-denom-4" class="py-2 rounded-lg font-bold font-mono text-sm bg-gray-800 text-gray-400 hover:bg-gray-700">분모 4</button>
+                                <button onclick="setS2Denom(6)" id="btn-denom-6" class="py-2 rounded-lg font-bold font-mono text-sm bg-gray-800 text-gray-400 hover:bg-gray-700">분모 6</button>
+                                <button onclick="setS2Denom(12)" id="btn-denom-12" class="py-2 rounded-lg font-bold font-mono text-sm bg-gray-800 text-gray-400 hover:bg-gray-700">분모 12</button>
+                            </div>
+                        </div>
+                        <!-- 분자 조정 -->
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <div class="space-y-2">
+                                <label class="text-xs text-gray-400 block">왼쪽 분자 조정</label>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="adjustS2Left(-1)" class="px-3 py-1 bg-gray-800 rounded font-bold hover:bg-gray-750">-</button>
+                                    <span id="s2-left-num" class="font-mono text-lg font-bold">0</span>
+                                    <button onclick="adjustS2Left(1)" class="px-3 py-1 bg-gray-800 rounded font-bold hover:bg-gray-750">+</button>
+                                </div>
+                                <div id="s2-left-fraction" class="text-center font-mono text-sm bg-gray-950 p-2 rounded text-cyan-300">
+                                    0 / 1
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs text-gray-400 block">오른쪽 분자 조정</label>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="adjustS2Right(-1)" class="px-3 py-1 bg-gray-800 rounded font-bold hover:bg-gray-750">-</button>
+                                    <span id="s2-right-num" class="font-mono text-lg font-bold">0</span>
+                                    <button onclick="adjustS2Right(1)" class="px-3 py-1 bg-gray-800 rounded font-bold hover:bg-gray-750">+</button>
+                                </div>
+                                <div id="s2-right-fraction" class="text-center font-mono text-sm bg-gray-950 p-2 rounded text-cyan-300">
+                                    0 / 1
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="checkS2Bridge()" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold text-sm rounded-xl transition">
+                        🌉 통분 다리 활성화 검증
+                    </button>
+                </div>
+                <!-- 오른쪽: 소수 몬스터 레이드 -->
+                <div class="bg-gray-900 p-6 rounded-2xl border border-red-900/40 flex flex-col justify-between">
+                    <div id="s2-monster-container">
+                        <!-- 몬스터 상태 또는 클리어 보물함 표시 영역 -->
+                    </div>
+                    <div class="text-xs text-gray-400 mt-4">
+                        💡 <strong>교육 가이드:</strong> 0.25를 기약분수로 변환하면 <span class="text-cyan-400 font-bold">1/4</span>이 됩니다. 다리 연결은 각각 <span class="text-cyan-400 font-bold">-3/6</span>, <span class="text-cyan-400 font-bold">-4/6</span>이 되어야 절벽의 고정 홈과 맞물려 결합됩니다!
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= STAGE 3 SCREEN ================= -->
+        <section id="screen-stage3" class="hidden w-full max-w-4xl bg-gray-950 p-4 rounded-b-2xl border border-t-0 border-purple-900/40">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+                <!-- 왼쪽: 거울 장치 -->
+                <div class="bg-gray-900 p-6 rounded-2xl border border-purple-900/40 space-y-4">
+                    <div class="flex items-center gap-2 border-b border-purple-900/50 pb-2">
+                        <span class="text-xl">🪞</span>
+                        <h4 class="text-purple-400 font-bold text-sm">부호 반전 거울 장치</h4>
+                    </div>
+                    <p class="text-gray-400 text-xs leading-relaxed">
+                        주머니의 보석을 거울에 비추면 부호가 완벽하게 바뀝니다. 새로운 음수 또는 양수 조각을 만들어 수평 맞추기 저울의 부품으로 사용하세요!
+                    </p>
+                    <div id="s3-mirror-slot" class="bg-gray-950 p-4 rounded-xl flex flex-col items-center justify-center border border-purple-800/30 gap-4 min-h-[160px]">
+                        <!-- 거울 작동 뷰포트 -->
+                    </div>
+                </div>
+                <!-- 중앙 및 우측: 절댓값 저울 -->
+                <div class="md:col-span-2 bg-gray-900 p-6 rounded-2xl border border-cyan-900/40 flex flex-col justify-between">
+                    <div>
+                        <h4 class="text-cyan-400 font-bold text-sm mb-4">⚖️ 절댓값 저울 연출</h4>
+                        <div class="bg-gray-950 p-6 rounded-xl border border-gray-800 relative overflow-hidden min-h-[180px] flex items-end justify-center">
+                            <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 bg-gray-700 h-24 rounded-t"></div>
+                            <div id="s3-scale-bar" class="absolute bottom-20 left-4 right-4 h-2 bg-gradient-to-r from-red-500 via-gray-600 to-green-500 rounded transition-transform duration-500 origin-center" style="transform: rotate(0deg);">
+                                <!-- 좌측 받침대 -->
+                                <div class="absolute left-4 top-2 w-12 h-1 bg-gray-400">
+                                    <div class="absolute top-1 left-1/2 -translate-x-1/2 bg-red-900 border border-red-500 px-2 py-1 text-[10px] font-bold rounded whitespace-nowrap">
+                                        |-8| = 8
+                                    </div>
+                                </div>
+                                <!-- 우측 받침대 -->
+                                <div class="absolute right-4 top-2 w-12 h-1 bg-gray-400">
+                                    <div class="absolute top-1 left-1/2 -translate-x-1/2 bg-green-900 border border-green-500 px-2 py-1 text-[10px] font-bold rounded flex flex-col items-center whitespace-nowrap">
+                                        <span class="font-mono text-[8px]">TOTAL</span>
+                                        <span id="s3-right-weight-text">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <span class="text-xs text-gray-400 block mb-2">현재 우측 저울에 놓인 보석 (클릭 시 가방으로 회수):</span>
+                            <div id="s3-scale-gems" class="flex flex-wrap gap-2 min-h-[40px] bg-gray-950 p-2 rounded-lg border border-gray-800">
+                                <!-- 저울 위 보석 리스트 -->
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="checkS3Scale()" class="mt-6 w-full py-3 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-black font-extrabold text-sm rounded-xl transition shadow-lg">
+                        ⚖️ 저울 수평 확인하기
+                    </button>
+                </div>
+            </div>
+            <!-- 보석 보관함 -->
+            <div class="mt-6 bg-gray-900 p-6 rounded-2xl border border-gray-800">
+                <h5 class="text-xs text-purple-300 font-bold uppercase tracking-wider mb-3">🎒 나의 보석 주머니 (클릭해 행동 선택)</h5>
+                <div id="s3-bag-gems" class="flex flex-wrap gap-3">
+                    <!-- 보관 보석 아이템 목록 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= BOSS SCREEN ================= -->
+        <section id="screen-boss" class="hidden w-full max-w-4xl bg-gray-950 p-4 rounded-b-2xl border border-t-0 border-purple-900/40">
+            <!-- 보스 전용 HUD 헤더 -->
+            <div class="bg-gray-950 border-2 border-red-900 rounded-2xl p-4 mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl animate-bounce">👾</span>
+                    <div>
+                        <h3 class="text-lg font-black text-red-500">감옥 사령관 : 제로 킹 (King Zero)</h3>
+                        <p id="boss-phase-text" class="text-gray-500 text-[10px] uppercase font-bold">Phase 1 / 4 : 숫자 선공 피하기</p>
+                    </div>
+                </div>
+                <div class="w-full sm:w-1/2">
+                    <div class="flex justify-between text-xs mb-1 font-mono text-red-400">
+                        <span>BOSS HP</span>
+                        <span id="boss-hp-percentage">100%</span>
+                    </div>
+                    <div class="h-4 bg-gray-900 border border-red-500/30 rounded-full overflow-hidden">
+                        <div id="boss-hp-bar" class="bg-gradient-to-r from-red-600 to-amber-500 h-full transition-all duration-300" style="width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 슬로우 모션 제어 및 버프 현황판 -->
+            <div class="grid grid-cols-2 gap-4 mt-2 bg-gray-900/60 p-4 rounded-xl border border-gray-800">
+                <div>
+                    <span class="text-[10px] text-gray-400 block mb-1">⏳ 시간 지연 모션 (5초 정지)</span>
+                    <button id="btn-slowmo" onclick="triggerSlowMo()" class="w-full py-2 rounded-lg font-bold text-xs transition bg-gray-800 text-gray-500 cursor-not-allowed">
+                        ⚡ 슬로우 가동 (100%)
+                    </button>
+                </div>
+                <div class="flex items-center justify-center bg-gray-950 rounded-lg border border-purple-900/30">
+                    <div class="text-center">
+                        <span class="text-[10px] text-gray-400 block">🛡️ 활성 버프</span>
+                        <span id="hud-barrier-status" class="text-xs font-black text-gray-500">없음</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 각 보스 페이즈별 플레이 컨테이너 -->
+            <div id="boss-phase-container" class="mt-6">
+                <!-- JS가 현재 활성 페이즈에 따라 UI 동적 로드 -->
+            </div>
+        </section>
+
+        <!-- ================= GAMEOVER SCREEN ================= -->
+        <section id="screen-gameover" class="hidden max-w-md w-full flex flex-col justify-center items-center py-12 text-center space-y-6">
+            <span class="text-6xl animate-bounce">💀</span>
+            <h2 class="text-4xl font-black text-red-500 tracking-tight">탈출 실패</h2>
+            <p class="text-gray-400 text-sm leading-relaxed">
+                유리수 감옥 사령관 제로 킹의 사칙 연산 공격을 버티지 못하고 연산 과부하가 걸렸습니다! 부호 수식들의 역동적인 성질을 다시금 마음에 새기고 도전해봐요!
+            </p>
+            <button onclick="restartGame()" class="w-full py-4 bg-gradient-to-r from-red-600 to-amber-600 hover:from-red-500 hover:to-amber-500 text-white font-black text-lg rounded-xl transition shadow-lg">
+                🔄 다시 탈출 도전하기
+            </button>
+        </section>
+
+        <!-- ================= VICTORY SCREEN ================= -->
+        <section id="screen-victory" class="hidden max-w-2xl w-full flex flex-col justify-center items-center py-12 text-center space-y-6">
+            <div class="relative">
+                <span class="text-7xl block animate-bounce">🏆</span>
+                <div class="absolute -top-4 -right-4 bg-yellow-500 text-black font-black text-xs px-2.5 py-1 rounded-full border-2 border-black animate-pulse">
+                    PERFECT CLEAR
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h2 class="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-300 to-orange-500 tracking-tight">
+                    유리수 감옥 탈출 완수!
+                </h2>
+                <p class="text-gray-400 text-sm">
+                    정수와 유리수의 완벽한 성질, 통분, 소수 자릿수, 절댓값 수평까지 모조리 마스터해 0의 결계를 격파했습니다!
+                </p>
+            </div>
+
+            <div class="bg-gray-900 border border-yellow-500/30 p-6 rounded-2xl w-full text-left space-y-4">
+                <h4 class="text-sm text-yellow-400 font-bold uppercase tracking-wider border-b border-gray-800 pb-2">📊 나의 학업 성취 기록판</h4>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-gray-850 p-3 rounded-xl border border-gray-800">
+                        <span class="text-[10px] text-gray-500 block">총 소요 시간</span>
+                        <span id="record-time" class="text-2xl font-mono font-black text-cyan-300">0초</span>
+                    </div>
+                    <div class="bg-gray-850 p-3 rounded-xl border border-gray-800">
+                        <span class="text-[10px] text-gray-500 block">최대 연쇄 콤보</span>
+                        <span id="record-combo" class="text-2xl font-mono font-black text-purple-400">0 COMBO</span>
+                    </div>
+                </div>
+                <div class="p-4 bg-gray-850 rounded-xl border border-yellow-500/20 flex justify-between items-center">
+                    <div>
+                        <span class="text-xs text-gray-400 block">종합 교내 랭킹 추정</span>
+                        <span class="text-lg font-black text-yellow-300">전교 상위 3.5% (수학의 지배자)</span>
+                    </div>
+                    <div class="text-3xl">🧙‍♂️</div>
+                </div>
+                <p class="text-[10px] text-gray-500 text-center">
+                    캡처해서 단톡방에 자랑하고 친구들에게 유리수 마스터 속도로 도전해보세요!
+                </p>
+            </div>
+
+            <button onclick="restartGame()" class="px-8 py-4 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-black font-extrabold text-lg rounded-xl transition transform hover:-translate-y-1 active:translate-y-0 w-full">
+                🎮 다시 도전하여 기록 갱신하기
+            </button>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="py-4 text-center text-xs text-gray-600 border-t border-gray-900/50 mt-12">
+        &copy; 2026 유리수 감옥 탈출 (Escape from Room 0) — 중1 과정 수학 게임형 학습 모듈
+    </footer>
+
+    <script>
+        /* Web Audio API를 활용한 순수 정밀 신디사이저 사운드 엔진 */
+        class SoundSystem {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playTone(freq, type, duration, vol = 0.1) {
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {
+                    console.log("Audio playback blocked or unsupported on this device.", e);
+                }
+            }
+            playSuccess() {
+                this.playTone(523.25, 'triangle', 0.15); // C5
+                setTimeout(() => this.playTone(659.25, 'triangle', 0.15), 100); // E5
+                setTimeout(() => this.playTone(783.99, 'triangle', 0.3), 200); // G5
+            }
+            playHurt() {
+                this.playTone(180, 'sawtooth', 0.3, 0.15);
+                setTimeout(() => this.playTone(120, 'sawtooth', 0.2, 0.15), 100);
+            }
+            playLaser() {
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.4);
+                    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.4);
+                } catch(e){}
+            }
+            playExplosion() {
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(20, this.ctx.currentTime + 0.6);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.6);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.6);
+                } catch(e){}
+            }
+            playPowerUp() {
+                this.playTone(300, 'sine', 0.1);
+                setTimeout(() => this.playTone(450, 'sine', 0.1), 80);
+                setTimeout(() => this.playTone(600, 'sine', 0.1), 160);
+                setTimeout(() => this.playTone(900, 'sine', 0.3), 240);
+            }
+        }
+
+        const sounds = new SoundSystem();
+
+        // 전역 게임 상태 객체
+        const state = {
+            screen: 'intro', // intro, stage1, stage2, stage3, boss, victory, gameover
+            playerHP: 100,
+            combo: 0,
+            maxCombo: 0,
+            barrierActive: false,
+            gameTime: 0,
+            gameTimerInterval: null,
+            
+            // 슬로우 모션 관련
+            slowMoGauge: 100,
+            slowMoActive: false,
+            slowMoInterval: null,
+
+            // Stage 1 전용
+            s1Sum: 0,
+            s1Trap: false,
+            s1Path: [],
+            
+            // Stage 2 전용
+            s2Denom: 6,
+            s2LeftNum: 0,
+            s2RightNum: 0,
+            s2MonsterActive: true,
+            s2MonsterProgress: 0,
+            s2MonsterInterval: null,
+            s2ChestOpened: false,
+
+            // Stage 3 전용
+            s3Gems: [
+                { id: 1, val: 8, text: "+8" },
+                { id: 2, val: -5, text: "-5" },
+                { id: 3, val: -3, text: "-3" },
+                { id: 4, val: 6, text: "+6" },
+                { id: 5, val: -2, text: "-2" },
+                { id: 6, val: 10, text: "+10" },
+            ],
+            scaleLeft: 8,
+            scaleRight: [],
+            mirrorResult: null,
+
+            // Boss Stage 전용
+            bossPhase: 1, // 1: 공격 피하기, 2: 분수 시한폭탄, 3: 소수점 레이저, 4: 10단 결계
+            bossHP: 100,
+            timeLimit: 60,
+            bossTimerInterval: null,
+
+            // Boss Phase 1
+            p1Question: { q: '(-5) + (+3)', ans: -2 },
+            p1Options: [-8, -2, +2, +8],
+
+            // Boss Phase 2
+            p2DenomTarget: 12,
+            p2UserDenom: 1,
+            p2BombTimer: 15,
+            p2BombInterval: null,
+
+            // Boss Phase 3
+            p3LaserGap: 0.01,
+            p3PlayerSize: 1.0,
+            p3Timer: 10,
+            p3TimerInterval: null,
+
+            // Boss Phase 4
+            p4Index: 0,
+            p4Questions: [
+                { q: '(-7) - (-3)', a: -4, type: 'basic' },
+                { q: '(+5) + (-8)', a: -3, type: 'basic' },
+                { q: '(-2) * (-4)', a: 8, type: 'basic' },
+                { q: '(-2/3) * (+9/4) (기약분수로 입력, 예: -3/2)', a: '-3/2', type: 'mid' },
+                { q: '(-0.6) + (+1/5) (분수로 입력, 예: -2/5)', a: '-2/5', type: 'mid' },
+                { q: '(-3/4) / (+1/8)', a: -6, type: 'mid' },
+                { q: '(-2)^3 / 0.5', a: -16, type: 'adv' },
+                { q: '(-1)^4 * (-1/2)', a: '-1/2', type: 'adv' },
+                { q: '|-5| - (-3)^2', a: -4, type: 'adv' },
+                { q: '다음 중 가장 큰 수의 번호는? (1) (-2)*(-3)  (2) (-5)+(+2)  (3) (-1)^5  (4) |-10| / 2', a: 1, type: 'final' }
+            ]
+        };
+
+        function addAlert(msg, type = 'info') {
+            const container = document.getElementById('alert-container');
+            const alertId = Date.now();
+            
+            let bgClass = 'bg-blue-900/90 border-blue-500 text-blue-200';
+            if (type === 'success') bgClass = 'bg-green-900/90 border-green-500 text-green-200';
+            if (type === 'danger') bgClass = 'bg-red-900/90 border-red-500 text-red-200';
+            if (type === 'warning') bgClass = 'bg-yellow-900/90 border-yellow-500 text-yellow-200';
+
+            const alertEl = document.createElement('div');
+            alertEl.id = `alert-${alertId}`;
+            alertEl.className = `p-3 rounded-lg shadow-xl text-xs sm:text-sm font-bold border animate-slide-in flex items-center justify-between gap-4 transition-all duration-300 ${bgClass}`;
+            alertEl.innerHTML = `<span>${msg}</span>`;
+
+            container.appendChild(alertEl);
+
+            setTimeout(() => {
+                alertEl.remove();
+            }, 3000);
+        }
+
+        // 전체 화면 전환 함수
+        function setScreen(screenName) {
+            state.screen = screenName;
+            
+            // 전체 섹션 숨김 처리
+            document.getElementById('screen-intro').classList.add('hidden');
+            document.getElementById('screen-stage1').classList.add('hidden');
+            document.getElementById('screen-stage2').classList.add('hidden');
+            document.getElementById('screen-stage3').classList.add('hidden');
+            document.getElementById('screen-boss').classList.add('hidden');
+            document.getElementById('screen-gameover').classList.add('hidden');
+            document.getElementById('screen-victory').classList.add('hidden');
+            document.getElementById('game-hud').classList.add('hidden');
+
+            // 타이머 정지들
+            clearInterval(state.s2MonsterInterval);
+            clearInterval(state.p2BombInterval);
+            clearInterval(state.p3TimerInterval);
+            clearInterval(state.bossTimerInterval);
+
+            // 해당 화면 및 HUD 보이기
+            if (screenName === 'intro') {
+                document.getElementById('screen-intro').classList.remove('hidden');
+            } else if (screenName === 'gameover') {
+                document.getElementById('screen-gameover').classList.remove('hidden');
+            } else if (screenName === 'victory') {
+                document.getElementById('screen-victory').classList.remove('hidden');
+                document.getElementById('record-time').innerText = `${state.gameTime}초`;
+                document.getElementById('record-combo').innerText = `${state.maxCombo} COMBO`;
+            } else {
+                document.getElementById('game-hud').classList.remove('hidden');
+                document.getElementById(`screen-${screenName}`).classList.remove('hidden');
+                updateHUD();
+                
+                // 화면별 진입 이벤트 설정
+                if (screenName === 'stage1') {
+                    initStage1();
+                } else if (screenName === 'stage2') {
+                    initStage2();
+                } else if (screenName === 'stage3') {
+                    initStage3();
+                } else if (screenName === 'boss') {
+                    initBoss();
+                }
+            }
+        }
+
+        function updateHUD() {
+            // HP 업데이트
+            document.getElementById('hud-hp-bar').style.width = `${state.playerHP}%`;
+            document.getElementById('hud-hp-text').innerText = `${state.playerHP}/100`;
+
+            // 콤보 업데이트
+            const comboBadge = document.getElementById('hud-combo-badge');
+            if (state.combo > 0) {
+                comboBadge.classList.remove('hidden');
+                document.getElementById('hud-combo-val').innerText = state.combo;
+            } else {
+                comboBadge.classList.add('hidden');
+            }
+
+            // 보호막 버프 텍스트
+            const barrierStatus = document.getElementById('hud-barrier-status');
+            if (barrierStatus) {
+                if (state.barrierActive) {
+                    barrierStatus.innerText = "🛡️ 괄호 보호막 완비";
+                    barrierStatus.className = "text-xs font-black text-purple-400";
+                } else {
+                    barrierStatus.innerText = "없음";
+                    barrierStatus.className = "text-xs font-black text-gray-500";
+                }
+            }
+
+            // HUD 타이틀 분기 처리
+            const hudTitle = document.getElementById('hud-title');
+            const hudSubtitle = document.getElementById('hud-subtitle');
+            if (state.screen === 'stage1') {
+                hudTitle.innerText = "1층 : 음수의 방 (마이너스의 저주)";
+                hudSubtitle.innerText = "차가운 얼음 동굴에서 정확히 -7을 만들어 탈출문을 가동하십시오.";
+            } else if (state.screen === 'stage2') {
+                hudTitle.innerText = "2층 : 분수와 소수의 미로 (통분의 연구실)";
+                hudSubtitle.innerText = "분모를 완벽히 통분해 절벽의 양측을 결합하고, 0.25 소수 몬스터를 격파하십시오.";
+            } else if (state.screen === 'stage3') {
+                hudTitle.innerText = "3층 : 절댓값의 방 (수평 거울의 시련)";
+                hudSubtitle.innerText = "부호와 무관하게 원점으로부터의 거리(절댓값)만을 재는 저울의 수평을 맞추십시오.";
+            } else if (state.screen === 'boss') {
+                hudTitle.innerText = "최종 제로킹 보스방";
+                hudSubtitle.innerText = "모든 연산 기술과 반사신경을 총동원해 승리하십시오!";
+            }
+        }
+
+        function handleHurt(amount) {
+            if (state.barrierActive) {
+                state.barrierActive = false;
+                state.combo = 0;
+                sounds.playTone(400, 'square', 0.2);
+                addAlert("🛡️ 보호막이 피해를 완벽히 흡수했습니다!", "info");
+                updateHUD();
+                return;
+            }
+            state.playerHP -= amount;
+            if (state.playerHP <= 0) {
+                state.playerHP = 0;
+                sounds.playHurt();
+                setScreen('gameover');
+                return;
+            }
+            state.combo = 0;
+            sounds.playHurt();
+            updateHUD();
+            addAlert(`💥 데미지 -${amount}!`, "danger");
+        }
+
+        function incrementCombo() {
+            state.combo++;
+            if (state.combo > state.maxCombo) {
+                state.maxCombo = state.combo;
+            }
+            if (state.combo === 3) {
+                sounds.playPowerUp();
+                addAlert("⚡ 3연속 콤보 돌풍! 이동 속도 버프 획득!", "success");
+            }
+            if (state.combo === 5) {
+                sounds.playPowerUp();
+                state.barrierActive = true;
+                addAlert("🛡️ 5연속 콤보 달성! 오답 1회를 가드하는 '괄호 보호막' 생성!", "success");
+            }
+            updateHUD();
+        }
+
+        function showManual() {
+            sounds.playTone(440, 'sine', 0.2);
+            alert("👥 [협동 매뉴얼]\n\n이 게임은 친구들과 함께 풀이 힌트를 속삭여 줄 때 훨씬 재미있습니다.\n\n- 1층: -7을 향해 발판을 밟아야 하는 동료의 수식을 미리 메모해 알려주세요!\n- 2층: 다리를 고정하기 위해 분수 연산을 가이딩 해주세요.\n- 3층: 거울의 대칭성 및 절댓값을 활용해 무게를 통제하세요.");
+        }
+
+        function startGame() {
+            sounds.playSuccess();
+            state.playerHP = 100;
+            state.combo = 0;
+            state.maxCombo = 0;
+            state.gameTime = 0;
+            state.barrierActive = false;
+            
+            // 메인 게임 통합 타이머 가동
+            clearInterval(state.gameTimerInterval);
+            state.gameTimerInterval = setInterval(() => {
+                if (state.screen !== 'intro' && state.screen !== 'gameover' && state.screen !== 'victory') {
+                    state.gameTime++;
+                }
+            }, 1000);
+
+            // 슬로우 모션 충전 루프
+            clearInterval(state.slowMoInterval);
+            state.slowMoInterval = setInterval(() => {
+                if (!state.slowMoActive && state.slowMoGauge < 100) {
+                    state.slowMoGauge = Math.min(100, state.slowMoGauge + 5);
+                    updateSlowMoButton();
+                }
+            }, 1000);
+
+            setScreen('stage1');
+        }
+
+        function restartGame() {
+            setScreen('intro');
+        }
+
+        const stage1Tiles = [
+            [+3, -5, +2, -2],
+            [-4, +1, -7, +5],
+            [+2, -5, +4, -3],
+            [-6, +3, -2, '뺄셈의 덫']
+        ];
+
+        function initStage1() {
+            state.s1Sum = 0;
+            state.s1Trap = false;
+            state.s1Path = [];
+            renderS1Grid();
+        }
+
+        function resetStage1() {
+            initStage1();
+            sounds.playTone(300, 'sine', 0.2);
+            addAlert("처음 위치로 초기화되었습니다.", "info");
+        }
+
+        function renderS1Grid() {
+            const gridContainer = document.getElementById('s1-grid');
+            gridContainer.innerHTML = '';
+
+            // 실시간 상태 보드 업데이트
+            document.getElementById('s1-sum').innerText = state.s1Sum;
+            const trapStatus = document.getElementById('s1-trap-status');
+            if (state.s1Trap) {
+                trapStatus.innerText = "예 (- 부호 반전!)";
+                trapStatus.className = "text-yellow-400 font-bold animate-pulse";
+            } else {
+                trapStatus.innerText = "아니오";
+                trapStatus.className = "text-gray-500";
+            }
+
+            stage1Tiles.forEach((row, r) => {
+                row.forEach((val, c) => {
+                    const tileId = `${r}-${c}`;
+                    const isVisited = state.s1Path.includes(tileId);
+
+                    const btn = document.createElement('button');
+                    btn.disabled = isVisited;
+                    btn.onclick = () => handleS1Tile(val, r, c);
+
+                    let bgStyle = '';
+                    if (isVisited) {
+                        bgStyle = 'bg-gray-800 border-gray-700 text-gray-600 scale-95';
+                    } else if (val === '뺄셈의 덫') {
+                        bgStyle = 'bg-gradient-to-br from-yellow-600 to-amber-700 hover:from-yellow-500 hover:to-amber-600 border-yellow-500/50 text-white shadow-md';
+                    } else if (val < 0) {
+                        bgStyle = 'bg-gradient-to-br from-cyan-900/60 to-blue-900/60 hover:from-cyan-800 hover:to-blue-800 border-cyan-500/30 text-cyan-200';
+                    } else {
+                        bgStyle = 'bg-gradient-to-br from-purple-900/60 to-pink-900/60 hover:from-purple-800 hover:to-pink-800 border-purple-500/30 text-purple-200';
+                    }
+
+                    btn.className = `aspect-square rounded-xl font-bold flex flex-col items-center justify-center transition-all duration-200 border text-xs sm:text-sm ${bgStyle}`;
+                    
+                    const emoji = (val === '뺄셈의 덫') ? '🕸️' : (val < 0 ? '❄️' : '🔥');
+                    const label = (val === '뺄셈의 덫') ? '뺄셈의 덫' : `${val >= 0 ? '+' : ''}${val}`;
+
+                    btn.innerHTML = `<span class="text-lg mb-1">${emoji}</span><span class="font-mono">${label}</span>`;
+                    gridContainer.appendChild(btn);
+                });
+            });
+        }
+
+        function handleS1Tile(val, r, c) {
+            const tileId = `${r}-${c}`;
+            state.s1Path.push(tileId);
+            sounds.playTone(400, 'square', 0.1);
+
+            if (val === '뺄셈의 덫') {
+                state.s1Trap = true;
+                sounds.playTone(600, 'sawtooth', 0.3);
+                addAlert("🕸️ 뺄셈의 덫 발동! 다음 밟는 수의 부호가 곱하기 성질로 인해 뒤집힙니다!", "warning");
+                renderS1Grid();
+                return;
+            }
+
+            let diff = val;
+            if (state.s1Trap) {
+                diff = -val;
+                state.s1Trap = false;
+                addAlert(`빼기의 덫 효과! -(${val >= 0 ? '+' : ''}${val}) = ${diff >= 0 ? '+' : ''}${diff}`, "success");
+            } else {
+                addAlert(`${val >= 0 ? '+' : ''}${val} 만큼 더해졌습니다.`, "info");
+            }
+
+            state.s1Sum += diff;
+
+            // 정답 조건 체크 (-7인가?)
+            if (state.s1Sum === -7) {
+                sounds.playSuccess();
+                addAlert("🔑 자물쇠를 해제했습니다! 2층으로 진입합니다.", "success");
+                setTimeout(() => {
+                    setScreen('stage2');
+                }, 1500);
+            } else {
+                renderS1Grid();
+            }
+        }
+
+        function initStage2() {
+            state.s2Denom = 6;
+            state.s2LeftNum = 0;
+            state.s2RightNum = 0;
+            state.s2MonsterActive = true;
+            state.s2MonsterProgress = 0;
+            state.s2ChestOpened = false;
+
+            updateS2FractionUI();
+            renderS2Monster();
+
+            // 몬스터 접근 자동 스케줄 가동
+            clearInterval(state.s2MonsterInterval);
+            state.s2MonsterInterval = setInterval(() => {
+                if (state.screen === 'stage2' && state.s2MonsterActive) {
+                    state.s2MonsterProgress += 5;
+                    if (state.s2MonsterProgress >= 100) {
+                        handleHurt(20);
+                        state.s2MonsterProgress = 0;
+                    }
+                    renderS2Monster();
+                }
+            }, 1000);
+        }
+
+        function setS2Denom(d) {
+            state.s2Denom = d;
+            sounds.playTone(350, 'sine', 0.1);
+            updateS2FractionUI();
+        }
+
+        function adjustS2Left(amount) {
+            state.s2LeftNum += amount;
+            sounds.playTone(300, 'sine', 0.05);
+            updateS2FractionUI();
+        }
+
+        function adjustS2Right(amount) {
+            state.s2RightNum += amount;
+            sounds.playTone(300, 'sine', 0.05);
+            updateS2FractionUI();
+        }
+
+        function updateS2FractionUI() {
+            // 버튼들 활성 상태 연출
+            [3, 4, 6, 12].forEach(d => {
+                const btn = document.getElementById(`btn-denom-${d}`);
+                if (state.s2Denom === d) {
+                    btn.className = "py-2 rounded-lg font-bold font-mono text-sm bg-cyan-500 text-black";
+                } else {
+                    btn.className = "py-2 rounded-lg font-bold font-mono text-sm bg-gray-800 text-gray-400 hover:bg-gray-700";
+                }
+            });
+
+            document.getElementById('s2-left-num').innerText = state.s2LeftNum;
+            document.getElementById('s2-right-num').innerText = state.s2RightNum;
+
+            document.getElementById('s2-left-fraction').innerText = `${state.s2LeftNum} / ${state.s2Denom}`;
+            document.getElementById('s2-right-fraction').innerText = `${state.s2RightNum} / ${state.s2Denom}`;
+        }
+
+        function renderS2Monster() {
+            const container = document.getElementById('s2-monster-container');
+            if (state.s2MonsterActive) {
+                container.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-red-400 font-bold text-sm">👾 실시간 소수 몬스터 습격</h4>
+                        <span class="text-xs bg-red-950 text-red-400 px-2 py-1 rounded border border-red-800 font-bold">DANGER</span>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="bg-gray-950 p-4 rounded-xl text-center space-y-2 border border-red-900/20">
+                            <span class="text-4xl animate-bounce block">👻</span>
+                            <span class="text-xl font-bold font-mono text-red-300">소수점 슬라임 "0.25"</span>
+                            <p class="text-xs text-gray-400">몬스터가 계속해서 당신의 방어기지로 접근 중입니다!</p>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-xs font-bold text-gray-400">
+                                <span>접근도</span>
+                                <span class="text-red-400 font-mono">${state.s2MonsterProgress}%</span>
+                            </div>
+                            <div class="bg-gray-800 h-3 rounded-full overflow-hidden border border-red-950">
+                                <div class="bg-red-600 h-full transition-all duration-300" style="width: ${state.s2MonsterProgress}%;"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <span class="text-xs text-gray-400 block">💡 알맞은 분수 변환 필터를 쏘아 사멸시키십시오:</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="shootS2Filter('1/2')" class="py-2 bg-gray-800 hover:bg-gray-700 text-white font-mono text-xs rounded-lg transition border border-gray-700">필터: 1/2</button>
+                                <button onclick="shootS2Filter('1/4')" class="py-2 bg-gray-800 hover:bg-gray-700 text-white font-mono text-xs rounded-lg transition border border-gray-700">필터: 1/4</button>
+                                <button onclick="shootS2Filter('3/4')" class="py-2 bg-gray-800 hover:bg-gray-700 text-white font-mono text-xs rounded-lg transition border border-gray-700">필터: 3/4</button>
+                                <button onclick="shootS2Filter('1/5')" class="py-2 bg-gray-800 hover:bg-gray-700 text-white font-mono text-xs rounded-lg transition border border-gray-700">필터: 1/5</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-green-950/40 p-6 rounded-xl text-center space-y-3 border border-green-800/40">
+                        <span class="text-4xl block">📦</span>
+                        <span class="text-lg font-bold text-green-300">몬스터 퇴치 완수!</span>
+                        <p class="text-xs text-gray-400">몬스터가 지니던 [비밀의 열쇠]를 확보하여 고정 기어상자를 열었습니다.</p>
+                        <div class="inline-block px-3 py-1 bg-green-900/60 border border-green-500/50 rounded text-green-200 text-xs font-bold">
+                            🔐 자물쇠 결합 권한 획득
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function shootS2Filter(frac) {
+            if (frac === '1/4') {
+                sounds.playSuccess();
+                state.s2MonsterActive = false;
+                state.s2ChestOpened = true;
+                addAlert("🎯 정답! 0.25 소수 몬스터를 1/4 분수로 완벽 변환하여 소멸시켰습니다!", "success");
+                incrementCombo();
+                renderS2Monster();
+            } else {
+                sounds.playTone(200, 'sawtooth', 0.3);
+                addAlert("⚠️ 오답입니다! 0.25는 분수로 몇 분의 몇일까요?", "danger");
+                handleHurt(10);
+            }
+        }
+
+        function checkS2Bridge() {
+            // 왼쪽 목표: -1/2 = -3/6
+            // 오른쪽 목표: -2/3 = -4/6
+            if (state.s2Denom === 6 && state.s2LeftNum === -3 && state.s2RightNum === -4) {
+                if (!state.s2ChestOpened) {
+                    addAlert("🔒 절벽은 계산이 일치하나, 상자 열쇠를 구하지 못했습니다. 소수 몬스터를 처치하세요!", "warning");
+                    return;
+                }
+                sounds.playSuccess();
+                addAlert("🌉 통분 다리가 완벽하게 결합되었습니다! 3층으로 올라갑니다.", "success");
+                setTimeout(() => setScreen('stage3'), 1500);
+            } else {
+                sounds.playTone(200, 'square', 0.2);
+                addAlert(`현재 구조: [${state.s2LeftNum}/${state.s2Denom}] 과 [${state.s2RightNum}/${state.s2Denom}] 은 완벽하게 홈에 고정되지 않습니다.`, "warning");
+            }
+        }
+
+        function initStage3() {
+            state.s3Gems = [
+                { id: 1, val: 8, text: "+8" },
+                { id: 2, val: -5, text: "-5" },
+                { id: 3, val: -3, text: "-3" },
+                { id: 4, val: 6, text: "+6" },
+                { id: 5, val: -2, text: "-2" },
+                { id: 6, val: 10, text: "+10" },
+            ];
+            state.scaleLeft = 8;
+            state.scaleRight = [];
+            state.mirrorResult = null;
+
+            renderS3GemsUI();
+        }
+
+        function renderS3GemsUI() {
+            // 우측 저울에 놓인 총 절댓값 무게 산출
+            const rightWeight = state.scaleRight.reduce((acc, gem) => acc + Math.abs(gem.val), 0);
+            document.getElementById('s3-right-weight-text').innerText = rightWeight;
+
+            // 저울 눈금 기울기 시각 효과
+            const delta = state.scaleLeft - rightWeight;
+            const rotDeg = delta * 3; // 차이에 따라 각도 꺾임
+            document.getElementById('s3-scale-bar').style.transform = `rotate(${rotDeg}deg)`;
+
+            // 저울 위 보석 렌더링
+            const scaleGemsContainer = document.getElementById('s3-scale-gems');
+            scaleGemsContainer.innerHTML = '';
+            if (state.scaleRight.length === 0) {
+                scaleGemsContainer.innerHTML = '<span class="text-xs text-gray-500 py-1">이곳에 보석을 적재하세요.</span>';
+            } else {
+                state.scaleRight.forEach(gem => {
+                    const btn = document.createElement('button');
+                    btn.onclick = () => removeGemFromRight(gem);
+                    btn.className = "px-3 py-1.5 bg-green-950/80 hover:bg-red-900/60 border border-green-500 text-green-200 text-xs font-mono font-bold rounded transition";
+                    btn.innerHTML = `${gem.text} (절댓값 |${gem.val}|) ✖`;
+                    scaleGemsContainer.appendChild(btn);
+                });
+            }
+
+            // 가방 주머니 보석 렌더링
+            const bagGemsContainer = document.getElementById('s3-bag-gems');
+            bagGemsContainer.innerHTML = '';
+            state.s3Gems.forEach(gem => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "bg-gray-900 p-3 rounded-xl border border-gray-700 flex flex-col gap-2 items-center";
+                itemDiv.innerHTML = `
+                    <span class="font-mono font-extrabold text-white text-sm">${gem.text}</span>
+                    <div class="flex gap-1">
+                        <button onclick="placeGemOnRight(${gem.id})" class="px-2 py-1 bg-cyan-600 hover:bg-cyan-500 text-black text-[10px] font-bold rounded">저울 적재</button>
+                        <button onclick="applyMirrorInS3(${gem.id})" class="px-2 py-1 bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-bold rounded">거울 투영</button>
+                    </div>
+                `;
+                bagGemsContainer.appendChild(itemDiv);
+            });
+
+            // 거울 슬롯 렌더링
+            const mirrorSlot = document.getElementById('s3-mirror-slot');
+            if (state.mirrorResult) {
+                mirrorSlot.innerHTML = `
+                    <div class="text-center space-y-3">
+                        <div class="inline-block px-4 py-2 bg-purple-900/80 border border-purple-500 rounded-lg text-lg font-black font-mono animate-pulse">
+                            ${state.mirrorResult.text}
+                        </div>
+                        <p class="text-xs text-green-400 font-bold">✓ 거울 투과 완료!</p>
+                        <button onclick="takeMirroredGem()" class="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-black text-xs font-bold rounded">가방에 수령하기</button>
+                    </div>
+                `;
+            } else {
+                mirrorSlot.innerHTML = `<div class="text-center text-gray-500 text-xs">보석 목록에서 [거울 투영]을 눌러보세요.</div>`;
+            }
+        }
+
+        function placeGemOnRight(id) {
+            const gem = state.s3Gems.find(g => g.id === id);
+            if (!gem) return;
+            state.scaleRight.push(gem);
+            state.s3Gems = state.s3Gems.filter(g => g.id !== id);
+            sounds.playTone(500, 'sine', 0.1);
+            renderS3GemsUI();
+        }
+
+        function removeGemFromRight(gem) {
+            state.s3Gems.push(gem);
+            state.scaleRight = state.scaleRight.filter(g => g.id !== gem.id);
+            sounds.playTone(300, 'sine', 0.1);
+            renderS3GemsUI();
+        }
+
+        function applyMirrorInS3(id) {
+            const gem = state.s3Gems.find(g => g.id === id);
+            if (!gem) return;
+            const invertedVal = -gem.val;
+            state.mirrorResult = {
+                id: gem.id,
+                val: invertedVal,
+                text: invertedVal >= 0 ? `+${invertedVal}` : `${invertedVal}`
+            };
+            sounds.playTone(800, 'sine', 0.3);
+            addAlert(`🪞 거울이 빛을 내뿜으며 부호를 반전시켰습니다: ${gem.val} -> ${invertedVal}`, "success");
+            renderS3GemsUI();
+        }
+
+        function takeMirroredGem() {
+            if (!state.mirrorResult) return;
+            state.s3Gems = state.s3Gems.map(g => g.id === state.mirrorResult.id ? state.mirrorResult : g);
+            state.mirrorResult = null;
+            renderS3GemsUI();
+        }
+
+        function checkS3Scale() {
+            const rightWeight = state.scaleRight.reduce((acc, gem) => acc + Math.abs(gem.val), 0);
+            if (rightWeight === state.scaleLeft) {
+                sounds.playSuccess();
+                addAlert("⚖️ 수평이 정확히 일치합니다! 절댓값의 마법 결계가 파괴되었습니다!", "success");
+                setTimeout(() => {
+                    setScreen('boss');
+                }, 1500);
+            } else {
+                sounds.playTone(250, 'sawtooth', 0.3);
+                addAlert(`저울 수평이 맞지 않습니다. (왼쪽: |${state.scaleLeft}|=8m, 오른쪽: ${rightWeight}m)`, "danger");
+                handleHurt(15);
+                renderS3GemsUI();
+            }
+        }
+
+        function initBoss() {
+            state.bossPhase = 1;
+            state.bossHP = 100;
+            state.timeLimit = 60;
+            state.slowMoGauge = 100;
+            state.slowMoActive = false;
+
+            updateBossHPBar();
+            loadBossPhaseUI();
+        }
+
+        function updateBossHPBar() {
+            document.getElementById('boss-hp-percentage').innerText = `${state.bossHP}%`;
+            document.getElementById('boss-hp-bar').style.width = `${state.bossHP}%`;
+        }
+
+        function loadBossPhaseUI() {
+            const phaseText = document.getElementById('boss-phase-text');
+            const container = document.getElementById('boss-phase-container');
+            container.innerHTML = '';
+
+            // 타이머 제거
+            clearInterval(state.p2BombInterval);
+            clearInterval(state.p3TimerInterval);
+            clearInterval(state.bossTimerInterval);
+
+            if (state.bossPhase === 1) {
+                phaseText.innerText = "Phase 1 / 4 : 보스의 계산 선공 피하기";
+                container.innerHTML = `
+                    <div class="bg-gray-900 p-6 rounded-2xl border border-red-900/40 text-center space-y-6">
+                        <div>
+                            <span class="text-xs bg-red-950 text-red-400 border border-red-800 px-3 py-1 rounded font-bold uppercase">보스의 강력한 선제 공격!</span>
+                            <h3 class="text-2xl font-black mt-3 text-white">보스가 공중에 띄운 계산식의 정답 수치 구체를 흡수하십시오.</h3>
+                            <div class="text-3xl font-extrabold text-cyan-400 mt-4 font-mono bg-gray-950 py-3 rounded-xl border border-cyan-900/30 max-w-md mx-auto">
+                                ${state.p1Question.q} = ?
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
+                            ${state.p1Options.map(opt => `
+                                <button onclick="handleP1Answer(${opt})" class="py-4 bg-gradient-to-br from-gray-800 to-gray-900 hover:from-cyan-900/50 hover:to-blue-900/50 border border-gray-700 hover:border-cyan-500 rounded-2xl text-lg font-black font-mono transition">
+                                    ${opt >= 0 ? `+${opt}` : opt}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <p class="text-xs text-gray-500">⚠️ 잘못된 정답 구체를 받으면 강력한 연산 부작용 피해가 발생합니다!</p>
+                    </div>
+                `;
+            } else if (state.bossPhase === 2) {
+                phaseText.innerText = "Phase 2 / 4 : 분수 시한폭탄 긴급 해제";
+                state.p2BombTimer = 15;
+                state.p2UserDenom = 1;
+
+                container.innerHTML = `
+                    <div class="bg-gray-900 p-6 rounded-2xl border border-yellow-900/40 space-y-6">
+                        <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                            <h4 class="text-yellow-400 font-bold text-sm">💣 시한 폭탄 발동 : "통분하지 않으면 터진다!"</h4>
+                            <span id="p2-timer-badge" class="text-xl font-bold font-mono text-red-500 animate-pulse">⏰ 15s</span>
+                        </div>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            보스가 소환한 <span class="text-white font-bold font-mono">1/4</span> 폭탄과 <span class="text-white font-bold font-mono">1/6</span> 폭탄을 무력화하기 위해 공통 분모가 되는 최소공배수 발판을 활성화해야 합니다!
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-950 p-4 rounded-xl border border-gray-800">
+                            <div class="space-y-3">
+                                <label class="text-xs text-gray-400 block">1. 보스방 사방의 발판 중 알맞은 '통분 공배수 발판' 선택</label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    ${[6, 8, 12, 24].map(denom => `
+                                        <button id="btn-p2-denom-${denom}" onclick="setS2BossDenom(${denom})" class="py-2 rounded font-mono font-bold text-xs bg-gray-800 text-gray-400 hover:bg-gray-700">
+                                            [분모 ${denom}] 발판 밟기
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            <div class="space-y-4 flex flex-col justify-center">
+                                <div class="flex justify-around items-center text-center">
+                                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 min-w-[100px]">
+                                        <div class="text-[10px] text-gray-400">1/4 폭탄</div>
+                                        <div id="p2-left-txt" class="text-lg font-bold font-mono mt-1 text-cyan-300">1 / 4</div>
+                                    </div>
+                                    <span class="text-xl">🤝</span>
+                                    <div class="bg-gray-900 p-3 rounded-lg border border-gray-700 min-w-[100px]">
+                                        <div class="text-[10px] text-gray-400">1/6 폭탄</div>
+                                        <div id="p2-right-txt" class="text-lg font-bold font-mono mt-1 text-cyan-300">1 / 6</div>
+                                    </div>
+                                </div>
+                                <button onclick="defuseS2Bomb()" class="w-full py-2.5 bg-gradient-to-r from-red-600 to-yellow-500 hover:from-red-500 hover:to-yellow-400 text-black font-extrabold text-sm rounded-lg shadow">
+                                    💥 통합 레이저 발사! (폭탄 무력화)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // 시한폭탄 타이머 구동
+                state.p2BombInterval = setInterval(() => {
+                    if (state.screen === 'boss' && state.bossPhase === 2) {
+                        const step = state.slowMoActive ? 0.5 : 1;
+                        state.p2BombTimer -= step;
+                        if (state.p2BombTimer <= 0) {
+                            sounds.playExplosion();
+                            handleHurt(30);
+                            state.p2BombTimer = 15;
+                            addAlert("💥 분수 시한폭탄 대폭발! 데미지 30!", "danger");
+                        }
+                        const timerBadge = document.getElementById('p2-timer-badge');
+                        if (timerBadge) {
+                            timerBadge.innerText = `⏰ ${Math.ceil(state.p2BombTimer)}s`;
+                        }
+                    }
+                }, 1000);
+            } else if (state.bossPhase === 3) {
+                phaseText.innerText = "Phase 3 / 4 : 자릿수 맞추기 레이저";
+                state.p3Timer = 10;
+                state.p3PlayerSize = 1.0;
+
+                container.innerHTML = `
+                    <div class="bg-gray-900 p-6 rounded-2xl border border-red-900/40 space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-red-400 font-bold text-sm">⚡ 극초정밀 레이저 소환 : "자릿수를 맞춰라!"</h4>
+                            <span id="p3-timer-badge" class="text-sm bg-red-950 text-red-500 px-3 py-1 rounded border border-red-900 animate-pulse font-mono font-bold">CHARGING: 10s</span>
+                        </div>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            보스가 화면 가로축 전체에 회피 불가 무적 장벽을 방출합니다. 장벽 중 안전 통과구는 단 <span class="text-white font-bold font-mono">0.01</span> 너비입니다! 소수점 기호를 흡수해 당신의 몸 크기 자릿수를 완벽하게 제어하십시오.
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                            <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 text-center flex flex-col justify-center items-center">
+                                <span class="text-[10px] text-gray-400 block mb-2">현재 나의 캐릭터 크기 (자릿수)</span>
+                                <span id="p3-size-display" class="text-3xl font-black font-mono text-cyan-400 tracking-wider">1.0</span>
+                                <span id="p3-size-desc" class="text-xs text-gray-500 mt-2">정수 상태 (거대함)</span>
+                            </div>
+                            <div class="md:col-span-2 space-y-3">
+                                <span class="text-xs text-gray-400 block">바닥에 떨어진 소수점(⋅) 아이템 흡수</span>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <button id="btn-p3-sz-1" onclick="setP3Size(1.0)" class="py-3 rounded-xl font-bold transition font-mono bg-cyan-500 text-black">기본 크기 (1.0)</button>
+                                    <button id="btn-p3-sz-01" onclick="setP3Size(0.1)" class="py-3 rounded-xl font-bold transition font-mono bg-gray-800 hover:bg-gray-700 text-gray-300">소수점 1개 (0.1)</button>
+                                    <button id="btn-p3-sz-001" onclick="setP3Size(0.01)" class="py-3 rounded-xl font-bold transition font-mono bg-gray-800 hover:bg-gray-700 text-gray-300">소수점 2개 (0.01)</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                state.p3TimerInterval = setInterval(() => {
+                    if (state.screen === 'boss' && state.bossPhase === 3) {
+                        const step = state.slowMoActive ? 0.5 : 1;
+                        state.p3Timer -= step;
+                        if (state.p3Timer <= 0) {
+                            sounds.playLaser();
+                            if (state.p3PlayerSize === state.p3LaserGap) {
+                                sounds.playSuccess();
+                                addAlert("⚡ 레이저의 미세한 0.01 틈새로 무사히 관통했습니다!", "success");
+                                state.bossHP -= 20;
+                                updateBossHPBar();
+                                state.bossPhase = 4;
+                                loadBossPhaseUI();
+                            } else {
+                                handleHurt(35);
+                                addAlert(`💥 크기가 일치하지 않아 충돌 피해를 입었습니다! (안전 틈: ${state.p3LaserGap}, 내 크기: ${state.p3PlayerSize})`, "danger");
+                                state.p3Timer = 10; // 재기회
+                            }
+                        }
+                        const badge = document.getElementById('p3-timer-badge');
+                        if (badge) {
+                            badge.innerText = `CHARGING: ${Math.ceil(state.p3Timer)}s`;
+                        }
+                    }
+                }, 1000);
+            } else if (state.bossPhase === 4) {
+                phaseText.innerText = "Phase 4 / 4 : 10단 결계 최종 고속 해제";
+                state.timeLimit = 60;
+                state.p4Index = 0;
+                renderP4Question();
+
+                state.bossTimerInterval = setInterval(() => {
+                    if (state.screen === 'boss' && state.bossPhase === 4) {
+                        const step = state.slowMoActive ? 0.5 : 1;
+                        state.timeLimit -= step;
+                        if (state.timeLimit <= 0) {
+                            sounds.playExplosion();
+                            setScreen('gameover');
+                        }
+                        const limitBadge = document.getElementById('p4-timer-limit');
+                        if (limitBadge) {
+                            limitBadge.innerText = `${Math.ceil(state.timeLimit)}초`;
+                        }
+                    }
+                }, 1000);
+            }
+        }
+
+        function handleP1Answer(ans) {
+            if (ans === state.p1Question.ans) {
+                sounds.playSuccess();
+                state.bossHP -= 15;
+                updateBossHPBar();
+                incrementCombo();
+                addAlert("🎯 정확히 정답인 에너지 수식탄을 무기력하게 흡수했습니다!", "success");
+                state.bossPhase = 2;
+                loadBossPhaseUI();
+            } else {
+                handleHurt(15);
+                addAlert("❌ 잘못된 수식 구체를 흡수하여 치명적인 시스템 반동을 받았습니다!", "danger");
+            }
+        }
+
+        function setS2BossDenom(denom) {
+            state.p2UserDenom = denom;
+            sounds.playTone(300, 'sine', 0.1);
+
+            // 버튼 색상 업데이트
+            [6, 8, 12, 24].forEach(d => {
+                const btn = document.getElementById(`btn-p2-denom-${d}`);
+                if (btn) {
+                    if (d === denom) {
+                        btn.className = "py-2 rounded font-mono font-bold text-xs bg-yellow-500 text-black";
+                    } else {
+                        btn.className = "py-2 rounded font-mono font-bold text-xs bg-gray-800 text-gray-400 hover:bg-gray-700";
+                    }
+                }
+            });
+
+            // 시각 변환 결과 안내
+            const leftTxt = document.getElementById('p2-left-txt');
+            const rightTxt = document.getElementById('p2-right-txt');
+            if (denom === 12) {
+                leftTxt.innerText = "3 / 12";
+                rightTxt.innerText = "2 / 12";
+            } else {
+                leftTxt.innerText = `... / ${denom}`;
+                rightTxt.innerText = `... / ${denom}`;
+            }
+        }
+
+        function defuseS2Bomb() {
+            if (state.p2UserDenom === state.p2DenomTarget) {
+                sounds.playSuccess();
+                state.bossHP -= 25;
+                updateBossHPBar();
+                incrementCombo();
+                addAlert("💣 분수 공배수 시한폭탄 완벽 무력화! 보스에게 강렬한 역전 격타!", "success");
+                state.bossPhase = 3;
+                loadBossPhaseUI();
+            } else {
+                sounds.playTone(200, 'sawtooth', 0.3);
+                addAlert("⚠️ 분모 통분이 일치하지 않아 가속 융합 레이저가 발사되지 못했습니다!", "danger");
+            }
+        }
+
+        function setP3Size(sz) {
+            state.p3PlayerSize = sz;
+            sounds.playTone(sz === 1.0 ? 300 : sz === 0.1 ? 450 : 600, 'sine', 0.1);
+
+            document.getElementById('p3-size-display').innerText = sz;
+            
+            const desc = document.getElementById('p3-size-desc');
+            if (sz === 1.0) desc.innerText = "정수 상태 (거대함)";
+            else if (sz === 0.1) desc.innerText = "소수 첫째자리 (보통)";
+            else desc.innerText = "소수 둘째자리 (매우 작음)";
+
+            // 버튼 불 켜기
+            const mapIds = { 1.0: 'btn-p3-sz-1', 0.1: 'btn-p3-sz-01', 0.01: 'btn-p3-sz-001' };
+            Object.keys(mapIds).forEach(key => {
+                const btn = document.getElementById(mapIds[key]);
+                if (parseFloat(key) === sz) {
+                    btn.className = "py-3 rounded-xl font-bold transition font-mono bg-cyan-500 text-black";
+                } else {
+                    btn.className = "py-3 rounded-xl font-bold transition font-mono bg-gray-800 hover:bg-gray-700 text-gray-300";
+                }
+            });
+        }
+
+        function renderP4Question() {
+            const container = document.getElementById('boss-phase-container');
+            const currentQ = state.p4Questions[state.p4Index];
+            const difficultyLabel = currentQ.type === 'basic' ? "🟢 기초" : currentQ.type === 'mid' ? "🟡 중급" : currentQ.type === 'adv' ? "🔴 고급" : "🏆 최종관문";
+
+            container.innerHTML = `
+                <div class="bg-gray-900 p-6 rounded-2xl border border-purple-900/40 space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-2 border-b border-gray-800 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-purple-900 text-purple-300 border border-purple-800 px-3 py-1 rounded font-mono font-bold text-xs animate-pulse">결계 ${state.p4Index + 1} / 10</span>
+                            <span class="text-gray-400 text-xs">난이도: ${difficultyLabel}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-400">남은 시간</span>
+                            <span id="p4-timer-limit" class="text-xl font-black font-mono text-red-500">${Math.ceil(state.timeLimit)}초</span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-950 p-6 rounded-xl border border-purple-950 text-center">
+                        <h3 class="text-xl sm:text-2xl font-black font-mono tracking-wide text-cyan-300">
+                            ${currentQ.q}
+                        </h3>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex gap-2">
+                            <input id="p4-answer-input" type="text" placeholder="답안을 입력하세요 (예: -4, 8, -3/2)" class="flex-1 px-4 py-3 bg-gray-950 border border-gray-700 focus:border-cyan-500 rounded-xl text-white font-mono focus:outline-none" onkeydown="handleP4InputKey(event)">
+                            <button onclick="submitP4Answer()" class="px-6 py-3 bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold rounded-xl transition">제출</button>
+                        </div>
+                        <span class="text-[10px] text-gray-500 block">💡 엔터키를 쳐도 빠르게 즉시 제출이 가동됩니다!</span>
+                    </div>
+                </div>
+            `;
+            setTimeout(() => {
+                const inp = document.getElementById('p4-answer-input');
+                if (inp) inp.focus();
+            }, 100);
+        }
+
+        function handleP4InputKey(e) {
+            if (e.key === 'Enter') {
+                submitP4Answer();
+            }
+        }
+
+        function submitP4Answer() {
+            const currentQ = state.p4Questions[state.p4Index];
+            const userInp = document.getElementById('p4-answer-input').value.trim();
+
+            if (userInp === String(currentQ.a)) {
+                sounds.playSuccess();
+                incrementCombo();
+                state.bossHP = Math.max(0, state.bossHP - 10);
+                updateBossHPBar();
+
+                if (state.p4Index + 1 >= state.p4Questions.length) {
+                    sounds.playExplosion();
+                    setScreen('victory');
+                } else {
+                    state.p4Index++;
+                    addAlert(`🔑 ${state.p4Index}번째 연산 결계 분쇄 완료!`, "success");
+                    renderP4Question();
+                }
+            } else {
+                handleHurt(10);
+                addAlert("⚠️ 오답입니다! 결계 해제 실패. 힌트: 부호와 연산 우선순위(곱셈 우선)를 차근차근 점검해보세요!", "danger");
+            }
+        }
+
+        function triggerSlowMo() {
+            if (state.slowMoGauge < 100) return;
+            sounds.playTone(800, 'sine', 0.5);
+            state.slowMoActive = true;
+            state.slowMoGauge = 0;
+            updateSlowMoButton();
+            addAlert("⏳ 시간 왜곡 가동! 보스 폭탄 및 타이머 속도가 5초간 대폭 정지합니다.", "warning");
+
+            setTimeout(() => {
+                state.slowMoActive = false;
+                updateSlowMoButton();
+                addAlert("⏳ 시간 왜곡 효과가 종료되었습니다.", "info");
+            }, 5000);
+        }
+
+        function updateSlowMoButton() {
+            const btn = document.getElementById('btn-slowmo');
+            if (btn) {
+                if (state.slowMoActive) {
+                    btn.className = "w-full py-2 rounded-lg font-bold text-xs transition bg-yellow-500 text-black animate-pulse";
+                    btn.innerText = "⏳ 슬로우 가동 중!";
+                } else if (state.slowMoGauge >= 100) {
+                    btn.className = "w-full py-2 rounded-lg font-bold text-xs transition bg-yellow-600 hover:bg-yellow-500 text-black";
+                    btn.innerText = "⚡ 슬로우 가능 (100%)";
+                    btn.disabled = false;
+                } else {
+                    btn.className = "w-full py-2 rounded-lg font-bold text-xs transition bg-gray-800 text-gray-500 cursor-not-allowed";
+                    btn.innerText = `⚡ 슬로우 가동 (${state.slowMoGauge}%)`;
+                    btn.disabled = true;
+                }
+            }
+        }
+
+        // 초기 앱 진입점
+        window.onload = function() {
+            // 인트로 화면 우선 진출
+            setScreen('intro');
+        };
+    </script>
+</body>
+</html>
