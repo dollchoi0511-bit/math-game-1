@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="ko">
+ <head><script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260819-01-6858913","C":{"Abril Fatface":"YACgEZbkUVE,0","Alfa Slab One":"YACgEYS9sJU,0","Anton":"YACgEcYqQ-A,0","Archivo":"YAHO2-t-jNE,0","Arial":"YAGyDvJ_4Ts,0","Bebas Neue":"YACgESME5ew,0","Bricolage Grotesque":"YAFyMcdwzpc,0","Canva Sans":"YAFLd8sKbwc,2","Caveat":"YALBs2ploWQ,0","Comic Sans MS":"YAHO2VMiyZo,0","Cormorant Garamond":"YAFdJhX-538,0","Courier New":"YAGzXiGs0_8,0","DM Sans":"YAD1aU3sLnI,0","DM Serif Display":"YAD1aYG82rc,0","Forum":"YACgEcnnqB4,0","Fraunces":"YAEul-FRQw4,0","Georgia":"YAGzXkO0pEM,0","Helvetica Neue":"YAFcf6CtJfI,0","Impact":"YAFcfnjI7Vk,0","Inter":"YAFdJvSyp_k,3","Iowan Old Style":"YAGNIFa8j9o,0","Jacques Francois":"YAHO2a5g66Q,0","JetBrains Mono":"YAFdJksXcAk,0","Libre Baskerville":"YACgEUFdPdA,0","Manrope":"YAHO2b2feC4,0","Merriweather":"YACgEXvHxxs,0","Montserrat":"YADLjI9qxTA,0","Nunito":"YACgEX8C5Gg,0","Oleo Script":"YACgEQQ14jI,0","Phantom Sans":"YAHO2E8Pb88,0","Playfair Display":"YACgEYmuCJE,0","Poppins":"YAFdJjbTu24,1","Press Start 2P":"YAFyGr-8pmQ,0","Quicksand":"YADWjpfPmdk,0","Raleway":"YACgEVg3xZg,0","Segoe UI":"YAHNdRD1Klw,0","Source Sans 3":"YAG4lO1Mj10,0","Spectral":"YAHO2rVUHIM,0","Times New Roman":"YAGzXW3gftg,0","Times":"YAGzXW3gftg,0","Ubuntu":"YACgERDU--Q,0","Work Sans":"YAGXhLOKv44,0","Yellowtail":"YACgEYG4kG4,0","ui-monospace":"YADlN8CFZ8Q,0","ui-sans-serif":"YACkoN-xg4g,0"}}');</script><script src="/_sdk/7949ff62d67710d5.telemetry_sdk.js" integrity="sha512-KIvXA82Di44YY/RH9/63A9MuTuavYgDFG8PfErJn7Wli4K0LAOk+coo/aPXk3+ZNL96nHh9VYD4PE+fLes+laQ=="></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>스탬프 관리</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Fraunces:wght@600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root { --ink:#4d4762; --muted:#817a94; --line:#e8e0ef; --plum:#7766a8; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:"DM Sans", sans-serif; color:var(--ink); }
+    button, input, select, textarea { font:inherit; }
+    button { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    button:disabled { cursor:not-allowed; opacity:.55; }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline:3px solid #b7a8ed; outline-offset:2px; }
+    .app-shell { width:100%; min-height:calc(100 * min(var(--vh, 1vh), 1vh)); background:radial-gradient(circle at 7% 5%,rgba(255,196,211,.92),transparent 25rem),radial-gradient(circle at 94% 8%,rgba(190,171,255,.9),transparent 29rem),linear-gradient(150deg,#fff7f5 0%,#f7f1ff 50%,#effbf5 100%); }
+    .topbar { border-bottom:2px solid rgba(194,174,226,.9); background:rgba(255,253,253,.9); backdrop-filter:blur(16px); }
+    .brand-font { font-family:Fraunces, serif; }
+    .soft-card { border:1px solid rgba(229,220,238,.9); box-shadow:0 10px 30px rgba(102,84,139,.08); }
+    .class-tab { border:1px solid #ded5ed; background:#fff; color:#756c87; transition:.18s ease; }
+    .class-tab:hover { transform:translateY(-1px); background:#f7f3ff; }
+    .class-tab.active { background:linear-gradient(135deg,#927fc4,#7663a8); color:#fff; border-color:#856fba; box-shadow:0 8px 18px rgba(115,91,169,.25); }
+    .summary-card { background:rgba(255,255,255,.79); border:1px solid rgba(230,220,239,.9); }
+    .summary-card:nth-child(2) { background:rgba(255,246,225,.76); }
+    .summary-card:nth-child(3) { background:rgba(230,248,237,.78); }
+    .summary-card:nth-child(4) { background:rgba(243,237,255,.82); }
+    .table-wrap { overflow:auto; background:rgba(255,255,255,.82); border:1px solid rgba(229,220,238,.9); }
+    table { border-collapse:separate; border-spacing:0; width:100%; min-width:740px; }
+    th { position:sticky; top:0; z-index:1; background:#f5efff; color:#786b91; font-size:.75rem; letter-spacing:.05em; }
+    th, td { padding:.8rem .9rem; text-align:left; white-space:nowrap; border-bottom:1px solid #f0eaf4; }
+    tbody tr { transition:background .16s; }
+    tbody tr:hover { background:#fcf9ff; }
+    .student-name { font-weight:700; color:#695498; text-decoration:underline; text-decoration-color:#d6c9f4; text-underline-offset:4px; }
+    .stamp-pill { display:inline-flex; align-items:center; justify-content:center; min-width:2.1rem; border-radius:999px; padding:.22rem .52rem; background:#eee9ff; color:#695498; font-size:.8rem; font-weight:700; }
+    .reward-ready { position:relative; background:linear-gradient(90deg,#fff8d8,#fff0c2)!important; box-shadow:inset 5px 0 0 #e7a62d,0 8px 24px rgba(224,161,35,.18); animation:rewardPulse 1.8s ease-in-out infinite; }
+    .reward-ready::after { content:"🎁 뽑기 가능"; display:inline-flex; margin-left:.55rem; padding:.18rem .5rem; border-radius:999px; background:#e7a62d; color:#4f3410; font-size:.72rem; font-weight:800; }
+    .reward-total { color:#b87512!important; text-shadow:0 0 14px rgba(231,166,45,.45); }
+    @keyframes rewardPulse { 0%,100% { box-shadow:inset 5px 0 0 #e7a62d,0 8px 24px rgba(224,161,35,.16); } 50% { box-shadow:inset 5px 0 0 #f08c24,0 8px 30px rgba(224,161,35,.42); } }
+    .modal-backdrop { position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center; padding:1rem; background:rgba(66,51,87,.36); backdrop-filter:blur(5px); }
+    .modal-box { width:min(780px,100%); max-height:calc(92 * min(var(--vh, 1vh), 1vh)); overflow:auto; background:#fffdfd; border:1px solid rgba(255,255,255,.9); border-radius:1.5rem; box-shadow:0 28px 80px rgba(67,47,96,.25); }
+    .hidden { display:none!important; }
+    .stamp-action { min-height:60px; border:1px solid #e0d6f0; background:#fff; color:#62507f; transition:.16s; }
+    .stamp-action:hover { background:#f6f1ff; transform:translateY(-1px); }
+    .stamp-action.minus { border-color:#f1ced8; color:#aa6073; }
+    .stamp-action.minus:hover { background:#fff5f7; }
+    .note-card { border-left:4px solid #f1bd72; background:#fffaf0; }
+    .log-card { border-left:4px solid #b9aae9; background:#faf8ff; }
+    .toast { position:fixed; bottom:1.25rem; left:50%; z-index:60; transform:translateX(-50%) translateY(140%); transition:.25s; background:#5b4b80; color:#fff; padding:.78rem 1.15rem; border-radius:999px; box-shadow:0 10px 30px rgba(65,47,94,.22); }
+    .toast.show { transform:translateX(-50%) translateY(0); }
+    .pastel-input { border:1px solid #ded4e8; background:#fffdfd; color:var(--ink); }
+    .pastel-input:focus { border-color:#a990da; box-shadow:0 0 0 3px rgba(183,168,237,.27); outline:none; }
+    .theme-pink { background:radial-gradient(circle at 7% 5%,rgba(255,196,211,.92),transparent 25rem),linear-gradient(150deg,#fff7f5 0%,#fff1f5 50%,#fff8f1 100%); }
+    .theme-yellow { background:radial-gradient(circle at 94% 8%,rgba(255,224,137,.82),transparent 29rem),linear-gradient(150deg,#fffdf1 0%,#fff8dc 50%,#fffaf0 100%); }
+    .theme-sky { background:radial-gradient(circle at 7% 5%,rgba(169,221,255,.86),transparent 25rem),linear-gradient(150deg,#f2fbff 0%,#edf7ff 50%,#f5fbff 100%); }
+    .theme-green { background:radial-gradient(circle at 94% 8%,rgba(174,232,195,.86),transparent 29rem),linear-gradient(150deg,#f2fff7 0%,#edf9f1 50%,#f6fdf8 100%); }
+    @media(max-width:700px) { .summary-grid { grid-template-columns:repeat(2,1fr); } .desktop-menu { width:100%; } }
+  </style>
+  <script src="/_sdk/0e8d3a91e1c6f495.data_sdk.js" type="text/javascript" integrity="sha512-c00oDoGjsMgluCLLEyVl3suwEkgjOGGplVFbsilUoBg4aMKNmsL3mwsc9r0dPn95qiSZyjBousQXgROkAW7p/w=="></script>
+  <script src="/_sdk/d97541380e824b1a.editing_sdk.js" type="text/javascript" integrity="sha512-iBVkuiyctyjmaqUwrsoYSc/nxwymdEKZMKPeBCNj6uN/7hFPTiMVeunYJjJVnUh1GNECKEyCerl7IHtlqhzSYQ=="></script>
+  <script src="/_sdk/eba18683f23e5798.resizing_sdk.js" type="text/javascript" integrity="sha512-E0UWUllhwPXaNJtjyTKXWKrIE+FruPfFpO4mRmMDP2LI+U9bOizy5npCq6xx/JyWcvSK7D3TFf2wFR2Mha9kbA=="></script>
+ </head>
+ <body data-template-id="__page-root">
+  <div class="app-shell">
+   <header class="topbar">
+    <div class="w-full max-w-[1500px] mx-auto px-4 py-4">
+     <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+       <div class="w-11 h-11 rounded-2xl bg-[#eee9ff] text-[#715d9f] flex items-center justify-center shadow-sm" aria-hidden="true"><i data-lucide="sparkles"></i>
+       </div>
+       <div>
+        <h1 data-template-id="app-title" class="canva-text brand-font leading-none text-[2rem] font-bold">수업 스탬프 관리</h1>
+        <p data-template-id="app-subtitle" class="canva-text text-sm mt-1 text-[#817a94]">윤정쌤과 수학 천재들의 수업 기록</p>
+       </div>
+      </div>
+      <nav aria-label="관리 메뉴" class="desktop-menu flex flex-wrap gap-2"><button type="button" data-template-id="student-menu-button" class="canva-button rounded-xl px-3 py-2 font-semibold text-sm bg-[#eee9ff] text-[#64508f]" onclick="openStudentManager()">학생 관리</button> <button type="button" data-template-id="stamp-menu-button" class="canva-button rounded-xl px-3 py-2 font-semibold text-sm bg-[#dff5ea] text-[#477d63]" onclick="openStampManager()">스탬프 관리</button> <button type="button" data-template-id="history-menu-button" class="canva-button rounded-xl px-3 py-2 font-semibold text-sm bg-[#ffe9df] text-[#9a6255]" onclick="openHistory()">전체 기록</button>
+      </nav>
+     </div>
+     <div class="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="반 선택"><button type="button" class="class-tab rounded-xl px-5 py-2.5 font-bold" onclick="setClass(1)">1반</button> <button type="button" class="class-tab rounded-xl px-5 py-2.5 font-bold" onclick="setClass(2)">2반</button> <button type="button" class="class-tab rounded-xl px-5 py-2.5 font-bold" onclick="setClass(3)">3반</button> <button type="button" class="class-tab rounded-xl px-5 py-2.5 font-bold" onclick="setClass(4)">4반</button>
+     </div>
+    </div>
+   </header>
+   <main class="w-full max-w-[1500px] mx-auto p-4 md:p-5">
+    <section aria-labelledby="overview-heading">
+     <h2 id="overview-heading" class="sr-only">현재 반 현황</h2>
+     <div class="summary-grid grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <article class="summary-card soft-card rounded-2xl p-4">
+       <p class="text-xs font-bold uppercase tracking-wider text-[#817a94]">현재 선택</p>
+       <p id="current-class-label" class="text-2xl font-bold mt-1">1반</p>
+      </article>
+      <article class="summary-card soft-card rounded-2xl p-4">
+       <p class="text-xs font-bold uppercase tracking-wider text-[#817a94]">학생 수</p>
+       <p id="student-count" class="text-2xl font-bold mt-1">0명</p>
+      </article>
+      <article class="summary-card soft-card rounded-2xl p-4">
+       <p class="text-xs font-bold uppercase tracking-wider text-[#817a94]">전체 스탬프</p>
+       <p id="total-stamps" class="text-2xl font-bold mt-1">0개</p>
+      </article>
+      <article class="summary-card soft-card rounded-2xl p-4">
+       <p class="text-xs font-bold uppercase tracking-wider text-[#817a94]">오늘 지급</p>
+       <p id="today-stamps" class="text-2xl font-bold mt-1">0개</p>
+       <p id="leader-line" class="text-xs text-[#817a94] mt-1">기록을 시작해 보세요</p>
+      </article>
+     </div>
+    </section>
+    <section class="mt-6" aria-labelledby="students-heading">
+     <div class="flex flex-wrap gap-3 justify-between items-end mb-3">
+      <div>
+       <h2 id="students-heading" class="font-bold text-2xl">학생 현황</h2>
+       <p class="text-sm mt-1 text-[#817a94]">학생 이름을 누르면 스탬프와 누가기록을 함께 관리할 수 있어요.</p>
+      </div>
+      <div class="flex flex-wrap gap-2"><label class="sr-only" for="student-search">학생 검색</label>
+       <div class="relative"><i data-lucide="search" class="absolute left-3 top-3 text-[#9a8ead]" style="width:18px"></i> <input id="student-search" type="search" placeholder="학번 또는 이름 검색" class="pastel-input w-52 rounded-xl pl-10 pr-3 py-2.5" oninput="render()">
+       </div><label class="sr-only" for="sort-select">정렬</label> <select id="sort-select" class="pastel-input rounded-xl px-3 py-2.5 font-semibold text-sm" onchange="render()"> <option value="id">학번순</option> <option value="name">이름순</option> <option value="total">총 스탬프 많은 순</option> </select>
+      </div>
+     </div>
+     <div class="table-wrap soft-card rounded-2xl">
+      <table>
+       <thead>
+        <tr id="student-table-head"></tr>
+       </thead>
+       <tbody id="student-table-body"></tbody>
+      </table>
+      <div id="empty-students" class="hidden text-center p-12">
+       <p class="font-semibold text-[#817a94]">표시할 학생이 없습니다. 학생 관리에서 학생을 추가해 주세요.</p>
+      </div>
+     </div>
+    </section>
+   </main>
+  </div>
+  <div id="student-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="student-modal-title">
+   <section class="modal-box">
+    <div class="p-5 border-b border-[#eee7f2] flex justify-between gap-3">
+     <div>
+      <p id="student-modal-id" class="text-sm text-[#8d829e]"></p>
+      <h2 id="student-modal-title" class="text-2xl font-bold"></h2>
+     </div><button type="button" class="p-2 rounded-xl hover:bg-[#f4effb]" onclick="closeModal('student-modal')" aria-label="닫기"><i data-lucide="x"></i></button>
+    </div>
+    <div class="p-5">
+     <div class="rounded-2xl bg-[#f1edff] p-4 flex justify-between items-center"><span class="font-semibold text-[#695498]">총 스탬프</span> <strong id="modal-total" class="text-3xl text-[#695498]">0개</strong>
+     </div>
+     <h3 class="font-bold text-[1.2rem] mt-6 mb-3">빠른 스탬프 지급</h3>
+     <div id="student-stamp-actions" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+     <section class="mt-7" aria-labelledby="note-title">
+      <h3 id="note-title" class="font-bold text-[1.2rem] mb-3">학생 누가기록</h3>
+      <form id="note-form" onsubmit="saveNote(event)" class="rounded-2xl bg-[#fff8eb] border border-[#f7e3b9] p-4"><label class="block text-sm font-bold mb-2 text-[#806b4c]" for="student-note-input">관찰 내용, 상담 메모, 성장 기록을 남겨 보세요.</label> <textarea id="student-note-input" required rows="3" placeholder="예: 모둠 활동에서 친구의 의견을 경청하고 정리하는 모습이 돋보였음" class="pastel-input w-full rounded-xl p-3 resize-y"></textarea>
+       <div class="flex justify-end mt-3"><button id="note-save-button" type="submit" class="rounded-xl px-4 py-2.5 font-bold bg-[#eabf7b] text-[#5d4524]">누가기록 저장</button>
+       </div>
+      </form>
+     </section>
+     <h3 class="font-bold text-[1.2rem] mt-7 mb-3">최근 기록</h3>
+     <ul id="student-history-list" class="space-y-2"></ul>
+    </div>
+   </section>
+  </div>
+  <div id="student-manager-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="student-manager-title">
+   <section class="modal-box">
+    <div class="p-5 border-b border-[#eee7f2] flex justify-between">
+     <div>
+      <h2 id="student-manager-title" class="font-bold text-2xl">학생 관리</h2>
+      <p class="text-sm mt-1 text-[#817a94]">현재 선택한 반에 학생을 등록하거나 수정합니다.</p>
+     </div><button type="button" class="p-2 rounded-xl hover:bg-[#f4effb]" onclick="closeModal('student-manager-modal')" aria-label="닫기"><i data-lucide="x"></i></button>
+    </div>
+    <div class="p-5">
+     <form id="student-form" class="grid grid-cols-1 sm:grid-cols-3 gap-3" onsubmit="saveStudent(event)"><input id="edit-student-key" type="hidden">
+      <div><label class="block text-sm font-bold mb-1" for="student-id-input">학번</label> <input id="student-id-input" required class="pastel-input w-full rounded-xl p-2.5">
+      </div>
+      <div><label class="block text-sm font-bold mb-1" for="student-name-input">이름</label> <input id="student-name-input" required class="pastel-input w-full rounded-xl p-2.5">
+      </div>
+      <div class="flex items-end"><button id="student-save-button" type="submit" class="w-full rounded-xl p-2.5 font-bold bg-[#8470b5] text-white">학생 저장</button>
+      </div>
+     </form>
+     <div id="manager-student-list" class="mt-6 divide-y divide-[#f0eaf4]"></div>
+    </div>
+   </section>
+  </div>
+  <div id="stamp-manager-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="stamp-manager-title">
+   <section class="modal-box">
+    <div class="p-5 border-b border-[#eee7f2] flex justify-between">
+     <div>
+      <h2 id="stamp-manager-title" class="font-bold text-2xl">스탬프 관리</h2>
+      <p class="text-sm mt-1 text-[#817a94]">추가한 스탬프는 모든 반의 목록과 지급 화면에 표시됩니다.</p>
+     </div><button type="button" class="p-2 rounded-xl hover:bg-[#f4effb]" onclick="closeModal('stamp-manager-modal')" aria-label="닫기"><i data-lucide="x"></i></button>
+    </div>
+    <div class="p-5">
+     <form class="flex gap-3" onsubmit="saveStamp(event)"><input id="edit-stamp-key" type="hidden"> <label class="sr-only" for="stamp-name-input">스탬프 이름</label> <input id="stamp-name-input" required placeholder="새 스탬프 이름 입력" class="pastel-input flex-1 rounded-xl p-2.5"> <button id="stamp-save-button" type="submit" class="rounded-xl px-5 font-bold bg-[#75b891] text-white">추가 / 저장</button>
+     </form>
+     <div id="manager-stamp-list" class="mt-6 divide-y divide-[#f0eaf4]"></div>
+    </div>
+   </section>
+  </div>
+  <div id="history-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="history-title">
+   <section class="modal-box">
+    <div class="p-5 border-b border-[#eee7f2] flex justify-between">
+     <div>
+      <h2 id="history-title" class="font-bold text-2xl">전체 기록</h2>
+      <p class="text-sm mt-1 text-[#817a94]">현재 반의 스탬프 지급 기록과 학생 누가기록을 시간순으로 확인합니다.</p>
+     </div><button type="button" class="p-2 rounded-xl hover:bg-[#f4effb]" onclick="closeModal('history-modal')" aria-label="닫기"><i data-lucide="x"></i></button>
+    </div>
+    <div id="history-list" class="p-5 space-y-2"></div>
+   </section>
+  </div>
+  <div id="confirm-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+   <section class="modal-box max-w-md p-6">
+    <h2 id="confirm-title" class="font-bold text-2xl">확인해 주세요</h2>
+    <p id="confirm-message" class="mt-2 text-[#7d748d]"></p>
+    <div class="mt-5 flex justify-end gap-2"><button type="button" class="rounded-xl px-4 py-2.5 font-bold bg-[#f0ebf5] text-[#625a70]" onclick="closeModal('confirm-modal')">취소</button> <button id="confirm-accept" type="button" class="rounded-xl px-4 py-2.5 font-bold bg-[#be7084] text-white">계속하기</button>
+    </div>
+   </section>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script>
+    const STORAGE_KEY = "standalone_stamp_manager_v2";
+    const DEFAULT_STAMPS = ["발표왕", "집중왕", "필기왕", "게임왕"];
+    let records = [];
+    let currentClass = 1;
+    let activeStudent = null;
+
+    function uid() {
+      return "record-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+    }
+
+    function esc(value) {
+      return String(value || "").replace(/[&<>"']/g, char => ({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;"
+      }[char]));
+    }
+
+    // ===== Firebase / Cloud Firestore 연결 =====
+    // 기존 화면과 기능은 그대로 두고, records 배열의 저장 위치만 Firestore로 바꿉니다.
+    const firebaseConfig = {
+      apiKey: "AIzaSyAiUHCjKplp3-_0e6v_mIeRSIye8hJhGDw",
+      authDomain: "math-2026.firebaseapp.com",
+      projectId: "math-2026",
+      storageBucket: "math-2026.firebasestorage.app",
+      messagingSenderId: "180705224893",
+      appId: "1:180705224893:web:8fd3101522f90867652fd4"
+    };
+
+    let db = null;
+    let firestoreFns = null;
+    let unsubscribeRecords = null;
+    let firebaseReady = false;
+
+    async function initFirebase() {
+      try {
+        const appMod = await import("https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js");
+        const fsMod = await import("https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js");
+
+        const app = appMod.initializeApp(firebaseConfig);
+        db = fsMod.getFirestore(app);
+        firestoreFns = fsMod;
+
+        // 기존 브라우저(localStorage)에 저장된 기록이 있고
+        // Firestore가 비어 있다면 최초 1회 자동 이전합니다.
+        const recordsRef = fsMod.collection(db, "records");
+        const existing = await fsMod.getDocs(recordsRef);
+
+        if (existing.empty) {
+          try {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (Array.isArray(saved) && saved.length) {
+              await Promise.all(saved.map(item => {
+                const id = item.id || uid();
+                return fsMod.setDoc(fsMod.doc(db, "records", id), { ...item, id });
+              }));
+              toast("기존 브라우저 기록을 Firebase로 옮겼습니다.");
+            }
+          } catch (migrationError) {
+            console.warn("기존 기록 이전을 건너뜁니다.", migrationError);
+          }
+        }
+
+        // 실시간 동기화: 다른 기기에서 수정해도 현재 화면에 반영됩니다.
+        unsubscribeRecords = fsMod.onSnapshot(
+          recordsRef,
+          snapshot => {
+            records = snapshot.docs.map(snap => ({ ...snap.data(), id: snap.id }));
+            firebaseReady = true;
+            render();
+            refreshOpenPanels();
+          },
+          error => {
+            console.error("Firestore 읽기 오류:", error);
+            toast("Firebase에서 기록을 불러오지 못했습니다.");
+          }
+        );
+      } catch (error) {
+        console.error("Firebase 초기화 오류:", error);
+        toast("Firebase 연결에 실패했습니다. 인터넷 연결과 Firestore 설정을 확인해 주세요.");
+      }
+    }
+
+    function loadRecords() {
+      // Firestore의 onSnapshot이 records를 채웁니다.
+      records = [];
+    }
+
+    function persistRecord(record) {
+      if (!db || !firestoreFns) {
+        toast("Firebase 연결 중입니다. 잠시 후 다시 시도해 주세요.");
+        return false;
+      }
+
+      firestoreFns
+        .setDoc(firestoreFns.doc(db, "records", record.id), record)
+        .catch(error => {
+          console.error("Firestore 저장 오류:", error);
+          toast("기록 저장에 실패했습니다.");
+        });
+      return true;
+    }
+
+    function persistUpdate(id, updates) {
+      if (!db || !firestoreFns) {
+        toast("Firebase 연결 중입니다. 잠시 후 다시 시도해 주세요.");
+        return false;
+      }
+
+      firestoreFns
+        .updateDoc(firestoreFns.doc(db, "records", id), updates)
+        .catch(error => {
+          console.error("Firestore 수정 오류:", error);
+          toast("기록 수정에 실패했습니다.");
+        });
+      return true;
+    }
+
+    function toast(message) {
+      const element = document.getElementById("toast");
+      element.textContent = message;
+      element.classList.add("show");
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => element.classList.remove("show"), 2400);
+    }
+
+    function dateText(iso) {
+      return new Date(iso).toLocaleString("ko-KR", {
+        month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit"
+      });
+    }
+
+    function activeStudents() {
+      return records.filter(item => item.type === "student" && item.active && item.class_num === currentClass);
+    }
+
+    function activeStamps() {
+      const custom = records
+        .filter(item => item.type === "stamp" && item.active)
+        .map(item => item.stamp_type);
+      return [...new Set([...DEFAULT_STAMPS, ...custom])];
+    }
+
+    function logs() {
+      return records.filter(item => item.type === "log" && item.active);
+    }
+
+    function stampsFor(student) {
+      return logs().filter(item =>
+        item.class_num === student.class_num &&
+        item.student_id === student.student_id &&
+        item.action !== "note"
+      );
+    }
+
+    function total(student) {
+      return stampsFor(student).reduce((sum, item) => sum + (item.action === "add" ? 1 : -1), 0);
+    }
+
+    function countStamp(student, stamp) {
+      return stampsFor(student)
+        .filter(item => item.stamp_type === stamp)
+        .reduce((sum, item) => sum + (item.action === "add" ? 1 : -1), 0);
+    }
+
+    function notesFor(student) {
+      return logs().filter(item =>
+        item.class_num === student.class_num &&
+        item.student_id === student.student_id &&
+        item.action === "note"
+      );
+    }
+
+    function render() {
+      document.querySelectorAll(".class-tab").forEach((button, index) => {
+        button.classList.toggle("active", index + 1 === currentClass);
+      });
+
+      const shell = document.querySelector(".app-shell");
+      shell.classList.remove("theme-pink", "theme-yellow", "theme-sky", "theme-green");
+      shell.classList.add(["theme-pink", "theme-yellow", "theme-sky", "theme-green"][currentClass - 1]);
+
+      const students = activeStudents();
+      const stamps = activeStamps();
+      const today = new Date().toDateString();
+      const additionsToday = logs().filter(item =>
+        item.class_num === currentClass &&
+        item.action === "add" &&
+        new Date(item.timestamp).toDateString() === today
+      );
+      const leader = [...students].sort((a, b) => total(b) - total(a))[0];
+
+      document.getElementById("current-class-label").textContent = currentClass + "반";
+      document.getElementById("student-count").textContent = students.length + "명";
+      document.getElementById("total-stamps").textContent = students.reduce((sum, student) => sum + total(student), 0) + "개";
+      document.getElementById("today-stamps").textContent = additionsToday.length + "개";
+      document.getElementById("leader-line").textContent =
+        leader && total(leader) > 0 ? leader.student_name + " (" + total(leader) + "개)" : "아직 1등 기록이 없습니다";
+
+      document.getElementById("student-table-head").innerHTML =
+        "<th>학번</th><th>이름</th><th>총 스탬프</th>" +
+        stamps.map(stamp => "<th>" + esc(stamp) + "</th>").join("") +
+        "<th>누가기록</th>";
+
+      const query = document.getElementById("student-search").value.trim().toLowerCase();
+      const sort = document.getElementById("sort-select").value;
+
+      const view = students
+        .filter(student => (student.student_id + student.student_name).toLowerCase().includes(query))
+        .sort((a, b) => {
+          if (sort === "name") return a.student_name.localeCompare(b.student_name, "ko");
+          if (sort === "total") return total(b) - total(a);
+          return String(a.student_id).localeCompare(String(b.student_id), undefined, { numeric:true });
+        });
+
+      document.getElementById("student-table-body").innerHTML = view.map(student => `
+        <tr class="${total(student) > 0 && total(student) % 5 === 0 ? "reward-ready" : ""}">
+          <td>${esc(student.student_id)}</td>
+          <td><button class="student-name" type="button" onclick="openStudent('${student.id}')">${esc(student.student_name)}</button></td>
+          <td><strong>${total(student)}</strong></td>
+          ${stamps.map(stamp => `<td><span class="stamp-pill">${countStamp(student, stamp)}</span></td>`).join("")}
+          <td><span class="text-sm text-[#8d7b59]">${notesFor(student).length ? notesFor(student).length + "개" : "—"}</span></td>
+        </tr>
+      `).join("");
+
+      document.getElementById("empty-students").classList.toggle("hidden", view.length !== 0);
+    }
+
+    function setClass(number) {
+      currentClass = number;
+      render();
+    }
+
+    function addRecord(record) {
+      if (!firebaseReady || !db || !firestoreFns) {
+        toast("Firebase 연결 중입니다. 잠시 후 다시 시도해 주세요.");
+        return false;
+      }
+
+      if (records.length >= 999) {
+        toast("최대 999개의 기록에 도달했습니다. 불필요한 기록을 삭제해 주세요.");
+        return false;
+      }
+
+      const newRecord = { ...record, id:uid() };
+      records.push(newRecord); // 화면은 즉시 반영
+      render();
+      refreshOpenPanels();
+
+      if (!persistRecord(newRecord)) {
+        records = records.filter(item => item.id !== newRecord.id);
+        render();
+        refreshOpenPanels();
+        return false;
+      }
+      return true;
+    }
+
+    function updateRecord(id, updates) {
+      if (!firebaseReady || !db || !firestoreFns) {
+        toast("Firebase 연결 중입니다. 잠시 후 다시 시도해 주세요.");
+        return false;
+      }
+
+      const index = records.findIndex(item => item.id === id);
+      if (index < 0) return false;
+
+      const before = { ...records[index] };
+      records[index] = { ...records[index], ...updates };
+      render();
+      refreshOpenPanels();
+
+      if (!persistUpdate(id, updates)) {
+        records[index] = before;
+        render();
+        refreshOpenPanels();
+        return false;
+      }
+      return true;
+    }
+
+    function openStudent(id) {
+      activeStudent = records.find(item => item.id === id);
+      if (!activeStudent) return;
+
+      document.getElementById("student-modal-id").textContent = activeStudent.student_id;
+      document.getElementById("student-modal-title").textContent = activeStudent.student_name;
+      document.getElementById("student-modal").classList.remove("hidden");
+      renderStudentModal();
+    }
+
+    function giveStamp(student, stamp, action = "add") {
+      if (action === "subtract" && countStamp(student, stamp) < 1) {
+        toast("차감할 스탬프가 없습니다.");
+        return;
+      }
+
+      if (addRecord({
+        type:"log",
+        class_num:student.class_num,
+        student_id:student.student_id,
+        student_name:student.student_name,
+        stamp_type:stamp,
+        action,
+        timestamp:new Date().toISOString(),
+        active:true
+      })) {
+        toast(action === "add" ? "스탬프를 지급했습니다." : "스탬프를 차감했습니다.");
+      }
+    }
+
+    function giveFromModal(stamp, action) {
+      if (activeStudent) giveStamp(activeStudent, stamp, action);
+    }
+
+    function renderStudentModal() {
+      if (!activeStudent) return;
+
+      const latest = records.find(item => item.id === activeStudent.id);
+      if (!latest) return;
+      activeStudent = latest;
+
+      const sum = total(activeStudent);
+      const totalEl = document.getElementById("modal-total");
+      totalEl.textContent = sum + "개";
+      totalEl.classList.toggle("reward-total", sum > 0 && sum % 5 === 0);
+
+      document.getElementById("student-stamp-actions").innerHTML = activeStamps().map(stamp => `
+        <div class="grid grid-cols-[1fr_auto] gap-2">
+          <button type="button" class="stamp-action rounded-2xl px-4 text-left font-bold" onclick="giveFromModal(${JSON.stringify(stamp)}, 'add')">
+            ${esc(stamp)} <span class="text-[#9889ae]">+1</span>
+          </button>
+          <button type="button" class="stamp-action minus rounded-2xl px-4 font-bold" onclick="giveFromModal(${JSON.stringify(stamp)}, 'subtract')">−1</button>
+        </div>
+      `).join("");
+
+      const recent = logs()
+        .filter(item => item.class_num === activeStudent.class_num && item.student_id === activeStudent.student_id)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 12);
+
+      document.getElementById("student-history-list").innerHTML = recent.length
+        ? recent.map(item => `
+          <li class="${item.action === "note" ? "note-card" : "log-card"} rounded-xl p-3 flex justify-between gap-3">
+            <div>
+              <p class="text-xs text-[#8a8098]">${dateText(item.timestamp)} · ${item.action === "note" ? "누가기록" : "스탬프 기록"}</p>
+              <p class="mt-1 text-sm font-semibold">${item.action === "note" ? esc(item.stamp_type) : esc(item.stamp_type) + " " + (item.action === "add" ? "+1" : "−1")}</p>
+            </div>
+            <button type="button" class="text-sm font-bold text-[#a76778] underline self-start" onclick="deleteLog('${item.id}')">삭제</button>
+          </li>
+        `).join("")
+        : '<li class="py-4 text-[#8a8098]">아직 기록이 없습니다.</li>';
+    }
+
+    function saveNote(event) {
+      event.preventDefault();
+      if (!activeStudent) return;
+
+      const input = document.getElementById("student-note-input");
+      const note = input.value.trim();
+      if (!note) return;
+
+      const button = document.getElementById("note-save-button");
+      button.disabled = true;
+
+      const ok = addRecord({
+        type:"log",
+        class_num:activeStudent.class_num,
+        student_id:activeStudent.student_id,
+        student_name:activeStudent.student_name,
+        stamp_type:note,
+        action:"note",
+        timestamp:new Date().toISOString(),
+        active:true
+      });
+
+      button.disabled = false;
+      if (ok) {
+        input.value = "";
+        toast("누가기록을 저장했습니다.");
+      }
+    }
+
+    function openStudentManager() {
+      document.getElementById("student-manager-modal").classList.remove("hidden");
+      renderStudentManager();
+    }
+
+    function renderStudentManager() {
+      const list = activeStudents().sort((a, b) =>
+        String(a.student_id).localeCompare(String(b.student_id), undefined, { numeric:true })
+      );
+
+      document.getElementById("manager-student-list").innerHTML = list.length
+        ? list.map(student => `
+          <div class="py-3 flex items-center justify-between gap-3">
+            <span><strong>${esc(student.student_id)}</strong> · ${esc(student.student_name)}</span>
+            <span class="flex gap-3">
+              <button type="button" class="text-sm font-bold text-[#7660aa]" onclick="editStudent('${student.id}')">수정</button>
+              <button type="button" class="text-sm font-bold text-[#b26678]" onclick="deactivateStudent('${student.id}')">비활성화</button>
+            </span>
+          </div>
+        `).join("")
+        : '<p class="py-5 text-[#8a8098]">등록된 학생이 없습니다.</p>';
+    }
+
+    function editStudent(id) {
+      const student = records.find(item => item.id === id);
+      if (!student) return;
+
+      document.getElementById("edit-student-key").value = id;
+      document.getElementById("student-id-input").value = student.student_id;
+      document.getElementById("student-name-input").value = student.student_name;
+    }
+
+    function saveStudent(event) {
+      event.preventDefault();
+
+      const button = document.getElementById("student-save-button");
+      const id = document.getElementById("student-id-input").value.trim();
+      const name = document.getElementById("student-name-input").value.trim();
+      const key = document.getElementById("edit-student-key").value;
+
+      button.disabled = true;
+      const ok = key
+        ? updateRecord(key, { student_id:id, student_name:name })
+        : addRecord({
+          type:"student",
+          class_num:currentClass,
+          student_id:id,
+          student_name:name,
+          stamp_type:"",
+          action:"",
+          timestamp:new Date().toISOString(),
+          active:true
+        });
+
+      button.disabled = false;
+      if (ok) {
+        event.target.reset();
+        document.getElementById("edit-student-key").value = "";
+        toast("학생 정보를 저장했습니다.");
+      }
+    }
+
+    function deactivateStudent(id) {
+      ask("이 학생을 비활성화할까요? 기존 기록은 보존됩니다.", () => {
+        if (updateRecord(id, { active:false })) toast("학생을 비활성화했습니다.");
+      });
+    }
+
+    function openStampManager() {
+      document.getElementById("stamp-manager-modal").classList.remove("hidden");
+      renderStampManager();
+    }
+
+    function renderStampManager() {
+      const custom = records.filter(item => item.type === "stamp" && item.active);
+
+      document.getElementById("manager-stamp-list").innerHTML = activeStamps().map(stamp => {
+        const record = custom.find(item => item.stamp_type === stamp);
+        return `
+          <div class="py-3 flex items-center justify-between gap-3">
+            <strong>${esc(stamp)}${record ? "" : ' <span class="text-xs text-[#9a8ead]">(기본)</span>'}</strong>
+            ${record ? `
+              <span class="flex gap-3">
+                <button type="button" class="text-sm font-bold text-[#7660aa]" onclick="editStamp('${record.id}')">수정</button>
+                <button type="button" class="text-sm font-bold text-[#b26678]" onclick="deactivateStamp('${record.id}')">비활성화</button>
+              </span>` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function editStamp(id) {
+      const stamp = records.find(item => item.id === id);
+      if (!stamp) return;
+
+      document.getElementById("edit-stamp-key").value = id;
+      document.getElementById("stamp-name-input").value = stamp.stamp_type;
+    }
+
+    function saveStamp(event) {
+      event.preventDefault();
+
+      const button = document.getElementById("stamp-save-button");
+      const name = document.getElementById("stamp-name-input").value.trim();
+      const key = document.getElementById("edit-stamp-key").value;
+
+      if (activeStamps().includes(name) && !key) {
+        toast("이미 있는 스탬프입니다.");
+        return;
+      }
+
+      button.disabled = true;
+      const ok = key
+        ? updateRecord(key, { stamp_type:name })
+        : addRecord({
+          type:"stamp",
+          class_num:0,
+          student_id:"",
+          student_name:"",
+          stamp_type:name,
+          action:"",
+          timestamp:new Date().toISOString(),
+          active:true
+        });
+
+      button.disabled = false;
+      if (ok) {
+        event.target.reset();
+        document.getElementById("edit-stamp-key").value = "";
+        toast("스탬프를 저장했습니다.");
+      }
+    }
+
+    function deactivateStamp(id) {
+      ask("이 스탬프를 목록에서 비활성화할까요? 기존 지급 기록은 보존됩니다.", () => {
+        if (updateRecord(id, { active:false })) toast("스탬프를 비활성화했습니다.");
+      });
+    }
+
+    function openHistory() {
+      document.getElementById("history-modal").classList.remove("hidden");
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = logs()
+        .filter(item => item.class_num === currentClass)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 100);
+
+      document.getElementById("history-list").innerHTML = list.length
+        ? list.map(item => `
+          <article class="${item.action === "note" ? "note-card" : "log-card"} rounded-xl p-3 flex gap-3 justify-between">
+            <div>
+              <strong class="text-sm">${dateText(item.timestamp)}</strong>
+              <p class="text-sm mt-1">${esc(item.student_id)} · ${esc(item.student_name)}</p>
+              <p class="text-sm mt-1 font-semibold">${item.action === "note" ? "누가기록 · " + esc(item.stamp_type) : esc(item.stamp_type) + " " + (item.action === "add" ? "+1" : "−1")}</p>
+            </div>
+            <button type="button" class="text-sm text-[#b26678] underline self-start" onclick="deleteLog('${item.id}')">삭제</button>
+          </article>
+        `).join("")
+        : '<p class="py-6 text-center text-[#8a8098]">이 반의 기록이 없습니다.</p>';
+    }
+
+    function deleteLog(id) {
+      ask("이 기록을 삭제할까요? 삭제한 기록은 총계에 반영되지 않습니다.", () => {
+        if (updateRecord(id, { active:false })) toast("기록을 삭제했습니다.");
+      });
+    }
+
+    function ask(message, callback) {
+      document.getElementById("confirm-message").textContent = message;
+      document.getElementById("confirm-accept").onclick = () => {
+        closeModal("confirm-modal");
+        callback();
+      };
+      document.getElementById("confirm-modal").classList.remove("hidden");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add("hidden");
+    }
+
+    function refreshOpenPanels() {
+      if (!document.getElementById("student-manager-modal").classList.contains("hidden")) renderStudentManager();
+      if (!document.getElementById("stamp-manager-modal").classList.contains("hidden")) renderStampManager();
+      if (!document.getElementById("history-modal").classList.contains("hidden")) renderHistory();
+      if (!document.getElementById("student-modal").classList.contains("hidden")) renderStudentModal();
+    }
+
+    loadRecords();
+    render();
+    lucide.createIcons();
+    initFirebase();
+  </script>
+ </body>
+</html>
