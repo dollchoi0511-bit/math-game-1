@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>중2 수학 - 삼각형의 외심과 내심 탐구실</title>
+    <!-- Tailwind CSS loaded via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .math-font {
+            font-family: 'Gowun Dodum', serif;
+        }
+        /* Touch friendly handle styles */
+        .vertex-handle {
+            cursor: pointer;
+            transition: r 0.2s, stroke-width 0.2s;
+        }
+        .vertex-handle:active {
+            r: 16px;
+        }
+        /* Custom scrollbar for control panels */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .glow-blue {
+            filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.5));
+        }
+        .glow-red {
+            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.5));
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col overflow-hidden">
+
+    <!-- App Header -->
+    <header class="bg-indigo-700 text-white px-4 py-3 shadow-md flex justify-between items-center z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-white/20 p-2 rounded-lg">
+                <i class="fa-solid fa-shapes text-xl text-yellow-300"></i>
+            </div>
+            <div>
+                <h1 class="text-lg md:text-xl font-bold tracking-tight">삼각형의 외심과 내심 탐구실</h1>
+                <p class="text-xs text-indigo-200 hidden sm:block">중학교 2학년 수학 | 직관적 도형 개념 관찰 앱</p>
+            </div>
+        </div>
+        
+        <!-- Mode Switcher Tabs -->
+        <div class="flex bg-indigo-900/60 p-1 rounded-xl gap-1 border border-indigo-500/30">
+            <button id="mode-circum" onclick="setMode('circum')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1.5 bg-blue-600 text-white shadow">
+                <i class="fa-regular fa-circle-dot"></i> 외심 (Circumcenter)
+            </button>
+            <button id="mode-in" onclick="setMode('in')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1.5 text-indigo-200 hover:text-white">
+                <i class="fa-solid fa-circle-dot"></i> 내심 (Incenter)
+            </button>
+            <button id="mode-both" onclick="setMode('both')" class="px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1.5 text-indigo-200 hover:text-white">
+                <i class="fa-solid fa-layer-group"></i> 동시 비교
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <div class="flex-1 flex flex-col lg:flex-row p-3 gap-3 overflow-hidden relative">
+        
+        <!-- Left Sidebar / Toolbar Panel (Desktop & Tablet) -->
+        <aside class="w-full lg:w-80 bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 flex flex-col gap-4 overflow-y-auto max-h-[35vh] lg:max-h-none">
+            
+            <!-- Triangle Preset Section -->
+            <div>
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-indigo-500 mr-1"></i> 삼각형 모양 빠르게 바꾸기
+                </label>
+                <div class="grid grid-cols-3 gap-1.5">
+                    <button onclick="setPreset('acute')" class="px-2 py-2 text-xs font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-700 transition text-center border border-slate-200">
+                        📐 예각삼각형
+                    </button>
+                    <button onclick="setPreset('right')" class="px-2 py-2 text-xs font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-700 transition text-center border border-slate-200">
+                        📐 직각삼각형
+                    </button>
+                    <button onclick="setPreset('obtuse')" class="px-2 py-2 text-xs font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-700 transition text-center border border-slate-200">
+                        📐 둔각삼각형
+                    </button>
+                    <button onclick="setPreset('isosceles')" class="px-2 py-2 text-xs font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-700 transition text-center border border-slate-200">
+                        🔺 이등변삼각형
+                    </button>
+                    <button onclick="setPreset('equilateral')" class="px-2 py-2 text-xs font-semibold bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-700 transition text-center border border-slate-200">
+                        🔺 정삼각형
+                    </button>
+                    <button onclick="resetTriangle()" class="px-2 py-2 text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg transition text-center border border-amber-200">
+                        🔄 초기화
+                    </button>
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <!-- Display Toggles -->
+            <div>
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">
+                    <i class="fa-solid fa-eye text-indigo-500 mr-1"></i> 시각 요소 표시 설정
+                </label>
+                <div class="space-y-2 text-xs">
+                    <label class="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-slate-100 cursor-pointer">
+                        <span class="font-medium text-slate-700 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> 원 (외접원 / 내접원)
+                        </span>
+                        <input type="checkbox" id="chk-circle" checked onchange="render()" class="w-4 h-4 accent-indigo-600 rounded">
+                    </label>
+                    <label class="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-slate-100 cursor-pointer">
+                        <span class="font-medium text-slate-700 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> 작도선 (수직이등분선 / 각의이등분선)
+                        </span>
+                        <input type="checkbox" id="chk-bisectors" checked onchange="render()" class="w-4 h-4 accent-indigo-600 rounded">
+                    </label>
+                    <label class="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-slate-100 cursor-pointer">
+                        <span class="font-medium text-slate-700 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 거리 선분 (꼭짓점/변까지)
+                        </span>
+                        <input type="checkbox" id="chk-radii" checked onchange="render()" class="w-4 h-4 accent-indigo-600 rounded">
+                    </label>
+                    <label class="flex items-center justify-between p-2 rounded-lg bg-slate-50 hover:bg-slate-100 cursor-pointer">
+                        <span class="font-medium text-slate-700 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> 수치 및 각도 표시
+                        </span>
+                        <input type="checkbox" id="chk-values" checked onchange="render()" class="w-4 h-4 accent-indigo-600 rounded">
+                    </label>
+                </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <!-- Mission & Quiz Box -->
+            <div class="bg-amber-50/80 border border-amber-200/80 rounded-xl p-3">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-xs font-bold text-amber-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-trophy text-amber-500"></i> 오늘의 탐구 미션
+                    </span>
+                    <span id="mission-status" class="text-[10px] bg-amber-200 text-amber-900 font-bold px-1.5 py-0.5 rounded-full">도전 중</span>
+                </div>
+                <p id="mission-text" class="text-xs text-amber-900 font-medium leading-relaxed">
+                    꼭짓점 A를 움직여 **외심(O)이 삼각형의 외부**에 위치하도록 만들어보세요!
+                </p>
+            </div>
+
+        </aside>
+
+        <!-- Center Interactive Area -->
+        <main class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200/80 relative flex flex-col overflow-hidden">
+            
+            <!-- Top Status Bar overlay -->
+            <div class="absolute top-3 left-3 right-3 flex justify-between items-start pointer-events-none z-10 gap-2">
+                <!-- Triangle Status Badge -->
+                <div class="bg-slate-900/80 backdrop-blur text-white px-3 py-1.5 rounded-xl text-xs font-medium shadow flex items-center gap-2 pointer-events-auto">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="triangle-type-text">예각삼각형</span>
+                    <span class="text-slate-400">|</span>
+                    <span id="angle-a-text" class="text-indigo-300">∠A: 60°</span>
+                    <span id="angle-b-text" class="text-indigo-300">∠B: 60°</span>
+                    <span id="angle-c-text" class="text-indigo-300">∠C: 60°</span>
+                </div>
+
+                <!-- Touch Drag Hint -->
+                <div class="bg-indigo-50/90 backdrop-blur border border-indigo-200 text-indigo-700 px-3 py-1.5 rounded-xl text-xs font-semibold shadow hidden sm:flex items-center gap-1.5 pointer-events-auto">
+                    <i class="fa-solid fa-hand-pointer text-indigo-500 animate-bounce"></i> 꼭짓점 A, B, C를 손가락으로 끌어보세요!
+                </div>
+            </div>
+
+            <!-- SVG Rendering Area -->
+            <div class="w-full h-full relative flex-1 bg-slate-50/50" id="svg-container">
+                <svg id="canvas" class="w-full h-full absolute inset-0 select-none touch-none" style="touch-action: none;">
+                    <defs>
+                        <!-- Glow Filters -->
+                        <filter id="glow-o" x="-20%" y="-20%" width="140%" height="140%">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                    </defs>
+
+                    <!-- Background Grid -->
+                    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f1f5f9" stroke-width="1.5"/>
+                    </pattern>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+
+                    <!-- Dynamic Layer Elements will be rendered here via JS -->
+                    <g id="layer-bisectors"></g>
+                    <g id="layer-circles"></g>
+                    <g id="layer-radii"></g>
+                    <g id="layer-triangle"></g>
+                    <g id="layer-angles"></g>
+                    <g id="layer-centers"></g>
+                    <g id="layer-vertices"></g>
+                </svg>
+            </div>
+
+            <!-- Bottom Concept Explanation Banner -->
+            <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white p-3 shadow-lg border-t border-indigo-700/50 flex items-center justify-between gap-3 z-10">
+                <div class="flex items-center gap-3">
+                    <div class="bg-indigo-500/30 p-2.5 rounded-xl border border-indigo-400/30 text-indigo-300 hidden md:block">
+                        <i class="fa-solid fa-lightbulb text-yellow-300 text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-[11px] font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1">
+                            <span>핵심 개념 직관 발견 노트</span>
+                        </div>
+                        <p id="concept-discovery-note" class="text-xs md:text-sm font-medium text-slate-100 leading-snug">
+                            외심은 세 변의 수직이등분선의 교점이며, 외심에서 세 꼭짓점에 이르는 거리는 모두 같습니다.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Live Measurements Drawer Toggle or Summary -->
+                <div id="distance-summary-badge" class="bg-white/10 border border-white/15 px-3 py-1.5 rounded-xl text-xs font-mono text-indigo-100 shrink-0 hidden sm:block">
+                    OA = OB = OC = <span id="dist-val" class="text-yellow-300 font-bold">120.5</span>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // State variables
+        let currentMode = 'circum'; // 'circum', 'in', 'both'
+        let currentMissionIndex = 0;
+        let isMissionCompleted = false;
+
+        // Triangle Vertices (Initial state)
+        let A = { x: 0, y: 0 };
+        let B = { x: 0, y: 0 };
+        let C = { x: 0, y: 0 };
+
+        // Dragging state
+        let activeVertex = null;
+        let svgElem = document.getElementById('canvas');
+
+        // Missions List
+        const missions = [
+            {
+                id: 'obtuse_circum',
+                text: "꼭짓점 A를 움직여 **외심(O)이 삼각형의 외부**에 위치하도록(둔각삼각형) 만들어보세요!",
+                check: (type) => type === 'obtuse' && currentMode !== 'in'
+            },
+            {
+                id: 'right_circum',
+                text: "삼각형을 **직각삼각형**으로 만들어 외심(O)이 **빗변의 중점**에 위치함을 확인해보세요!",
+                check: (type) => type === 'right'
+            },
+            {
+                id: 'equi_both',
+                text: "모드를 **[동시 비교]**로 바꾸고 정삼각형을 만들어 **외심과 내심이 일치**함을 확인하세요!",
+                check: (type) => type === 'equilateral' && currentMode === 'both'
+            }
+        ];
+
+        // Initialize Canvas & Positions
+        window.addEventListener('load', () => {
+            initCanvasSize();
+            setPreset('acute');
+            setupEvents();
+            render();
+        });
+
+        window.addEventListener('resize', () => {
+            render();
+        });
+
+        function initCanvasSize() {
+            const container = document.getElementById('svg-container');
+            const rect = container.getBoundingClientRect();
+            // Default center triangle if not set
+            if (A.x === 0 && A.y === 0) {
+                const cx = rect.width / 2;
+                const cy = rect.height / 2;
+                A = { x: cx, y: cy - 120 };
+                B = { x: cx - 150, y: cy + 100 };
+                C = { x: cx + 150, y: cy + 100 };
+            }
+        }
+
+        // --- MATH HELPERS ---
+        function dist(p1, p2) {
+            return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+        }
+
+        // Get Triangle Side Lengths: a (BC), b (CA), c (AB)
+        function getSideLengths() {
+            return {
+                a: dist(B, C),
+                b: dist(C, A),
+                c: dist(A, B)
+            };
+        }
+
+        // Get Angles in Degrees
+        function getAngles() {
+            const { a, b, c } = getSideLengths();
+            const angleA = Math.acos((b*b + c*c - a*a) / (2 * b * c)) * (180 / Math.PI);
+            const angleB = Math.acos((a*a + c*c - b*b) / (2 * a * c)) * (180 / Math.PI);
+            const angleC = Math.acos((a*a + b*b - c*c) / (2 * a * b)) * (180 / Math.PI);
+            return { A: angleA, B: angleB, C: angleC };
+        }
+
+        // Classify Triangle
+        function getTriangleType() {
+            const { A: degA, B: degB, C: degC } = getAngles();
+            const { a, b, c } = getSideLengths();
+            
+            const maxAngle = Math.max(degA, degB, degC);
+            const isEquilateral = Math.abs(a - b) < 8 && Math.abs(b - c) < 8 && Math.abs(c - a) < 8;
+            const isIsosceles = Math.abs(a - b) < 8 || Math.abs(b - c) < 8 || Math.abs(c - a) < 8;
+
+            if (isEquilateral) return 'equilateral';
+            if (Math.abs(maxAngle - 90) < 3.5) return 'right';
+            if (maxAngle > 90) return 'obtuse';
+            return 'acute';
+        }
+
+        // Circumcenter Calculation (외심 O)
+        function getCircumcenter() {
+            const D = 2 * (A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y));
+            if (Math.abs(D) < 1e-5) return { x: (A.x+B.x)/2, y: (A.y+B.y)/2, r: 0 }; // Collinear fallback
+
+            const Ux = ((A.x*A.x + A.y*A.y) * (B.y - C.y) + (B.x*B.x + B.y*B.y) * (C.y - A.y) + (C.x*C.x + C.y*C.y) * (A.y - B.y)) / D;
+            const Uy = ((A.x*A.x + A.y*A.y) * (C.x - B.x) + (B.x*B.x + B.y*B.y) * (A.x - C.x) + (C.x*C.x + C.y*C.y) * (B.x - A.x)) / D;
+            
+            const O = { x: Ux, y: Uy };
+            const r = dist(O, A);
+            return { O, r };
+        }
+
+        // Incenter Calculation (내심 I)
+        function getIncenter() {
+            const { a, b, c } = getSideLengths();
+            const P = a + b + c;
+            if (P < 1e-5) return { I: { x: A.x, y: A.y }, r: 0, D: A, E: B, F: C };
+
+            const Ix = (a * A.x + b * B.x + c * C.x) / P;
+            const Iy = (a * A.y + b * B.y + c * C.y) / P;
+            const I = { x: Ix, y: Iy };
+
+            // Project I onto sides to find tangent points (D on BC, E on CA, F on AB)
+            const projPoint = (P, V1, V2) => {
+                const vx = V2.x - V1.x;
+                const vy = V2.y - V1.y;
+                const lenSq = vx * vx + vy * vy;
+                if (lenSq < 1e-5) return { x: V1.x, y: V1.y };
+                const t = ((P.x - V1.x) * vx + (P.y - V1.y) * vy) / lenSq;
+                return { x: V1.x + t * vx, y: V1.y + t * vy };
+            };
+
+            const PointD = projPoint(I, B, C); // tangent point on BC
+            const PointE = projPoint(I, C, A); // tangent point on CA
+            const PointF = projPoint(I, A, B); // tangent point on AB
+
+            const r = dist(I, PointD);
+
+            return { I, r, D: PointD, E: PointE, F: PointF };
+        }
+
+        // Projection of Point onto line through P1, P2
+        function lineIntersectPoint(p1, p2, p3, p4) {
+            const denom = (p1.x - p2.x)*(p3.y - p4.y) - (p1.y - p2.y)*(p3.x - p4.x);
+            if (Math.abs(denom) < 1e-5) return null;
+            const t = ((p1.x - p3.x)*(p3.y - p4.y) - (p1.y - p3.y)*(p3.x - p4.x)) / denom;
+            return {
+                x: p1.x + t*(p2.x - p1.x),
+                y: p1.y + t*(p2.y - p1.y)
+            };
+        }
+
+        // Presets Setup
+        function setPreset(type) {
+            const container = document.getElementById('svg-container');
+            const rect = container.getBoundingClientRect();
+            const cx = rect.width / 2;
+            const cy = rect.height / 2 + 10;
+
+            if (type === 'acute') {
+                A = { x: cx, y: cy - 130 };
+                B = { x: cx - 140, y: cy + 100 };
+                C = { x: cx + 150, y: cy + 90 };
+            } else if (type === 'right') {
+                A = { x: cx - 130, y: cy - 110 };
+                B = { x: cx - 130, y: cy + 110 };
+                C = { x: cx + 150, y: cy + 110 };
+            } else if (type === 'obtuse') {
+                A = { x: cx - 50, y: cy - 60 };
+                B = { x: cx - 180, y: cy + 110 };
+                C = { x: cx + 170, y: cy + 110 };
+            } else if (type === 'isosceles') {
+                A = { x: cx, y: cy - 150 };
+                B = { x: cx - 130, y: cy + 110 };
+                C = { x: cx + 130, y: cy + 110 };
+            } else if (type === 'equilateral') {
+                const side = 260;
+                const h = side * Math.sin(Math.PI / 3);
+                A = { x: cx, y: cy - h / 2 };
+                B = { x: cx - side / 2, y: cy + h / 2 };
+                C = { x: cx + side / 2, y: cy + h / 2 };
+            }
+            render();
+        }
+
+        function resetTriangle() {
+            setPreset('acute');
+        }
+
+        // Mode Controller
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('mode-circum').className = mode === 'circum' 
+                ? "px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1.5 bg-blue-600 text-white shadow"
+                : "px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1.5 text-indigo-200 hover:text-white";
+            
+            document.getElementById('mode-in').className = mode === 'in' 
+                ? "px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1.5 bg-rose-600 text-white shadow"
+                : "px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1.5 text-indigo-200 hover:text-white";
+
+            document.getElementById('mode-both').className = mode === 'both' 
+                ? "px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1.5 bg-purple-600 text-white shadow"
+                : "px-3 py-1.5 rounded-lg text-xs md:text-sm font-bold transition flex items-center gap-1.5 text-indigo-200 hover:text-white";
+
+            render();
+        }
+
+        // Event Listeners for Touch / Mouse Dragging
+        function setupEvents() {
+            const getPos = (e) => {
+                const rect = svgElem.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return {
+                    x: clientX - rect.left,
+                    y: clientY - rect.top
+                };
+            };
+
+            const startDrag = (e) => {
+                const pos = getPos(e);
+                const hitRadius = 35; // Generous touch target for tablets
+                if (dist(pos, A) < hitRadius) activeVertex = 'A';
+                else if (dist(pos, B) < hitRadius) activeVertex = 'B';
+                else if (dist(pos, C) < hitRadius) activeVertex = 'C';
+
+                if (activeVertex) {
+                    e.preventDefault();
+                }
+            };
+
+            const doDrag = (e) => {
+                if (!activeVertex) return;
+                e.preventDefault();
+                const pos = getPos(e);
+                
+                // Keep inside bounds with padding
+                const padding = 25;
+                const rect = svgElem.getBoundingClientRect();
+                const clampedX = Math.max(padding, Math.min(rect.width - padding, pos.x));
+                const clampedY = Math.max(padding, Math.min(rect.height - padding, pos.y));
+
+                if (activeVertex === 'A') A = { x: clampedX, y: clampedY };
+                if (activeVertex === 'B') B = { x: clampedX, y: clampedY };
+                if (activeVertex === 'C') C = { x: clampedX, y: clampedY };
+
+                render();
+            };
+
+            const stopDrag = () => {
+                activeVertex = null;
+            };
+
+            // Touch events
+            svgElem.addEventListener('touchstart', startDrag, { passive: false });
+            svgElem.addEventListener('touchmove', doDrag, { passive: false });
+            svgElem.addEventListener('touchend', stopDrag);
+
+            // Mouse events
+            svgElem.addEventListener('mousedown', startDrag);
+            svgElem.addEventListener('mousemove', doDrag);
+            svgElem.addEventListener('mouseup', stopDrag);
+            svgElem.addEventListener('mouseleave', stopDrag);
+        }
+
+        // Master Render Engine
+        function render() {
+            const showCircle = document.getElementById('chk-circle').checked;
+            const showBisectors = document.getElementById('chk-bisectors').checked;
+            const showRadii = document.getElementById('chk-radii').checked;
+            const showValues = document.getElementById('chk-values').checked;
+
+            // Clear Layer Elements
+            const layers = ['layer-bisectors', 'layer-circles', 'layer-radii', 'layer-triangle', 'layer-angles', 'layer-centers', 'layer-vertices'];
+            layers.forEach(id => document.getElementById(id).innerHTML = '');
+
+            // Calculations
+            const triType = getTriangleType();
+            const angles = getAngles();
+            const { O, r: R } = getCircumcenter();
+            const { I, r: inR, D: PtD, E: PtE, F: PtF } = getIncenter();
+
+            // Update UI Stats & Badges
+            updateUIStatus(triType, angles, O, R, I, inR);
+
+            // Check Missions
+            checkMissionStatus(triType);
+
+            // 1. Render Base Triangle (ABC)
+            const layerTri = document.getElementById('layer-triangle');
+            layerTri.innerHTML = `
+                <polygon points="${A.x},${A.y} ${B.x},${B.y} ${C.x},${C.y}" 
+                         fill="rgba(241, 245, 249, 0.4)" stroke="#334155" stroke-width="3" stroke-linejoin="round" />
+            `;
+
+            // 2. CIRCUMCENTER MODE RENDER (외심)
+            if (currentMode === 'circum' || currentMode === 'both') {
+                renderCircumcenterElements(O, R, showCircle, showBisectors, showRadii, showValues);
+            }
+
+            // 3. INCENTER MODE RENDER (내심)
+            if (currentMode === 'in' || currentMode === 'both') {
+                renderIncenterElements(I, inR, PtD, PtE, PtF, showCircle, showBisectors, showRadii, showValues);
+            }
+
+            // 4. Render Vertices (A, B, C) Handles
+            renderVerticesHandles(showValues);
+        }
+
+        function renderCircumcenterElements(O, R, showCircle, showBisectors, showRadii, showValues) {
+            const layerCircles = document.getElementById('layer-circles');
+            const layerBisectors = document.getElementById('layer-bisectors');
+            const layerRadii = document.getElementById('layer-radii');
+            const layerCenters = document.getElementById('layer-centers');
+
+            // Circumcircle
+            if (showCircle && R > 0 && R < 2000) {
+                layerCircles.innerHTML += `
+                    <circle cx="${O.x}" cy="${O.y}" r="${R}" 
+                            fill="rgba(59, 130, 246, 0.05)" stroke="#3b82f6" stroke-width="2" stroke-dasharray="${currentMode==='both'?'6,4':''}" />
+                `;
+            }
+
+            // Perpendicular Bisectors (수직이등분선)
+            if (showBisectors) {
+                const midAB = { x: (A.x+B.x)/2, y: (A.y+B.y)/2 };
+                const midBC = { x: (B.x+C.x)/2, y: (B.y+C.y)/2 };
+                const midCA = { x: (C.x+A.x)/2, y: (C.y+A.y)/2 };
+
+                // Draw lines passing through midpoints and O
+                const drawExtendedLine = (p1, p2, color) => {
+                    const dx = p2.x - p1.x;
+                    const dy = p2.y - p1.y;
+                    const pStart = { x: p1.x - dx * 2, y: p1.y - dy * 2 };
+                    const pEnd = { x: p2.x + dx * 2, y: p2.y + dy * 2 };
+                    return `<line x1="${pStart.x}" y1="${pStart.y}" x2="${pEnd.x}" y2="${pEnd.y}" stroke="${color}" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.7" />`;
+                };
+
+                layerBisectors.innerHTML += drawExtendedLine(midAB, O, "#60a5fa");
+                layerBisectors.innerHTML += drawExtendedLine(midBC, O, "#60a5fa");
+                layerBisectors.innerHTML += drawExtendedLine(midCA, O, "#60a5fa");
+
+                // Right angle markers at midpoints
+                [midAB, midBC, midCA].forEach(mid => {
+                    layerBisectors.innerHTML += `<circle cx="${mid.x}" cy="${mid.y}" r="3" fill="#2563eb" />`;
+                });
+            }
+
+            // Distances from Circumcenter to Vertices (OA, OB, OC)
+            if (showRadii) {
+                layerRadii.innerHTML += `
+                    <line x1="${O.x}" y1="${O.y}" x2="${A.x}" y2="${A.y}" stroke="#2563eb" stroke-width="2" />
+                    <line x1="${O.x}" y1="${O.y}" x2="${B.x}" y2="${B.y}" stroke="#2563eb" stroke-width="2" />
+                    <line x1="${O.x}" y1="${O.y}" x2="${C.x}" y2="${C.y}" stroke="#2563eb" stroke-width="2" />
+                `;
+
+                if (showValues) {
+                    const len = R.toFixed(0);
+                    const midOA = { x: (O.x+A.x)/2, y: (O.y+A.y)/2 };
+                    layerRadii.innerHTML += `
+                        <rect x="${midOA.x-14}" y="${midOA.y-9}" width="28" height="18" rx="4" fill="#ffffff" stroke="#2563eb" stroke-width="1"/>
+                        <text x="${midOA.x}" y="${midOA.y+4}" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">${len}</text>
+                    `;
+                }
+            }
+
+            // Circumcenter Point O
+            layerCenters.innerHTML += `
+                <g class="glow-blue">
+                    <circle cx="${O.x}" cy="${O.y}" r="8" fill="#2563eb" stroke="#ffffff" stroke-width="2" />
+                    <text x="${O.x + 12}" y="${O.y + 4}" font-size="14" font-weight="900" fill="#1e40af">O (외심)</text>
+                </g>
+            `;
+        }
+
+        function renderIncenterElements(I, inR, PtD, PtE, PtF, showCircle, showBisectors, showRadii, showValues) {
+            const layerCircles = document.getElementById('layer-circles');
+            const layerBisectors = document.getElementById('layer-bisectors');
+            const layerRadii = document.getElementById('layer-radii');
+            const layerCenters = document.getElementById('layer-centers');
+
+            // Incircle
+            if (showCircle && inR > 0) {
+                layerCircles.innerHTML += `
+                    <circle cx="${I.x}" cy="${I.y}" r="${inR}" 
+                            fill="rgba(244, 63, 94, 0.08)" stroke="#e11d48" stroke-width="2" stroke-dasharray="${currentMode==='both'?'6,4':''}" />
+                `;
+            }
+
+            // Angle Bisectors (각의 이등분선)
+            if (showBisectors) {
+                layerBisectors.innerHTML += `
+                    <line x1="${A.x}" y1="${A.y}" x2="${I.x}" y2="${I.y}" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="4,4" />
+                    <line x1="${B.x}" y1="${B.y}" x2="${I.x}" y2="${I.y}" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="4,4" />
+                    <line x1="${C.x}" y1="${C.y}" x2="${I.x}" y2="${I.y}" stroke="#fb7185" stroke-width="1.5" stroke-dasharray="4,4" />
+                `;
+            }
+
+            // Perpendicular distances to sides (ID, IE, IF)
+            if (showRadii) {
+                layerRadii.innerHTML += `
+                    <line x1="${I.x}" y1="${I.y}" x2="${PtD.x}" y2="${PtD.y}" stroke="#be123c" stroke-width="2" stroke-dasharray="2,2" />
+                    <line x1="${I.x}" y1="${I.y}" x2="${PtE.x}" y2="${PtE.y}" stroke="#be123c" stroke-width="2" stroke-dasharray="2,2" />
+                    <line x1="${I.x}" y1="${I.y}" x2="${PtF.x}" y2="${PtF.y}" stroke="#be123c" stroke-width="2" stroke-dasharray="2,2" />
+                `;
+
+                // Tangent points on sides
+                [PtD, PtE, PtF].forEach(pt => {
+                    layerRadii.innerHTML += `<circle cx="${pt.x}" cy="${pt.y}" r="3.5" fill="#be123c" />`;
+                });
+
+                if (showValues) {
+                    const rVal = inR.toFixed(0);
+                    const midID = { x: (I.x+PtD.x)/2, y: (I.y+PtD.y)/2 };
+                    layerRadii.innerHTML += `
+                        <rect x="${midID.x-14}" y="${midID.y-9}" width="28" height="18" rx="4" fill="#ffffff" stroke="#e11d48" stroke-width="1"/>
+                        <text x="${midID.x}" y="${midID.y+4}" text-anchor="middle" font-size="10" font-weight="bold" fill="#be123c">r=${rVal}</text>
+                    `;
+                }
+            }
+
+            // Incenter Point I
+            layerCenters.innerHTML += `
+                <g class="glow-red">
+                    <circle cx="${I.x}" cy="${I.y}" r="8" fill="#e11d48" stroke="#ffffff" stroke-width="2" />
+                    <text x="${I.x + 12}" y="${I.y + 4}" font-size="14" font-weight="900" fill="#9f1239">I (내심)</text>
+                </g>
+            `;
+        }
+
+        function renderVerticesHandles(showValues) {
+            const layerVertices = document.getElementById('layer-vertices');
+
+            const vertices = [
+                { key: 'A', pt: A, label: 'A' },
+                { key: 'B', pt: B, label: 'B' },
+                { key: 'C', pt: C, label: 'C' }
+            ];
+
+            vertices.forEach(v => {
+                layerVertices.innerHTML += `
+                    <!-- Invisible large hit target -->
+                    <circle cx="${v.pt.x}" cy="${v.pt.y}" r="28" fill="transparent" class="vertex-handle" />
+                    <!-- Outer ring -->
+                    <circle cx="${v.pt.x}" cy="${v.pt.y}" r="12" fill="#4f46e5" fill-opacity="0.2" stroke="#4338ca" stroke-width="1.5" />
+                    <!-- Inner Solid Handle Point -->
+                    <circle cx="${v.pt.x}" cy="${v.pt.y}" r="7" fill="#4338ca" stroke="#ffffff" stroke-width="2.5" />
+                    <!-- Text Label -->
+                    <text x="${v.pt.x}" y="${v.pt.y - 18}" text-anchor="middle" font-size="16" font-weight="900" fill="#1e1b4b">${v.label}</text>
+                `;
+            });
+        }
+
+        function updateUIStatus(triType, angles, O, R, I, inR) {
+            // Update Triangle Type Badge
+            const typeLabels = {
+                'acute': '예각삼각형',
+                'right': '직각삼각형',
+                'obtuse': '둔각삼각형',
+                'equilateral': '정삼각형'
+            };
+            document.getElementById('triangle-type-text').innerText = typeLabels[triType] || '일반 삼각형';
+
+            // Angles
+            document.getElementById('angle-a-text').innerText = `∠A: ${angles.A.toFixed(0)}°`;
+            document.getElementById('angle-b-text').innerText = `∠B: ${angles.B.toFixed(0)}°`;
+            document.getElementById('angle-c-text').innerText = `∠C: ${angles.C.toFixed(0)}°`;
+
+            // Distance Badge
+            const badge = document.getElementById('distance-summary-badge');
+            if (currentMode === 'circum') {
+                badge.innerHTML = `외접원 반지름 R = <span class="text-yellow-300 font-bold">${R.toFixed(1)}</span> (OA=OB=OC)`;
+            } else if (currentMode === 'in') {
+                badge.innerHTML = `내접원 반지름 r = <span class="text-rose-300 font-bold">${inR.toFixed(1)}</span> (ID=IE=IF)`;
+            } else {
+                const OI_dist = dist(O, I).toFixed(1);
+                badge.innerHTML = `외심-내심 거리 OI = <span class="text-purple-300 font-bold">${OI_dist}</span>`;
+            }
+
+            // Concept Discovery Note Logic
+            const noteElem = document.getElementById('concept-discovery-note');
+
+            if (currentMode === 'circum') {
+                if (triType === 'right') {
+                    noteElem.innerHTML = `<span class="text-yellow-300 font-bold">💡 중요한 발견!</span> 직각삼각형의 외심(O)은 항상 <span class="underline decoration-yellow-400 font-bold">빗변의 중점</span>에 위치합니다! (빗변의 길이는 외접원 지름의 2배)`;
+                } else if (triType === 'obtuse') {
+                    noteElem.innerHTML = `<span class="text-yellow-300 font-bold">💡 중요한 발견!</span> 둔각삼각형의 외심(O)은 <span class="underline decoration-yellow-400 font-bold">삼각형의 외부</span>에 위치합니다.`;
+                } else {
+                    noteElem.innerHTML = `<span class="text-yellow-300 font-bold">💡 외심의 성질:</span> 예각삼각형의 외심(O)은 <span class="underline decoration-yellow-400 font-bold">삼각형의 내부</span>에 있으며, 세 꼭짓점까지의 거리가 모두 같습니다 (OA = OB = OC = R).`;
+                }
+            } else if (currentMode === 'in') {
+                noteElem.innerHTML = `<span class="text-rose-300 font-bold">💡 내심의 성질:</span> 내심(I)은 세 내각의 이등분선의 교점이며, 삼각형의 <span class="underline decoration-rose-300 font-bold">세 변에 이르는 수직거리</span>가 모두 내접원 반지름(r)으로 같습니다.`;
+            } else {
+                if (triType === 'equilateral') {
+                    noteElem.innerHTML = `<span class="text-purple-300 font-bold">✨ 놀라운 발견!</span> 정삼각형에서는 <span class="underline decoration-purple-300 font-bold">외심(O)과 내심(I)의 위치가 완전히 일치</span>합니다!`;
+                } else {
+                    noteElem.innerHTML = `<span class="text-purple-300 font-bold">💡 외심과 내심 비교:</span> 외심은 세 변의 수직이등분선의 교점, 내심은 세 내각의 이등분선의 교점입니다. 정삼각형으로 만들어 위치를 비교해보세요!`;
+                }
+            }
+        }
+
+        // Mission Checking Logic
+        function checkMissionStatus(triType) {
+            const currentMission = missions[currentMissionIndex];
+            const isSuccess = currentMission.check(triType);
+
+            const statusElem = document.getElementById('mission-status');
+            const textElem = document.getElementById('mission-text');
+
+            if (isSuccess && !isMissionCompleted) {
+                isMissionCompleted = true;
+                statusElem.className = "text-[10px] bg-emerald-500 text-white font-bold px-2 py-0.5 rounded-full animate-bounce";
+                statusElem.innerText = "🎉 미션 성공!";
+                
+                setTimeout(() => {
+                    // Advance to next mission
+                    currentMissionIndex = (currentMissionIndex + 1) % missions.length;
+                    isMissionCompleted = false;
+                    statusElem.className = "text-[10px] bg-amber-200 text-amber-900 font-bold px-1.5 py-0.5 rounded-full";
+                    statusElem.innerText = "다음 도전";
+                    textElem.innerHTML = missions[currentMissionIndex].text;
+                }, 2500);
+            } else if (!isMissionCompleted) {
+                textElem.innerHTML = currentMission.text;
+            }
+        }
+    </script>
+</body>
+</html>
