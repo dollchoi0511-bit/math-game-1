@@ -550,10 +550,7 @@
         return false;
       }
 
-      if (records.length >= 999) {
-        toast("최대 999개의 기록에 도달했습니다. 불필요한 기록을 삭제해 주세요.");
-        return false;
-      }
+    
 
       const newRecord = { ...record, id:uid() };
       records.push(newRecord); // 화면은 즉시 반영
