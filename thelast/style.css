@@ -22,3 +22,20 @@ body{overscroll-behavior:none}button{touch-action:manipulation}.start-form{max-w
 @media(orientation:landscape) and (max-height:650px){.rail-choice{min-height:44px}}
 .one-line-solution{display:block;color:#ffe0a0;font-size:15px;font-weight:700;line-height:1.7;white-space:nowrap}
 @media(max-width:550px){.one-line-solution{font-size:clamp(11px,3.2vw,15px)}}
+/* The three leading explorers get their own metal finish and animated gleam. */
+tr.podium{--metal:#ffd16b;--metal-soft:#ffd16b18;color:var(--metal);background:linear-gradient(105deg,var(--metal-soft),#16323a80 60%,var(--metal-soft));animation:podiumEnter .65s both}
+tr.podium-1{--metal:#ffe09a;--metal-soft:#e6b74526;text-shadow:0 0 16px #ffcc6755}
+tr.podium-2{--metal:#e0edf5;--metal-soft:#b9d7ea20;animation-delay:.08s}
+tr.podium-3{--metal:#f5bd91;--metal-soft:#ca895f24;animation-delay:.16s}
+tr.podium td{position:relative;color:var(--metal)!important;border-bottom:1px solid color-mix(in srgb,var(--metal) 35%,transparent);font-weight:700;height:76px}
+tr.podium td:first-child{border-left:3px solid var(--metal);white-space:nowrap;min-width:110px}
+tr.podium td:nth-child(2){overflow:hidden}
+tr.podium td:nth-child(2):after{content:'';position:absolute;inset:-100% -50%;background:linear-gradient(105deg,transparent 42%,var(--metal-soft) 49%,#fff9dc45 50%,transparent 58%);translate:-100% 0;animation:podiumShine 5s ease-in-out infinite;pointer-events:none}
+tr.podium-2 td:nth-child(2):after{animation-delay:1s}tr.podium-3 td:nth-child(2):after{animation-delay:2s}
+.medal-badge{display:inline-grid;place-items:center;width:44px;height:44px;font-size:31px;vertical-align:middle;margin-right:7px;border:1px solid var(--metal);border-radius:50%;background:radial-gradient(circle at 35% 25%,#ffffeb33,var(--metal-soft) 55%,#071a2590);box-shadow:0 0 15px var(--metal-soft),inset 0 0 12px var(--metal-soft);animation:medalGlow 2.6s ease-in-out infinite}
+.medal-rank{font-size:15px;letter-spacing:1px}.podium-1 .medal-badge{box-shadow:0 0 22px #ffc94d55,inset 0 0 13px #ffde8b33}.podium-2 .medal-badge{animation-delay:.4s}.podium-3 .medal-badge{animation-delay:.8s}
+@keyframes podiumEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes podiumShine{0%,40%{translate:-100% 0}75%,100%{translate:100% 0}}
+@keyframes medalGlow{50%{filter:brightness(1.2);transform:translateY(-2px)}}
+@media(max-width:550px){tr.podium td{height:68px}tr.podium td:first-child{min-width:82px}.medal-badge{width:33px;height:33px;font-size:24px;margin-right:5px}.medal-rank{font-size:11px}}
+@media(prefers-reduced-motion:reduce){tr.podium,.medal-badge,tr.podium td:nth-child(2):after{animation:none}}
